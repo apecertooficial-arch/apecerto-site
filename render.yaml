@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: apecerto-site
+    runtime: static
+    buildCommand: npm run build
+    staticPublishPath: ./dist
+    autoDeployTrigger: commit

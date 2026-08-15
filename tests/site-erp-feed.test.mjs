@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
-const html = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = fs.readFileSync(new URL("../dist/index.html", import.meta.url), "utf8");
+const design = fs.readFileSync(
+  new URL("../design/Site ApeCerto.dc.html", import.meta.url),
+  "utf8",
+);
 const templateMatch = html.match(
   /<script type="__bundler\/template">\s*([\s\S]*?)\s*<\/script>/,
 );
@@ -30,4 +34,5 @@ test("bundle continua estruturalmente íntegro", () => {
   );
   assert.match(template, /class Component extends DCLogic/);
   assert.match(template, /mapProduto\(r\)/);
+  assert.equal(template, design);
 });
