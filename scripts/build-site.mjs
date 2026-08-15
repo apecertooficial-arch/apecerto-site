@@ -1,28 +1,22 @@
-import fs from "node:fs";
+// Injeta design/Site ApeCerto.dc.html no pacote-base (index.html) e gera dist/index.html.
+// O pacote-base guarda o documento do design como string JSON dentro de
+// <script type="__bundler/template">; aqui esse bloco e substituido pelo design atual.
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 
-const bundleUrl = new URL("../index.html", import.meta.url);
-const designUrl = new URL("../design/Site ApeCerto.dc.html", import.meta.url);
-const outputDirUrl = new URL("../dist/", import.meta.url);
-const outputUrl = new URL("index.html", outputDirUrl);
+const base = await readFile('index.html', 'utf8');
+const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
 
-const bundle = fs.readFileSync(bundleUrl, "utf8");
-const design = fs.readFileSync(designUrl, "utf8");
+const MARK = '<script type="__bundler/template">';
+const s = base.indexOf(MARK);
+if (s < 0) throw new Error('bloco __bundler/template nao encontrado no index.html');
+const contentStart = base.indexOf('\n', s) + 1;
+const end = base.indexOf('</scr' + 'ipt>', contentStart);
+if (end < 0) throw new Error('fim do bloco __bundler/template nao encontrado');
 
-// A barra precisa permanecer escapada para que </script> dentro do design não
-// encerre prematuramente a tag que transporta o template no pacote publicado.
-const serializedDesign = JSON.stringify(design).replaceAll("</", "<\\u002F");
-const templatePattern =
-  /(<script type="__bundler\/template">\n)[\s\S]*?(\n  <\/script>)/;
+// escapa como string JSON e protege </ para nao fechar a tag <script>
+const encoded = JSON.stringify(design).replace(/<\//g, '<\\u002F');
+const out = base.slice(0, contentStart) + encoded + '\n  ' + base.slice(end);
 
-if (!templatePattern.test(bundle)) {
-  throw new Error("Bloco do template não encontrado no pacote-base");
-}
-
-const output = bundle.replace(
-  templatePattern,
-  `$1${serializedDesign}$2`,
-);
-
-fs.mkdirSync(outputDirUrl, { recursive: true });
-fs.writeFileSync(outputUrl, output);
-console.log(`Site gerado em ${outputUrl.pathname}`);
+await mkdir('dist', { recursive: true });
+await writeFile('dist/index.html', out);
+console.log('dist/index.html gerado:', out.length, 'bytes');
