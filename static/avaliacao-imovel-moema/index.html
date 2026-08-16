@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Avaliação de imóvel em Moema | ApeCerto</title>
+  <meta name="description" content="Receba uma avaliação inicial do seu apartamento em Moema e fale com a equipe local da ApeCerto pelo WhatsApp.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://apecerto.com/avaliacao-imovel-moema/">
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-524TZP8X');</script>
+  <link rel="stylesheet" href="/assets/landing.css">
+  <link rel="stylesheet" href="/assets/production.css">
+  <script src="/assets/analytics.js" defer></script>
+</head>
+<body>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-524TZP8X" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <header class="wrap">
+    <a class="brand" href="/" aria-label="ApeCerto"><span class="a">apê</span><span class="b">certo</span></a>
+    <a class="phone" href="tel:+5511980154312">(11) 98015-4312</a>
+  </header>
+  <main>
+    <div class="hero wrap">
+      <div>
+        <p class="eyebrow">Proprietários em Moema e região</p>
+        <h1>Descubra como posicionar seu imóvel para vender melhor.</h1>
+        <p class="lead">Conte o básico sobre o apartamento. Nossa equipe faz uma avaliação inicial e continua a conversa com você pelo WhatsApp.</p>
+        <div class="proof">
+          <div><strong>Curadoria local</strong>Conhecimento de Moema e bairros próximos.</div>
+          <div><strong>Atendimento digital</strong>Contato rápido, inclusive fora do horário comercial.</div>
+          <div><strong>Operação completa</strong>Fotos, anúncio, visitas e acompanhamento.</div>
+        </div>
+      </div>
+      <form class="card" id="owner-form">
+        <h2>Solicitar avaliação inicial</h2>
+        <p>Sem compromisso. Você segue a conversa no WhatsApp oficial da ApeCerto.</p>
+        <label for="nome">Seu nome</label>
+        <input id="nome" name="nome" autocomplete="name" required>
+        <label for="bairro">Bairro do imóvel</label>
+        <input id="bairro" name="bairro" autocomplete="address-level3" placeholder="Ex.: Moema Pássaros" required>
+        <label for="tipo">Tipo do imóvel</label>
+        <select id="tipo" name="tipo" required>
+          <option value="">Selecione</option>
+          <option>Apartamento</option><option>Studio</option><option>Cobertura</option><option>Outro</option>
+        </select>
+        <label for="objetivo">O que você pretende?</label>
+        <select id="objetivo" name="objetivo" required>
+          <option value="">Selecione</option>
+          <option>Vender</option><option>Alugar</option><option>Apenas entender o valor</option>
+        </select>
+        <button class="cta" type="submit">Continuar no WhatsApp</button>
+        <p class="small">Ao continuar, você concorda em ser atendido pela ApeCerto. Consulte nossa <a href="/privacidade/">política de privacidade</a>.</p>
+      </form>
+    </div>
+    <section class="info wrap">
+      <div class="steps">
+        <div class="step"><b>1</b><strong>Entendemos o imóvel</strong><p>Localização, características, condição e seu objetivo.</p></div>
+        <div class="step"><b>2</b><strong>Analisamos o posicionamento</strong><p>Comparamos oferta, faixa de preço e concorrência da região.</p></div>
+        <div class="step"><b>3</b><strong>Montamos o plano de venda</strong><p>Apresentação, divulgação, visitas e acompanhamento comercial.</p></div>
+      </div>
+    </section>
+  </main>
+  <footer><div class="wrap"><span>ApeCerto · Av. Iraí, 79, conjunto 95A · Moema, São Paulo</span><a href="mailto:contato@apecerto.com">contato@apecerto.com</a></div></footer>
+  <script>
+    document.getElementById('owner-form').addEventListener('submit', function (event) {
+      event.preventDefault();
+      var data = new FormData(event.currentTarget);
+      var message = ['Olá! Vim pela página de avaliação da ApeCerto.', 'Nome: ' + data.get('nome'), 'Bairro: ' + data.get('bairro'), 'Tipo: ' + data.get('tipo'), 'Objetivo: ' + data.get('objetivo')].join('\n');
+      if (window.apecertoTrack) window.apecertoTrack('generate_lead', { lead_type: 'proprietario', bairro: data.get('bairro'), objetivo: data.get('objetivo') });
+      window.open('https://wa.me/5511980154312?text=' + encodeURIComponent(message), '_blank', 'noopener');
+    });
+  </script>
+</body>
+</html>
