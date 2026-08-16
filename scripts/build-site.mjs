@@ -1,11 +1,13 @@
 // Gera dist/index.html injetando design/Site ApeCerto.dc.html no pacote-base (index.html).
-// Se existir design-payload.json na raiz, baixa antes os arquivos listados, validando por
-// sha256 OU por (tamanho exato em bytes + marcadores obrigatorios no conteudo).
+// Se existir design-payload.json na raiz, baixa antes os arquivos listados. O servidor de
+// arquivos injeta tags <style/script data-omelette-injected> no HTML servido; removemos
+// esse bloco antes de validar o sha256.
 import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { dirname } from 'node:path';
 
 const existe = p => access(p).then(() => true, () => false);
+const limpaInjecao = txt => txt.replace(/<(style|script)[^>]*data-omelette-injected[^>]*>[\s\S]*?<\/\1>/g, '');
 
 if (await existe('design-payload.json')) {
   const { files } = JSON.parse(await readFile('design-payload.json', 'utf8'));
@@ -13,14 +15,15 @@ if (await existe('design-payload.json')) {
     try {
       const r = await fetch(f.url, { redirect: 'follow' });
       if (!r.ok) throw new Error('HTTP ' + r.status);
-      const buf = Buffer.from(await r.arrayBuffer());
+      const bruto = Buffer.from(await r.arrayBuffer()).toString('utf8');
+      const txt = limpaInjecao(bruto);
+      const buf = Buffer.from(txt, 'utf8');
       const sha = createHash('sha256').update(buf).digest('hex');
-      const txt = buf.toString('utf8');
       const shaOk = sha === f.sha256;
       const lenOk = f.bytes ? buf.length === f.bytes : false;
       const marksOk = (f.mustContain || []).every(m => txt.includes(m));
       if (!shaOk && !(lenOk && marksOk)) {
-        console.warn('DEBUG', f.path, '-> status', r.status, '| content-type:', r.headers.get('content-type'), '| bytes:', buf.length, '(esperado', f.bytes + ')', '| sha:', sha, '| head:', JSON.stringify(txt.slice(0, 200)));
+        console.warn('DEBUG', f.path, '-> bytes pos-limpeza:', buf.length, '(esperado', f.bytes + ')', '| sha:', sha, '| head:', JSON.stringify(txt.slice(0, 160)));
         throw new Error('conteudo nao confere (sha ' + sha.slice(0, 12) + ', ' + buf.length + ' bytes)');
       }
       await mkdir(dirname(f.path) || '.', { recursive: true });
