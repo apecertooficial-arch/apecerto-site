@@ -2,17 +2,17 @@
   "files": [
     {
       "path": "index.html",
-      "sha256": "6fb8b12f766759af638b148527794294d52a7981a549b998ae73f636b21e05f3",
-      "bytes": 1289049,
-      "mustContain": ["__bundler/template", "<!DOCTYPE html>"],
-      "url": "https://0e3c9cd5-a3d6-4d54-a000-a7731cddaf01.claudeusercontent.com/v1/design/projects/0e3c9cd5-a3d6-4d54-a000-a7731cddaf01/serve/apecerto-site.html?t=eff2264fe13a736457d2c6a22dbd302c4b738346403c9bb7fd90e8cb6fb65c45.696aca1e-949c-4340-8db5-5c03c7c3170e.7a3399c9-4f46-455e-854f-9ae582ddb39b.1786966417.fp&direct=1"
+      "sha256": "ced849a76cc7fba882aa7d31fbe13e0fbf1e68e601442444187bcce310b26434",
+      "bytes": 1289082,
+      "mustContain": ["__bundler/template", "min(44vw, 168px)", "<!DOCTYPE html>"],
+      "url": "https://0e3c9cd5-a3d6-4d54-a000-a7731cddaf01.claudeusercontent.com/v1/design/projects/0e3c9cd5-a3d6-4d54-a000-a7731cddaf01/serve/apecerto-site.html?t=d4e0b037ce8d42319423a541da271f23cc6b922b56e00cdfd57aff887649126b.696aca1e-949c-4340-8db5-5c03c7c3170e.7a3399c9-4f46-455e-854f-9ae582ddb39b.1786971297.fp&direct=1"
     },
     {
       "path": "design/Site ApeCerto.dc.html",
       "sha256": "2858c0ef9a42a9f62b02dde20a8667ed95c3c55e07e91ff1d6eab7a5a4ee19ef",
       "bytes": 577274,
       "mustContain": ["/rest/v1/site_produtos", "Buscar com a Sara", "max-width: 767px", "apple-touch-icon", "rw-heroimg", "<!DOCTYPE html>"],
-      "url": "https://0e3c9cd5-a3d6-4d54-a000-a7731cddaf01.claudeusercontent.com/v1/design/projects/0e3c9cd5-a3d6-4d54-a000-a7731cddaf01/serve/design/Site%20ApeCerto.dc.html?t=35dc780723014f1ff8578f6423daa8ea5904e1d08c8fd065f1e0e3c6dbc6b74b.696aca1e-949c-4340-8db5-5c03c7c3170e.7a3399c9-4f46-455e-854f-9ae582ddb39b.1786966417.fp&direct=1"
+      "url": "https://0e3c9cd5-a3d6-4d54-a000-a7731cddaf01.claudeusercontent.com/v1/design/projects/0e3c9cd5-a3d6-4d54-a000-a7731cddaf01/serve/design/Site%20ApeCerto.dc.html?t=deaf047a2ffd96add0c210302e31a3fb9841c95020ef2d67bdd2219cc308e9bf.696aca1e-949c-4340-8db5-5c03c7c3170e.7a3399c9-4f46-455e-854f-9ae582ddb39b.1786971297.fp&direct=1"
     }
   ]
 }
