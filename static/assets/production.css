@@ -39,6 +39,16 @@ button[data-act="replace"] {
   font-weight: 700;
 }
 .apecerto-consent-actions button.primary { color: #fff; background: #ff7000; border-color: #ff7000; }
+.privacy-settings {
+  border: 1px solid #7d00b7;
+  border-radius: 999px;
+  padding: 10px 16px;
+  color: #7d00b7;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
 
 @media (max-width: 700px) {
   #apecerto-consent { align-items: stretch; flex-direction: column; gap: 14px; left: 12px; right: 12px; bottom: 12px; }

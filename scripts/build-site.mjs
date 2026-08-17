@@ -48,6 +48,13 @@ const trocaObrigatoria = (texto, de, para, rotulo) => {
   return texto.replace(de, para);
 };
 
+const trocaBlocoObrigatorio = (texto, inicio, fim, novo, rotulo) => {
+  const a = texto.indexOf(inicio);
+  const b = a < 0 ? -1 : texto.indexOf(fim, a + inicio.length);
+  if (a < 0 || b < 0) throw new Error('bloco obrigatorio ausente: ' + rotulo);
+  return texto.slice(0, a) + novo + texto.slice(b);
+};
+
 const productionHead = `
   <meta name="description" content="Apartamentos para comprar em Moema e região, com curadoria local, atendimento digital 24 horas e visitas agendadas pela ApeCerto.">
   <meta name="robots" content="index,follow,max-image-preview:large">
@@ -60,6 +67,7 @@ const productionHead = `
   <meta property="og:url" content="https://apecerto.com/">
   <meta property="og:site_name" content="ApeCerto">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"RealEstateAgent","name":"ApeCerto","url":"https://apecerto.com/","telephone":"+55 11 98015-4312","email":"contato@apecerto.com","address":{"@type":"PostalAddress","streetAddress":"Avenida Iraí, 79, conjunto 95A","addressLocality":"São Paulo","addressRegion":"SP","addressCountry":"BR"},"areaServed":["Moema","Campo Belo","Vila Nova Conceição","Brooklin","Planalto Paulista"]}</script>
+  <script>window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments)};window.gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});</script>
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-524TZP8X');</script>
   <link rel="stylesheet" href="/assets/production.css">
   <script src="/assets/analytics.js" defer></script>`;
@@ -94,6 +102,12 @@ design = trocaObrigatoria(
   '© 2026 apêcerto imóveis · Av. Iraí, 79, conjunto 95A',
   'rodape institucional',
 );
+design = trocaObrigatoria(
+  design,
+  '© 2026 apêcerto imóveis ltda · CRECI-SP 00000-J',
+  '© 2026 apêcerto imóveis · Av. Iraí, 79, conjunto 95A',
+  'rodape do detalhe',
+);
 
 design = trocaObrigatoria(
   design,
@@ -119,6 +133,96 @@ design = trocaObrigatoria(
   "      abrePortal: (e) => { if (e && e.preventDefault) e.preventDefault(); if (window.apecertoTrack) window.apecertoTrack('owner_portal_open', { source: 'site' }); const s = this.state.sess;",
   'evento portal proprietario',
 );
+
+// A busca publica usa uma Edge Function com IA e rate limit. O navegador nunca
+// recebe a chave do modelo e a funcao devolve somente IDs da view site_produtos.
+const saraProductionMethod = `  async saraBuscar(txt) {
+    const pergunta = String(txt || '').trim().slice(0, 240);
+    const msgs = (this.state.saraMsgs || []).concat([{ eu: true, txt: pergunta }]);
+    this.setState({ saraMsgs: msgs.concat([{ eu: false, txt: 'Só um instante — estou cruzando seu pedido com os imóveis disponíveis…' }]), saraIds: null });
+    if (window.apecertoTrack) window.apecertoTrack('sara_search', { query_length: pergunta.length });
+    try {
+      let clientId = '';
+      try {
+        clientId = localStorage.getItem('apecerto_sara_client') || '';
+        if (!clientId) {
+          clientId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2);
+          localStorage.setItem('apecerto_sara_client', clientId);
+        }
+      } catch (e) {}
+      const r = await fetch(this.SB_URL + '/functions/v1/sara-site', {
+        method: 'POST',
+        headers: { apikey: this.SB_KEY, Authorization: 'Bearer ' + this.SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pergunta, client_id: clientId })
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.ok) throw new Error(data.mensagem || data.erro || ('erro ' + r.status));
+      const f = data.filters || {};
+      const minD = Number(f.dormitorios_min);
+      const maxD = f.dormitorios_max == null ? null : Number(f.dormitorios_max);
+      const patch = {
+        aba: 'comprar',
+        fBairro: f.bairro || '',
+        fStatus: f.status || '',
+        fDorms: Number.isFinite(minD) ? (minD <= 1 && maxD !== null && maxD <= 1 ? 'd1' : minD === 2 && maxD === 2 ? 'd2' : minD >= 3 ? 'd3' : '') : '',
+        fVagas: Number(f.vagas_min) >= 2 ? 'v2' : Number(f.vagas_min) >= 1 ? 'v1' : '',
+        fPreco: f.preco_max || null,
+        fPrecoT: f.preco_max ? this.tDePreco(Number(f.preco_max)) : null,
+        precoTocado: !!f.preco_max,
+        saraIds: Array.isArray(data.ids) ? data.ids.map(String) : [],
+        saraPrecos: data.prices || {},
+        saraMsgs: msgs.concat([{ eu: false, txt: data.reply || 'Busca concluída.' }])
+      };
+      this.setState(patch, () => {
+        if (window.apecertoTrack) window.apecertoTrack('sara_results', {
+          result_count: Number(data.count || 0),
+          bairro: f.bairro || '',
+          status: f.status || '',
+          has_price_filter: !!f.preco_max,
+          has_bedroom_filter: f.dormitorios_min != null,
+          source: data.source || 'servidor'
+        });
+        if (Number(data.count || 0) > 0) {
+          const el = document.getElementById('apes');
+          if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' });
+        }
+      });
+    } catch (e) {
+      this.setState({
+        saraIds: null,
+        saraMsgs: msgs.concat([{ eu: false, txt: 'Não consegui consultar o catálogo agora. Tenta de novo em instantes ou chama a gente no WhatsApp.' }])
+      });
+      if (window.apecertoTrack) window.apecertoTrack('sara_error', { error_type: 'request_failed' });
+    }
+  }
+`;
+
+design = trocaBlocoObrigatorio(design, '  saraBuscar(txt) {', '  menuFiltra(patch) {', saraProductionMethod, 'Sara conectada ao servidor');
+design = trocaObrigatoria(
+  design,
+  "  precoDe(r) { return Number(r.preco_promo || r.preco_min || r.preco) || 0; }",
+  "  precoDe(r) { const p = Array.isArray(this.state.saraIds) && this.state.saraIds.includes(String(r.id)) && this.state.saraPrecos ? this.state.saraPrecos[String(r.id)] : null; return Number(p || r.preco_promo || r.preco_min || r.preco) || 0; }",
+  'preco da unidade encontrada pela Sara',
+);
+design = trocaObrigatoria(design, "Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar' }, patch)", "Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar', saraIds: null }, patch)", 'limpeza Sara no menu');
+design = trocaObrigatoria(design, '    const { fBairro, fStatus, fPreco, fDorms, fVagas } = this.state;', "    const { fBairro, fStatus, fPreco, fDorms, fVagas } = this.state;\n    const saraAtiva = Array.isArray(this.state.saraIds);\n    const saraIds = saraAtiva ? this.state.saraIds.map(String) : null;", 'filtro IDs da Sara');
+design = trocaObrigatoria(design, "      (!this.state.soFavs || this.state.favs[r.id]) &&", "      (!this.state.soFavs || this.state.favs[r.id]) &&\n      (!saraAtiva || saraIds.includes(String(r.id))) &&", 'aplicacao IDs da Sara');
+design = trocaObrigatoria(design, '    if (!out.length && rows.length) {', "    if (!out.length && rows.length && !saraAtiva) {", 'sem fallback enganoso da Sara');
+design = trocaObrigatoria(design, "    } else if (ativos && out.length) {", "    } else if (saraAtiva && !out.length) {\n      nota = 'Nenhum apê bate exatamente com o pedido feito à Sara.';\n    } else if (ativos && out.length) {", 'nota vazia da Sara');
+design = trocaObrigatoria(design, "fPreco: 890000, fPrecoT: null, precoTocado: false })", "fPreco: 890000, fPrecoT: null, precoTocado: false, saraIds: null })", 'limpar filtros da Sara');
+design = trocaObrigatoria(design, "setFBairro: e => this.setState({ fBairro: e.target.value })", "setFBairro: e => this.setState({ fBairro: e.target.value, saraIds: null })", 'bairro manual limpa Sara');
+design = trocaObrigatoria(design, "setFStatus: e => this.setState({ fStatus: e.target.value })", "setFStatus: e => this.setState({ fStatus: e.target.value, saraIds: null })", 'status manual limpa Sara');
+design = trocaObrigatoria(design, "this.setState({ fDorms: on ? '' : o.v })", "this.setState({ fDorms: on ? '' : o.v, saraIds: null })", 'dormitorios manuais limpam Sara');
+design = trocaObrigatoria(design, "this.setState({ fVagas: on ? '' : o.v })", "this.setState({ fVagas: on ? '' : o.v, saraIds: null })", 'vagas manuais limpam Sara');
+design = trocaObrigatoria(design, "precoTocado: true }); },", "precoTocado: true, saraIds: null }); },", 'preco manual limpa Sara');
+design = trocaObrigatoria(design, "setComprar: () => this.setState({ aba: 'comprar' })", "setComprar: () => this.setState({ aba: 'comprar', saraIds: null })", 'aba comprar limpa Sara');
+design = trocaObrigatoria(design, "setLanc: () => this.setState({ aba: 'lancamentos' })", "setLanc: () => this.setState({ aba: 'lancamentos', saraIds: null })", 'aba lancamentos limpa Sara');
+
+// Clarity grava movimento/cliques, mas nunca recebe os blocos que podem conter
+// conversa, documentos, dados de lead ou informacoes internas do portal.
+design = trocaObrigatoria(design, '<div class="rw-sara" style=', '<div class="rw-sara" data-clarity-mask="true" style=', 'mascara conversa da Sara');
+design = trocaObrigatoria(design, '<div sc-camel-on-click="{{ fichaFechar }}" style="position: fixed; inset: 0; z-index: 220;', '<div sc-camel-on-click="{{ fichaFechar }}" data-clarity-mask="true" style="position: fixed; inset: 0; z-index: 220;', 'mascara ficha financeira');
+design = trocaObrigatoria(design, '<div style="position: fixed; inset: 0; z-index: 100; background: var(--bg-page); overflow-y: auto">', '<div data-clarity-mask="true" style="position: fixed; inset: 0; z-index: 100; background: var(--bg-page); overflow-y: auto">', 'mascara portal do proprietario');
 
 const MARK = '<script type="__bundler/template">';
 const s = base.indexOf(MARK);
