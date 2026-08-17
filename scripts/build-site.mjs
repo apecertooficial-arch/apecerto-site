@@ -123,9 +123,21 @@ design = trocaObrigatoria(
 );
 design = trocaObrigatoria(
   design,
+  "      const payload = { empreendimento_id: det.id, empreendimento_nome: det.nome, nome: l.nome, telefone: l.telefone, email: l.email || null, preferencia_horario: pref };",
+  "      const tracking = window.apecertoLeadTracking ? window.apecertoLeadTracking() : null;\n      const payload = Object.assign({ empreendimento_id: det.id, empreendimento_nome: det.nome, nome: l.nome, telefone: l.telefone, email: l.email || null, preferencia_horario: pref }, tracking ? { page_view_id: tracking.page_view_id, tracking: tracking } : {});",
+  'atribuicao do lead comprador ao CRM',
+);
+design = trocaObrigatoria(
+  design,
   '      this.fotosArq = []; this.fotosExist = []; this.form = {};',
   `      if (window.apecertoTrack) window.apecertoTrack('generate_lead', { lead_type: 'proprietario', finalidade: f.finalidade || '' });\n      this.fotosArq = []; this.fotosExist = []; this.form = {};`,
   'evento lead proprietario',
+);
+design = trocaObrigatoria(
+  design,
+  '        acesso_instrucoes: f.acesso_instrucoes || null, fotos: paths, termo_aceite: true\n      };',
+  "        acesso_instrucoes: f.acesso_instrucoes || null, fotos: paths, termo_aceite: true\n      };\n      const tracking = window.apecertoLeadTracking ? window.apecertoLeadTracking() : null;\n      if (tracking) { payload.page_view_id = tracking.page_view_id; payload.tracking = tracking; }",
+  'atribuicao da captacao de proprietario',
 );
 design = trocaObrigatoria(
   design,
