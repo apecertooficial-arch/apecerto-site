@@ -171,6 +171,7 @@ const saraProductionMethod = `  async saraBuscar(txt) {
         precoTocado: !!f.preco_max,
         saraIds: Array.isArray(data.ids) ? data.ids.map(String) : [],
         saraPrecos: data.prices || {},
+        saraUnidades: data.units || {},
         saraMsgs: msgs.concat([{ eu: false, txt: data.reply || 'Busca concluída.' }])
       };
       this.setState(patch, () => {
@@ -204,6 +205,41 @@ design = trocaObrigatoria(
   "  precoDe(r) { const p = Array.isArray(this.state.saraIds) && this.state.saraIds.includes(String(r.id)) && this.state.saraPrecos ? this.state.saraPrecos[String(r.id)] : null; return Number(p || r.preco_promo || r.preco_min || r.preco) || 0; }",
   'preco da unidade encontrada pela Sara',
 );
+design = trocaObrigatoria(
+  design,
+  '    const precoNum = this.precoDe(r);',
+  "    const precoNum = this.precoDe(r);\n    const saraUnidade = Array.isArray(this.state.saraIds) && this.state.saraIds.includes(String(r.id)) && this.state.saraUnidades ? this.state.saraUnidades[String(r.id)] : null;\n    const areaExibida = saraUnidade && saraUnidade.area != null ? Number(saraUnidade.area) : r.area_util;\n    const dormitoriosExibidos = saraUnidade && saraUnidade.dormitorios != null ? Number(saraUnidade.dormitorios) : r.dormitorios;\n    const vagasExibidas = saraUnidade && saraUnidade.vagas != null ? Number(saraUnidade.vagas) : r.vagas;",
+  'dados da unidade encontrada pela Sara',
+);
+design = trocaObrigatoria(
+  design,
+  `      specs: [
+        r.area_util ? Math.round(Number(r.area_util)) + ' m²' : null,
+        r.dormitorios ? r.dormitorios + (r.dormitorios > 1 ? ' dorms' : ' dorm') : null,
+        r.vagas ? r.vagas + (r.vagas > 1 ? ' vagas' : ' vaga') : null,
+        r.unidades_disponiveis > 0 ? r.unidades_disponiveis + (r.unidades_disponiveis > 1 ? ' unidades disponíveis' : ' unidade disponível') : null
+      ].filter(Boolean).join(' · '),
+      specIcons: [
+        r.area_util ? { ic: 'scan', v: Math.round(Number(r.area_util)) + ' m²' } : null,
+        r.dormitorios ? { ic: 'bed-double', v: String(r.dormitorios) } : null,
+        r.banheiros ? { ic: 'bath', v: String(r.banheiros) } : null,
+        r.vagas ? { ic: 'car', v: String(r.vagas) } : null
+      ].filter(Boolean),`,
+  `      specs: [
+        areaExibida ? Number(areaExibida).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' m²' : null,
+        dormitoriosExibidos != null ? dormitoriosExibidos + (dormitoriosExibidos === 1 ? ' dorm' : ' dorms') : null,
+        vagasExibidas != null ? vagasExibidas + (vagasExibidas === 1 ? ' vaga' : ' vagas') : null,
+        !saraUnidade && r.unidades_disponiveis > 0 ? r.unidades_disponiveis + (r.unidades_disponiveis > 1 ? ' unidades disponíveis' : ' unidade disponível') : null
+      ].filter(Boolean).join(' · '),
+      specIcons: [
+        areaExibida ? { ic: 'scan', v: Number(areaExibida).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' m²' } : null,
+        dormitoriosExibidos != null ? { ic: 'bed-double', v: String(dormitoriosExibidos) } : null,
+        r.banheiros ? { ic: 'bath', v: String(r.banheiros) } : null,
+        vagasExibidas != null ? { ic: 'car', v: String(vagasExibidas) } : null
+      ].filter(Boolean),`,
+  'ficha resumida da unidade encontrada pela Sara',
+);
+design = trocaObrigatoria(design, "      precoAntes: r.preco_promo && Number(r.preco) > Number(r.preco_promo) ? this.fmtR$(r.preco) : false,", "      precoAntes: !saraUnidade && r.preco_promo && Number(r.preco) > Number(r.preco_promo) ? this.fmtR$(r.preco) : false,", 'preco anterior somente fora da Sara');
 design = trocaObrigatoria(design, "Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar' }, patch)", "Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar', saraIds: null }, patch)", 'limpeza Sara no menu');
 design = trocaObrigatoria(design, '    const { fBairro, fStatus, fPreco, fDorms, fVagas } = this.state;', "    const { fBairro, fStatus, fPreco, fDorms, fVagas } = this.state;\n    const saraAtiva = Array.isArray(this.state.saraIds);\n    const saraIds = saraAtiva ? this.state.saraIds.map(String) : null;", 'filtro IDs da Sara');
 design = trocaObrigatoria(design, "      (!this.state.soFavs || this.state.favs[r.id]) &&", "      (!this.state.soFavs || this.state.favs[r.id]) &&\n      (!saraAtiva || saraIds.includes(String(r.id))) &&", 'aplicacao IDs da Sara');

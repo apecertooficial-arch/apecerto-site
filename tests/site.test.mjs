@@ -31,6 +31,7 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(out.includes('11980154312'), 'o WhatsApp oficial deve estar no bundle');
   assert.ok(out.includes("apecertoTrack('generate_lead'"), 'leads devem disparar evento');
   assert.ok(out.includes('/functions/v1/sara-site'), 'a Sara deve consultar a Edge Function');
+  assert.ok(out.includes('saraUnidades'), 'o card deve usar os dados da unidade encontrada pela Sara');
   assert.ok(out.includes('(saraAtiva || dormOk(r))'), 'a lista deve confiar nos dormitorios por unidade validados pela Sara');
   assert.ok(out.includes('(saraAtiva || vagasOk(r))'), 'a lista nao deve eliminar o resultado por dados agregados do empreendimento');
   assert.ok(out.includes('data-clarity-mask'), 'areas sensiveis devem estar mascaradas');
@@ -44,6 +45,7 @@ test('Sara do site usa somente catalogo publico e protege a chave da IA', async 
   const fn = await readFile('supabase/functions/sara-site/index.ts', 'utf8');
   const migration = await readFile('supabase/migrations/20260817153000_sara_site_rate_limit.sql', 'utf8');
   assert.ok(fn.includes('.from("site_produtos")'), 'a Sara deve consultar a view publica aprovada');
+  assert.ok(fn.includes('units: Object.fromEntries'), 'a resposta deve incluir area, dormitorios e vagas da unidade encontrada');
   assert.ok(fn.includes('Deno.env.get("OPENAI_API_KEY")'), 'a chave deve existir somente no servidor');
   assert.ok(!fn.includes('service_role='), 'a service role nao pode estar hardcoded');
   assert.ok(migration.includes('grant execute on function public.sara_site_rate_check'), 'a funcao deve ter rate limit persistente');
