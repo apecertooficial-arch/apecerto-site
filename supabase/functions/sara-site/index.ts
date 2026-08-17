@@ -236,7 +236,7 @@ function matchCatalog(rows: CatalogRow[], units: UnitRow[], filters: Filters) {
     const hasUnitFilters = filters.dormitorios_min != null || filters.dormitorios_max != null
       || filters.vagas_min != null || filters.preco_max != null || filters.area_min != null;
     if (!available.length) {
-      if (!hasUnitFilters) return [{ row, price: priceOf(row) }];
+      if (!hasUnitFilters) return [{ row, price: priceOf(row), unit: null }];
       const bedrooms = row.dormitorios == null ? null : Number(row.dormitorios);
       const price = priceOf(row);
       const fallbackMatches = (filters.dormitorios_min == null || (bedrooms != null && bedrooms >= filters.dormitorios_min))
@@ -244,7 +244,7 @@ function matchCatalog(rows: CatalogRow[], units: UnitRow[], filters: Filters) {
         && (filters.vagas_min == null || Number(row.vagas ?? -1) >= filters.vagas_min)
         && (filters.preco_max == null || (price > 0 && price <= filters.preco_max))
         && (filters.area_min == null || Number(row.area_util ?? -1) >= filters.area_min);
-      return fallbackMatches ? [{ row, price }] : [];
+      return fallbackMatches ? [{ row, price, unit: null }] : [];
     }
 
     const matchingUnits = available.filter((unit) => {
@@ -257,8 +257,12 @@ function matchCatalog(rows: CatalogRow[], units: UnitRow[], filters: Filters) {
         && (filters.area_min == null || Number(unit.area_m2 ?? -1) >= filters.area_min);
     });
     if (!matchingUnits.length) return [];
-    const prices = matchingUnits.map(unitPrice).filter((price) => price > 0);
-    return [{ row, price: prices.length ? Math.min(...prices) : priceOf(row) }];
+    const matchedUnit = matchingUnits.slice().sort((a, b) => {
+      const priceA = unitPrice(a) || Number.MAX_SAFE_INTEGER;
+      const priceB = unitPrice(b) || Number.MAX_SAFE_INTEGER;
+      return priceA - priceB;
+    })[0];
+    return [{ row, price: unitPrice(matchedUnit) || priceOf(row), unit: matchedUnit }];
   }).sort((a, b) => a.price - b.price);
 }
 
@@ -370,6 +374,12 @@ Deno.serve(async (request: Request) => {
       count: matches.length,
       ids: matches.map((match) => match.row.id),
       prices: Object.fromEntries(matches.map((match) => [match.row.id, match.price])),
+      units: Object.fromEntries(matches.map((match) => [match.row.id, {
+        area: match.unit?.area_m2 ?? match.row.area_util,
+        dormitorios: match.unit ? unitBedrooms(match.unit) : match.row.dormitorios,
+        vagas: match.unit?.vagas ?? match.row.vagas,
+        preco: match.price,
+      }])),
       filters,
       source,
       reply,
