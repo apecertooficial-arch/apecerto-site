@@ -26,10 +26,16 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes('G-P63KVXKJDH'), 'o Analytics deve estar ligado ao site');
   assert.ok(analytics.includes('y3rdh7jjn5'), 'o Clarity deve estar ligado ao site');
   assert.ok(analytics.includes("window.clarity('consentv2'"), 'o Clarity deve respeitar consentimento');
+  assert.ok(analytics.includes('/functions/v1/site-track'), 'a telemetria first-party sem cookie deve estar ligada');
+  assert.ok(analytics.includes("firstPartyTrack('page_view'"), 'a pagina deve registrar visualizacao anonima');
+  assert.ok(analytics.includes('apecertoLeadTracking'), 'a origem deve acompanhar o lead ate o CRM');
+  assert.ok(analytics.includes("data-consent=\"analytics\""), 'Analytics deve ter consentimento separado');
+  assert.ok(analytics.includes("data-consent=\"all\""), 'marketing deve exigir aceite explicito');
   assert.ok(out.includes('GTM-524TZP8X'), 'o Tag Manager deve estar ligado ao site');
   assert.ok(out.includes('/assets/analytics.js'), 'o runtime de tracking deve ser carregado');
   assert.ok(out.includes('11980154312'), 'o WhatsApp oficial deve estar no bundle');
   assert.ok(out.includes("apecertoTrack('generate_lead'"), 'leads devem disparar evento');
+  assert.ok(out.includes('page_view_id: tracking.page_view_id'), 'o lead deve carregar o identificador efemero da visita');
   assert.ok(out.includes('/functions/v1/sara-site'), 'a Sara deve consultar a Edge Function');
   assert.ok(out.includes('saraUnidades'), 'o card deve usar os dados da unidade encontrada pela Sara');
   assert.ok(out.includes('(saraAtiva || dormOk(r))'), 'a lista deve confiar nos dormitorios por unidade validados pela Sara');
@@ -39,6 +45,20 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(out.includes('<link rel="canonical" href="https://apecerto.com/">'), 'a canonical deve existir');
   assert.ok(!out.includes('CRECI-SP 00000-J'), 'o placeholder de CRECI nao pode ir para producao');
   assert.ok(!out.includes('CNPJ 00.000.000/0001-00'), 'o placeholder de CNPJ nao pode ir para producao');
+});
+
+test('telemetria sem cookie minimiza dados e tem retencao', async () => {
+  const fn = await readFile('supabase/functions/site-track/index.ts', 'utf8');
+  const migration = await readFile('supabase/migrations/20260817210000_site_telemetry_and_crm_attribution.sql', 'utf8');
+  assert.ok(fn.includes('ALLOWED_EVENTS'), 'eventos devem usar lista permitida');
+  assert.ok(fn.includes('ALLOWED_PROPERTY_KEYS'), 'propriedades devem usar lista permitida');
+  assert.ok(!fn.includes('p_ip:'), 'IP nao pode ser enviado para a base analitica');
+  assert.ok(migration.includes("interval '90 days'"), 'eventos devem expirar em 90 dias');
+  assert.ok(migration.includes("interval '48 hours'"), 'hash de rate limit deve expirar em 48 horas');
+  assert.ok(migration.includes('revoke all on table private.site_events_anon'), 'eventos nao podem ser expostos ao navegador');
+  assert.ok(migration.includes('site_lead_sync_crm'), 'leads do site devem entrar no CRM');
+  const policies = await readFile('supabase/migrations/20260817211500_site_telemetry_private_policies.sql', 'utf8');
+  assert.ok(policies.includes('to service_role'), 'tabelas privadas devem ter politica somente para o servidor');
 });
 
 test('Sara do site usa somente catalogo publico e protege a chave da IA', async () => {
