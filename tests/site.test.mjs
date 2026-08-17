@@ -31,6 +31,8 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(out.includes('11980154312'), 'o WhatsApp oficial deve estar no bundle');
   assert.ok(out.includes("apecertoTrack('generate_lead'"), 'leads devem disparar evento');
   assert.ok(out.includes('/functions/v1/sara-site'), 'a Sara deve consultar a Edge Function');
+  assert.ok(out.includes('(saraAtiva || dormOk(r))'), 'a lista deve confiar nos dormitorios por unidade validados pela Sara');
+  assert.ok(out.includes('(saraAtiva || vagasOk(r))'), 'a lista nao deve eliminar o resultado por dados agregados do empreendimento');
   assert.ok(out.includes('data-clarity-mask'), 'areas sensiveis devem estar mascaradas');
   assert.ok(out.includes('<html lang="pt-BR">'), 'o idioma deve estar definido');
   assert.ok(out.includes('<link rel="canonical" href="https://apecerto.com/">'), 'a canonical deve existir');
