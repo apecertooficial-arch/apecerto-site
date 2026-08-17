@@ -17,6 +17,11 @@ test('build injeta o design no pacote-base', async t => {
   assert.ok(out.startsWith('<!DOCTYPE html>'), 'dist/index.html deve ser um documento HTML');
   assert.ok(out.includes('__bundler/template'), 'bloco de template deve existir no dist');
   assert.ok(out.includes('site_produtos'), 'design injetado deve consultar site_produtos');
+  assert.match(
+    out,
+    /#__bundler_loading,\s*#__bundler_thumbnail\s*\{\s*display:\s*none;/,
+    'a tela temporaria com o logo gigante deve permanecer oculta',
+  );
 });
 
 test('build aplica a camada de producao e tracking', async () => {
