@@ -76,8 +76,8 @@ design = trocaObrigatoria(design, '<html><head>', '<html lang="pt-BR"><head>', '
 design = trocaObrigatoria(
   design,
   '<meta name="viewport" content="width=device-width, initial-scale=1">',
-  '<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>ApeCerto | Apartamentos em Moema</title>' + productionHead,
-  'SEO e tracking do design',
+  '<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>ApeCerto | Apartamentos em Moema</title>',
+  'titulo do design sem tracking duplicado',
 );
 design = trocaObrigatoria(
   design,

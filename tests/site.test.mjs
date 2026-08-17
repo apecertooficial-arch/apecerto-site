@@ -33,6 +33,8 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes("data-consent=\"all\""), 'marketing deve exigir aceite explicito');
   assert.ok(out.includes('GTM-524TZP8X'), 'o Tag Manager deve estar ligado ao site');
   assert.ok(out.includes('/assets/analytics.js'), 'o runtime de tracking deve ser carregado');
+  assert.equal((out.match(/<script src="\/assets\/analytics\.js" defer><\/script>/g) || []).length, 1, 'o runtime de tracking deve carregar uma unica vez');
+  assert.equal((out.match(/googletagmanager\.com\/gtm\.js\?id=/g) || []).length, 1, 'o Tag Manager deve carregar uma unica vez');
   assert.ok(out.includes('11980154312'), 'o WhatsApp oficial deve estar no bundle');
   assert.ok(out.includes("apecertoTrack('generate_lead'"), 'leads devem disparar evento');
   assert.ok(out.includes('page_view_id: tracking.page_view_id'), 'o lead deve carregar o identificador efemero da visita');
