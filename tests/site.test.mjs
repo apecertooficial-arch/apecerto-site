@@ -22,6 +22,10 @@ test('build injeta o design no pacote-base', async t => {
     /#__bundler_loading,\s*#__bundler_thumbnail\s*\{\s*display:\s*none;/,
     'a tela temporaria com o logo gigante deve permanecer oculta',
   );
+  assert.ok(
+    out.includes('#__bundler_loading,#__bundler_thumbnail{display:none!important}'),
+    'a camada de producao deve ocultar a tela mesmo apos atualizar o payload do design',
+  );
 });
 
 test('build aplica a camada de producao e tracking', async () => {
