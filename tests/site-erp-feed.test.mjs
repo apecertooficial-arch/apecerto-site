@@ -34,5 +34,7 @@ test("bundle continua estruturalmente íntegro", () => {
   );
   assert.match(template, /class Component extends DCLogic/);
   assert.match(template, /mapProduto\(r\)/);
-  assert.equal(template, design);
+  assert.match(template, /11980154312/);
+  assert.match(template, /apecertoTrack\('generate_lead'/);
+  assert.notEqual(template, design, 'o build deve aplicar a camada de producao ao design de origem');
 });

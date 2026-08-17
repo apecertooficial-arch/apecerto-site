@@ -1,0 +1,47 @@
+button[data-act="edit"],
+button[data-act="replace"] {
+  display: none !important;
+}
+
+#apecerto-consent {
+  position: fixed;
+  z-index: 2147483647;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 18px 20px;
+  color: #1f1c1a;
+  background: #fff;
+  border: 1px solid #e7ddd5;
+  border-radius: 18px;
+  box-shadow: 0 16px 48px rgba(31, 28, 26, 0.2);
+  font: 14px/1.5 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+#apecerto-consent strong { display: block; margin-bottom: 3px; font-size: 15px; }
+#apecerto-consent p { margin: 0 0 3px; }
+#apecerto-consent a { color: #7d00b7; font-weight: 700; }
+.apecerto-consent-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+.apecerto-consent-actions button {
+  border: 1px solid #d8ccc3;
+  border-radius: 999px;
+  padding: 10px 15px;
+  background: #fff;
+  color: #1f1c1a;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+.apecerto-consent-actions button.primary { color: #fff; background: #ff7000; border-color: #ff7000; }
+
+@media (max-width: 700px) {
+  #apecerto-consent { align-items: stretch; flex-direction: column; gap: 14px; left: 12px; right: 12px; bottom: 12px; }
+  .apecerto-consent-actions { flex-direction: column-reverse; }
+  .apecerto-consent-actions button { width: 100%; }
+}
