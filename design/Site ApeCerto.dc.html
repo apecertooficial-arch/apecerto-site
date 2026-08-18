@@ -2414,6 +2414,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
                 </sc-if>
               </div>
             </sc-if>
+            <sc-if value="{{ detTourOn }}" hint-placeholder-val="{{ false }}">
+              <a href="{{ detTourUrl }}" target="_blank" rel="noopener noreferrer" style="width: fit-content; display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--ape-purple); border-radius: var(--radius-pill); padding: 11px 18px; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--ape-purple)"><i data-lucide="scan-line" style="width: 17px; height: 17px"></i> Abrir tour virtual</a>
+            </sc-if>
             <sc-if value="{{ detDetalhesOn }}" hint-placeholder-val="{{ false }}">
               <div style="display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--border-soft); padding-top: 24px">
                 <h3 style="margin: 0">Detalhes da propriedade</h3>
@@ -3373,7 +3376,7 @@ class Component extends DCLogic {
       bounds.push(ll);
       const mk = window.L.marker(ll, { icon: this.pinIcon(30) }).addTo(m);
       const tFoto = this.fotoUrl(r.capa_path);
-      mk.bindTooltip('<div style="width:190px;font-family:Quicksand,sans-serif;padding:2px">' + (tFoto ? '<div style="height:96px;border-radius:10px;background:#EFEAE4 url(&quot;' + tFoto + '&quot;) center/cover no-repeat"></div>' : '') + '<div style="font-weight:600;font-size:13px;margin-top:6px;color:#1F1C1A">' + r.nome + '</div><div style="font-size:12.5px;color:#FF7000;font-weight:700">' + (this.fmtR$(this.precoDe(r)) || 'sob consulta') + '</div></div>', { direction: 'top', opacity: 1 });
+      mk.bindTooltip('<div style="width:190px;font-family:Quicksand,sans-serif;padding:2px">' + (tFoto ? '<div style="height:96px;border-radius:10px;background:#EFEAE4 url(&quot;' + tFoto + '&quot;) center/cover no-repeat"></div>' : '') + '<div style="font-weight:600;font-size:13px;margin-top:6px;color:#1F1C1A">' + this.nomePublico(r) + '</div><div style="font-size:12.5px;color:#FF7000;font-weight:700">' + (this.fmtR$(this.precoDe(r)) || 'sob consulta') + '</div></div>', { direction: 'top', opacity: 1 });
       mk.on('click', () => this.abrirDetalhe(r));
     });
     m.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
@@ -3669,7 +3672,13 @@ class Component extends DCLogic {
       const range = r.headers.get('content-range');
       const total = range && range.includes('/') ? parseInt(range.split('/')[1], 10) : null;
       return r.json().then(rows => ({ rows, total }));
-    }).then(({ rows, total }) => this.setState({ produtos: rows, totalApes: total, dbErro: false }))
+    }).then(({ rows, total }) => this.setState({ produtos: rows, totalApes: total, dbErro: false }, () => {
+      try {
+        const key = new URLSearchParams(location.search).get('imovel');
+        const target = key && rows.find(item => String(item.slug || item.id) === key);
+        if (target) this.abrirDetalhe(target);
+      } catch (e) {}
+    }))
       .catch(() => this.setState({ dbErro: true, produtos: [] }));
   }
   mapProduto(r) {
@@ -3695,8 +3704,8 @@ class Component extends DCLogic {
       },
       favCor: fav ? 'var(--ape-orange)' : 'var(--fg-3)',
       favFill: fav ? 'var(--ape-orange)' : 'none',
-      nome: r.nome,
-      endereco: (r.bairro || 'Moema') + ', São Paulo',
+      nome: this.nomePublico(r),
+      endereco: (r.bairro || 'Moema') + ', ' + (r.cidade || 'São Paulo'),
       badge: badge.label, badgeBg: badge.bg,
       specs: [
         r.area_util ? Math.round(Number(r.area_util)) + ' m²' : null,
@@ -3716,7 +3725,12 @@ class Component extends DCLogic {
       abrir: () => this.abrirDetalhe(r)
     };
   }
-  precoDe(r) { return Number(r.preco_promo || r.preco_min || r.preco) || 0; }
+  nomePublico(r) { return (r && (r.titulo || r.nome)) || ''; }
+  precoDe(r) {
+    const valor = Number(r.preco_promo || r.preco_min || r.preco) || 0;
+    const finalidade = String(r.finalidade || 'venda').trim().toLowerCase();
+    return finalidade !== 'aluguel' && valor > 0 && valor < 100000 ? valor * 1000 : valor;
+  }
   fotoUrl(p) { return p ? (String(p).indexOf('http') === 0 ? p : this.SB_URL + '/storage/v1/object/public/empreendimentos/' + p) : ''; }
   saraBuscar(txt) {
     const t = txt.toLowerCase();
@@ -3801,6 +3815,11 @@ class Component extends DCLogic {
   }
   abrirDetalhe(r) {
     this.lead = {};
+    try {
+      const u = new URL(location.href);
+      u.searchParams.set('imovel', String(r.slug || r.id));
+      history.replaceState({}, '', u.pathname + u.search + u.hash);
+    } catch (e) {}
     this.setState({ det: r, galIdx: 0, galOn: false, leadOk: false, leadErro: null }, () => this.initMapa(r));
     if (!this.galKeys) {
       this.galKeys = ev => {
@@ -3837,7 +3856,7 @@ class Component extends DCLogic {
     const det = this.state.det; if (!det) return;
     const url = location.href.split('#')[0];
     try {
-      if (navigator.share) { await navigator.share({ title: det.nome + ' — apêcerto', url }); return; }
+      if (navigator.share) { await navigator.share({ title: this.nomePublico(det) + ' — apêcerto', url }); return; }
       await navigator.clipboard.writeText(url);
       this.setState({ shareOk: true });
       setTimeout(() => this.setState({ shareOk: false }), 2500);
@@ -3981,7 +4000,7 @@ class Component extends DCLogic {
       ...(() => {
         const rows = Array.isArray(st.produtos) ? st.produtos : [];
         const mini = r => ({
-          foto: this.fotoUrl(r.capa_path), nome: r.nome,
+          foto: this.fotoUrl(r.capa_path), nome: this.nomePublico(r),
           sub: [r.bairro, r.area_util ? Math.round(Number(r.area_util)) + ' m²' : null].filter(Boolean).join(' · '),
           preco: this.fmtR$(this.precoDe(r)) || 'sob consulta',
           precoAntes: r.preco_promo && Number(r.preco) > Number(r.preco_promo) ? this.fmtR$(r.preco) : false,
@@ -4036,10 +4055,10 @@ class Component extends DCLogic {
       setFPreco: e => { const t = Number(e.target.value); this.setState({ fPrecoT: t, fPreco: t >= 100 ? null : this.precoDeT(t), precoTocado: true }); },
       buscar: () => { const el = document.getElementById('apes'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' }); },
       detOn: !!det,
-      fecharDet: () => { if (this.mapa) { this.mapa.remove(); this.mapa = null; } this.setState({ det: null }); },
-      detNome: det ? det.nome : '',
+      fecharDet: () => { if (this.mapa) { this.mapa.remove(); this.mapa = null; } try { const u = new URL(location.href); u.searchParams.delete('imovel'); history.replaceState({}, '', u.pathname + u.search + u.hash); } catch (e) {} this.setState({ det: null }); },
+      detNome: det ? this.nomePublico(det) : '',
       detBadge: detBadge ? detBadge.label : '', detBadgeBg: detBadge ? detBadge.bg : '',
-      detEndereco: det ? [det.endereco, det.bairro, 'São Paulo'].filter(Boolean).join(' · ') : '',
+      detEndereco: det ? [det.endereco, det.bairro, det.cidade || 'São Paulo', det.uf].filter(Boolean).join(' · ') : '',
       detSlogan: det && det.slogan,
       detDescColl: !(det && st.detDescExpId === det.id),
       detDescExp: !!(det && st.detDescExpId === det.id),
@@ -4076,6 +4095,7 @@ class Component extends DCLogic {
       galNext: e => { e.stopPropagation(); this.setState({ galIdx: (gi + 1) % fotosDet.length }); },
       galThumbs: fotosDet.map((u, i) => ({ url: u, sel: e => { e.stopPropagation(); this.setState({ galIdx: i }); }, borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' })),
       detDescricao: det && det.descricao,
+      detTourOn: !!(det && det.tour_url), detTourUrl: det && det.tour_url,
       detTemDif: !!(det && det.diferenciais && det.diferenciais.length), detDif: (det && det.diferenciais) || [],
       detTemLazer: !!(det && det.lazer && det.lazer.length), detLazer: (det && det.lazer) || [],
       detPreco: det ? (this.fmtR$(this.precoDe(det)) || 'sob consulta') : '',
@@ -4159,7 +4179,7 @@ class Component extends DCLogic {
       })(),
       leadDias: this.proxDias().map(d => ({ val: d.val })),
       leadHoras: (() => { const hs = []; for (let h = 8; h <= 19; h++) { hs.push(String(h).padStart(2, '0') + ':00'); if (h < 19) hs.push(String(h).padStart(2, '0') + ':30'); } return hs; })().map(h => ({ label: h, sel: () => this.setState({ leadHora: h, horaOn: false }), bg: st.leadHora === h ? 'var(--bg-tint-orange)' : 'var(--bg-surface)', fg: st.leadHora === h ? 'var(--ape-orange-700)' : 'var(--fg-2)', bd: st.leadHora === h ? 'var(--ape-orange)' : 'var(--border-soft)' })),
-      finZapUrl: det ? 'https://wa.me/55' + String(this.props.whatsappNumero || '').replace(/\D/g, '') + '?text=' + encodeURIComponent('Oi! Quero simular o financiamento do ' + det.nome + ': ' + st.finPct + '% financiado (' + (this.fmtR$(this.precoDe(det) * st.finPct / 100) || '') + ') com entrada de ' + (this.fmtR$(this.precoDe(det) * (100 - st.finPct) / 100) || '')) : '#',
+      finZapUrl: det ? 'https://wa.me/55' + String(this.props.whatsappNumero || '').replace(/\D/g, '') + '?text=' + encodeURIComponent('Oi! Quero simular o financiamento do ' + this.nomePublico(det) + ': ' + st.finPct + '% financiado (' + (this.fmtR$(this.precoDe(det) * st.finPct / 100) || '') + ') com entrada de ' + (this.fmtR$(this.precoDe(det) * (100 - st.finPct) / 100) || '')) : '#',
       detLinhas: det ? [
         det.area_util ? { k: 'Área útil', v: Math.round(Number(det.area_util)) + ' m²' } : null,
         det.dormitorios ? { k: 'Dormitórios', v: String(det.dormitorios) + (det.suites ? ' (' + det.suites + (det.suites > 1 ? ' suítes)' : ' suíte)') : '') } : null,
@@ -4181,7 +4201,7 @@ class Component extends DCLogic {
       zapFlutuanteOn: true,
       zapFlutuanteUrl: (this.props.whatsappNumero ? 'https://wa.me/55' + String(this.props.whatsappNumero).replace(/\D/g, '') : 'https://wa.me/') + '?text=' + encodeURIComponent('Oi! Vim pelo site da apêcerto 🔑'),
       zapOn: !!(this.props.whatsappNumero && det),
-      zapUrl: det ? 'https://wa.me/55' + String(this.props.whatsappNumero || '').replace(/\D/g, '') + '?text=' + encodeURIComponent('Oi! Vi o ' + det.nome + ' no site e quero saber mais') : '#',
+      zapUrl: det ? 'https://wa.me/55' + String(this.props.whatsappNumero || '').replace(/\D/g, '') + '?text=' + encodeURIComponent('Oi! Vi o ' + this.nomePublico(det) + ' no site e quero saber mais') : '#',
       mmOn: !!st.mmOn, mmFechado: !st.mmOn,
       mmTgl: () => this.setState({ mmOn: !this.state.mmOn }),
       mmFecha: () => this.setState({ mmOn: false }),
@@ -4304,7 +4324,7 @@ class Component extends DCLogic {
       menuObras: () => this.menuFiltra({ fStatus: 'em_obras' }),
       menuLanc: () => this.menuFiltra({ fStatus: 'lancamento' }),
       menuDestOn: !!dest, menuDestFoto: dest ? this.fotoUrl(dest.capa_path) : '',
-      menuDestNome: dest ? dest.nome : '', menuDestPreco: dest ? (this.fmtR$(this.precoDe(dest)) || 'sob consulta') : '',
+      menuDestNome: dest ? this.nomePublico(dest) : '', menuDestPreco: dest ? (this.fmtR$(this.precoDe(dest)) || 'sob consulta') : '',
       menuDestAbrir: () => { this.setState({ menuOn: null }); if (dest) this.abrirDetalhe(dest); },
       bairros: [
         { nome: 'Moema Pássaros', slot: 'bairro-passaros', foto: 'Foto: rua arborizada dos Pássaros' },

@@ -14,9 +14,14 @@ test('build injeta o design no pacote-base', async t => {
   if (!(await existe('index.html'))) return t.skip('index.html (pacote-base) ainda nao esta no repo');
   execFileSync(process.execPath, ['scripts/build-site.mjs'], { stdio: 'inherit' });
   const out = await readFile('dist/index.html', 'utf8');
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   assert.ok(out.startsWith('<!DOCTYPE html>'), 'dist/index.html deve ser um documento HTML');
   assert.ok(out.includes('__bundler/template'), 'bloco de template deve existir no dist');
   assert.ok(out.includes('site_produtos'), 'design injetado deve consultar site_produtos');
+  assert.ok(design.includes("URLSearchParams(location.search).get('imovel')"), 'o site deve abrir o imóvel específico enviado pelo ERP');
+  assert.ok(design.includes("r.titulo || r.nome"), 'o título comercial do ERP deve ser priorizado na vitrine');
+  assert.ok(design.includes('detTourUrl'), 'o tour virtual cadastrado no ERP deve aparecer na ficha pública');
+  assert.ok(design.includes("valor < 100000 ? valor * 1000"), 'preços legados em milhares não podem aparecer como centenas de reais');
   assert.match(
     out,
     /#__bundler_loading,\s*#__bundler_thumbnail\s*\{\s*display:\s*none;/,

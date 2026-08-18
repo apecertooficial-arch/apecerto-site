@@ -214,8 +214,17 @@ const saraProductionMethod = `  async saraBuscar(txt) {
 design = trocaBlocoObrigatorio(design, '  saraBuscar(txt) {', '  menuFiltra(patch) {', saraProductionMethod, 'Sara conectada ao servidor');
 design = trocaObrigatoria(
   design,
-  "  precoDe(r) { return Number(r.preco_promo || r.preco_min || r.preco) || 0; }",
-  "  precoDe(r) { const p = Array.isArray(this.state.saraIds) && this.state.saraIds.includes(String(r.id)) && this.state.saraPrecos ? this.state.saraPrecos[String(r.id)] : null; return Number(p || r.preco_promo || r.preco_min || r.preco) || 0; }",
+  `  precoDe(r) {
+    const valor = Number(r.preco_promo || r.preco_min || r.preco) || 0;
+    const finalidade = String(r.finalidade || 'venda').trim().toLowerCase();
+    return finalidade !== 'aluguel' && valor > 0 && valor < 100000 ? valor * 1000 : valor;
+  }`,
+  `  precoDe(r) {
+    const p = Array.isArray(this.state.saraIds) && this.state.saraIds.includes(String(r.id)) && this.state.saraPrecos ? this.state.saraPrecos[String(r.id)] : null;
+    const valor = Number(p || r.preco_promo || r.preco_min || r.preco) || 0;
+    const finalidade = String(r.finalidade || 'venda').trim().toLowerCase();
+    return finalidade !== 'aluguel' && valor > 0 && valor < 100000 ? valor * 1000 : valor;
+  }`,
   'preco da unidade encontrada pela Sara',
 );
 design = trocaObrigatoria(
