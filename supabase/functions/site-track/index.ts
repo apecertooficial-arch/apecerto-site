@@ -17,8 +17,8 @@ const ALLOWED_EVENTS = new Set([
   "generate_lead", "whatsapp_click", "phone_click", "social_click",
   "sara_open", "sara_search", "sara_results", "sara_error",
   "favorite_toggle", "gallery_interaction", "property_search",
-  "cta_click", "owner_cta_click", "form_start", "filter_change",
-  "scroll_depth",
+  "cta_click", "owner_cta_click", "owner_portal_open", "form_start",
+  "filter_change", "scroll_depth",
 ]);
 
 const ALLOWED_PROPERTY_KEYS = new Set([
@@ -51,11 +51,13 @@ function response(origin: string | null, body: unknown, status = 200) {
 }
 
 function cleanText(value: unknown, maxLength: number) {
-  return String(value ?? "")
-    .replace(/[\u0000-\u001f\u007f]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, maxLength);
+  const raw = String(value ?? "");
+  let out = "";
+  for (const ch of raw) {
+    const code = ch.codePointAt(0)!;
+    out += (code < 32 || code === 127) ? " " : ch;
+  }
+  return out.replace(/\s+/g, " ").trim().slice(0, maxLength);
 }
 
 function cleanPath(value: unknown) {
