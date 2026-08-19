@@ -1,18 +1,17 @@
 {
   "files": [
     {
-      "path": "index.html",
-      "sha256": "ced849a76cc7fba882aa7d31fbe13e0fbf1e68e601442444187bcce310b26434",
-      "bytes": 1289082,
-      "mustContain": ["__bundler/template", "min(44vw, 168px)", "<!DOCTYPE html>"],
-      "url": "https://0e3c9cd5-a3d6-4d54-a000-a7731cddaf01.claudeusercontent.com/v1/design/projects/0e3c9cd5-a3d6-4d54-a000-a7731cddaf01/serve/apecerto-site.html?t=d4e0b037ce8d42319423a541da271f23cc6b922b56e00cdfd57aff887649126b.696aca1e-949c-4340-8db5-5c03c7c3170e.7a3399c9-4f46-455e-854f-9ae582ddb39b.1786971297.fp&direct=1"
-    },
-    {
       "path": "design/Site ApeCerto.dc.html",
-      "sha256": "2858c0ef9a42a9f62b02dde20a8667ed95c3c55e07e91ff1d6eab7a5a4ee19ef",
-      "bytes": 577274,
-      "mustContain": ["/rest/v1/site_produtos", "Buscar com a Sara", "max-width: 767px", "apple-touch-icon", "rw-heroimg", "<!DOCTYPE html>"],
-      "url": "https://0e3c9cd5-a3d6-4d54-a000-a7731cddaf01.claudeusercontent.com/v1/design/projects/0e3c9cd5-a3d6-4d54-a000-a7731cddaf01/serve/design/Site%20ApeCerto.dc.html?t=deaf047a2ffd96add0c210302e31a3fb9841c95020ef2d67bdd2219cc308e9bf.696aca1e-949c-4340-8db5-5c03c7c3170e.7a3399c9-4f46-455e-854f-9ae582ddb39b.1786971297.fp&direct=1"
+      "url": "https://0e3c9cd5-a3d6-4d54-a000-a7731cddaf01.claudeusercontent.com/v1/design/projects/0e3c9cd5-a3d6-4d54-a000-a7731cddaf01/serve/design/Site%20ApeCerto.dc.html?t=78abb7221582924e208ec4d1af38c70ae4450956460407186dba7b11103f65bd.696aca1e-949c-4340-8db5-5c03c7c3170e.7a3399c9-4f46-455e-854f-9ae582ddb39b.1787106050.fp&direct=1",
+      "sha256": "a673d92d4e60a0a7ea11657a789ef7ae4dfc897b6f7f7900107a716eabfdd21e",
+      "bytes": 604163,
+      "mustContain": [
+        "class Component extends DCLogic",
+        "checkPainelDemo",
+        "cadastre-seu-imovel",
+        "Crie seu acesso \u00e0 \u00e1rea do propriet\u00e1rio",
+        "zap() { return String(this.props.whatsappNumero || '11980154312')"
+      ]
     }
   ]
 }
