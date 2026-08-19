@@ -433,6 +433,55 @@
     };
   };
 
+  // Porta unica para todos os leads publicos. O navegador envia somente contato,
+  // contexto comercial permitido e a atribuicao consentida — nunca documentos.
+  window.apecertoSubmitSiteLead = async function (input) {
+    var source = input && typeof input === 'object' ? input : {};
+    var leadType = /^(comprador|proprietario|financiamento)$/.test(source.lead_type)
+      ? source.lead_type
+      : 'comprador';
+    var allowedContext = [
+      'empreendimento_id', 'empreendimento_nome', 'preferencia_horario',
+      'captacao_id', 'finalidade', 'bairro', 'cidade', 'area_util',
+      'valor_imovel', 'percentual_financiado', 'valor_entrada',
+      'valor_financiar', 'renda_mensal', 'estado_civil', 'objetivo',
+      'tipo_imovel', 'source'
+    ];
+    var context = {};
+    var rawContext = source.context && typeof source.context === 'object' ? source.context : {};
+    allowedContext.forEach(function (key) {
+      var value = rawContext[key];
+      if (value !== undefined && value !== null && value !== '') context[key] = value;
+    });
+    var tracking = window.apecertoLeadTracking ? window.apecertoLeadTracking() : {};
+    var body = {
+      nome: clean(source.nome, 120),
+      telefone: clean(source.telefone, 40),
+      email: clean(source.email, 254) || null,
+      origem: 'site',
+      lead_type: leadType,
+      empreendimento_id: source.empreendimento_id || null,
+      empreendimento_nome: clean(source.empreendimento_nome, 200) || null,
+      preferencia_horario: clean(source.preferencia_horario, 200) || null,
+      page_view_id: tracking.page_view_id || null,
+      tracking: tracking,
+      context: context,
+    };
+    if (!body.nome || !body.telefone) throw new Error('contact_required');
+    var response = await fetch(SUPABASE_URL + '/rest/v1/site_leads', {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) throw new Error('lead_http_' + response.status);
+    return true;
+  };
+
   function addConsentBanner() {
     var existing = document.getElementById('apecerto-consent');
     if (existing) existing.remove();

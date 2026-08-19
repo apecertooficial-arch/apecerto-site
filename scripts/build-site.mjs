@@ -147,6 +147,111 @@ design = trocaObrigatoria(
   'evento portal proprietario',
 );
 
+const buyerLeadProductionMethod = `  async leadEnviar() {
+    if (this.state.leadEnviando) return;
+    const l = this.lead, det = this.state.det;
+    if (!l.nome || !l.telefone || !l.email) return this.setState({ leadErro: 'Nome, WhatsApp e e-mail são obrigatórios — é como a gente confirma a visita.' });
+    this.setState({ leadEnviando: true, leadErro: null });
+    try {
+      if (!window.apecertoSubmitSiteLead) throw new Error('tracking_unavailable');
+      const pref = [this.state.leadDia, this.state.leadHora].filter(Boolean).join(' às ') || null;
+      await window.apecertoSubmitSiteLead({
+        lead_type: 'comprador',
+        empreendimento_id: det.id,
+        empreendimento_nome: det.nome,
+        preferencia_horario: pref,
+        nome: l.nome,
+        telefone: l.telefone,
+        email: l.email || null,
+        context: {
+          empreendimento_id: det.id,
+          empreendimento_nome: det.nome,
+          preferencia_horario: pref,
+          source: 'property_detail'
+        }
+      });
+      if (window.apecertoTrack) window.apecertoTrack('generate_lead', { lead_type: 'comprador', item_id: String(det.id || ''), item_name: det.nome || '' });
+      this.lead = {};
+      this.setState({ leadEnviando: false, leadOk: true });
+    } catch (e) { this.setState({ leadEnviando: false, leadErro: 'Não deu certo agora — tenta de novo ou chama no WhatsApp.' }); }
+  }
+`;
+
+design = trocaBlocoObrigatorio(design, '  async leadEnviar() {', '  async compartilhar() {', buyerLeadProductionMethod, 'lead comprador unificado no CRM');
+
+const financeProductionForm = `          <div sc-camel-on-input="{{ fichaInput }}" style="display: flex; flex-direction: column; gap: 14px">
+            <div style="background: var(--bg-sunken); border-radius: var(--radius-md); padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: var(--text-sm)">
+              <span style="color: var(--fg-3)">Imóvel: <strong style="color: var(--fg-1)">{{ fichaImovel }}</strong></span>
+              <span style="color: var(--fg-3)">Entrada ({{ finEntradaPct }}): <strong style="color: var(--fg-1)">{{ finEntrada }}</strong></span>
+              <span style="color: var(--fg-3)">A financiar ({{ finPctLabel }}): <strong style="color: var(--ape-orange)">{{ finFinanciar }}</strong></span>
+            </div>
+            <div style="background: var(--success-bg); color: var(--success); border-radius: var(--radius-md); padding: 10px 14px; font-size: var(--text-sm)">Nesta etapa pedimos apenas os dados necessários para o contato. CPF, RG e documentos serão solicitados pela equipe somente se você decidir avançar.</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+              <div style="display: flex; flex-direction: column; gap: 6px; grid-column: 1 / -1">
+                <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Nome completo *</label>
+                <input name="nome" autocomplete="name" placeholder="Seu nome" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Telefone / WhatsApp *</label>
+                <input name="telefone" autocomplete="tel" placeholder="(11) 99999-9999" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">E-mail *</label>
+                <input name="email" type="email" autocomplete="email" placeholder="voce@email.com" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px; grid-column: 1 / -1">
+                <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Renda mensal aproximada *</label>
+                <input name="renda" inputmode="numeric" placeholder="R$" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+              </div>
+            </div>
+`;
+
+design = trocaBlocoObrigatorio(
+  design,
+  '          <div sc-camel-on-input="{{ fichaInput }}" style="display: flex; flex-direction: column; gap: 14px">',
+  '            <sc-if value="{{ fichaErro }}" hint-placeholder-val="{{ false }}">',
+  financeProductionForm,
+  'formulario financeiro minimizado',
+);
+
+const financeLeadProductionMethod = `  async fichaEnviar() {
+    if (this.state.fichaEnviando) return;
+    const f = this.ficha, det = this.state.det, st = this.state;
+    if (!f.nome || !f.telefone || !f.email) return this.setState({ fichaErro: 'Nome, telefone e e-mail são obrigatórios.' });
+    if (!f.renda) return this.setState({ fichaErro: 'Coloca sua renda mensal — pode ser aproximada.' });
+    this.setState({ fichaEnviando: true, fichaErro: null });
+    const preco = det ? this.precoDe(det) : 0;
+    try {
+      if (!window.apecertoSubmitSiteLead) throw new Error('tracking_unavailable');
+      await window.apecertoSubmitSiteLead({
+        lead_type: 'financiamento',
+        empreendimento_id: det ? det.id : null,
+        empreendimento_nome: det ? det.nome : null,
+        nome: f.nome,
+        telefone: f.telefone,
+        email: f.email,
+        context: {
+          empreendimento_id: det ? det.id : null,
+          empreendimento_nome: det ? det.nome : null,
+          renda_mensal: this.num(f.renda),
+          valor_imovel: preco || null,
+          percentual_financiado: st.finPct,
+          valor_entrada: preco ? Math.round(preco * (100 - st.finPct) / 100) : null,
+          valor_financiar: preco ? Math.round(preco * st.finPct / 100) : null,
+          source: 'finance_simulator'
+        }
+      });
+      if (window.apecertoTrack) window.apecertoTrack('generate_lead', { lead_type: 'financiamento', item_id: det ? String(det.id || '') : '' });
+      this.ficha = {};
+      this.setState({ fichaEnviando: false, fichaOk: true });
+    } catch (e) { this.setState({ fichaEnviando: false, fichaErro: 'Não deu certo agora — tenta de novo ou chama a gente no WhatsApp.' }); }
+  }
+`;
+
+design = trocaBlocoObrigatorio(design, '  async fichaEnviar() {', '  similares(det) {', financeLeadProductionMethod, 'financiamento unificado no CRM');
+design = trocaObrigatoria(design, 'Preenche seus dados e a simulação do financiamento chega no seu e-mail.', 'Informe seus dados de contato e receba a orientação da equipe sobre financiamento.', 'texto seguro do financiamento');
+design = trocaObrigatoria(design, 'Ficha enviada!', 'Pedido de simulação enviado!', 'confirmacao do financiamento');
+
 // A busca publica usa uma Edge Function com IA e rate limit. O navegador nunca
 // recebe a chave do modelo e a funcao devolve somente IDs da view site_produtos.
 const saraProductionMethod = `  async saraBuscar(txt) {
