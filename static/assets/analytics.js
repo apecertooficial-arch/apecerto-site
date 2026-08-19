@@ -4,6 +4,8 @@
   var MEASUREMENT_ID = 'G-P63KVXKJDH';
   var CLARITY_ID = 'y3rdh7jjn5';
   var PIXEL_ID = '1088080836200357';
+  var GOOGLE_ADS_ID = 'AW-18389793678';
+  var ADS_CONVERSION_LABELS = {};
   var SUPABASE_URL = 'https://diaegvfveqezispcthwk.supabase.co';
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYWVndmZ2ZXFlemlzcGN0aHdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5OTU4MjIsImV4cCI6MjA5ODU3MTgyMn0.312n8BuI-loQrQ20x9j1hNjKZs2UO71ey9gvIo0eY0I';
   var CAPI_URL = SUPABASE_URL + '/functions/v1/meta-capi';
@@ -14,6 +16,7 @@
   var googleLoaded = false;
   var clarityLoaded = false;
   var pixelLoaded = false;
+  var googleAdsLoaded = false;
   var consent = { analytics: false, marketing: false };
   var currentTouch = readCurrentTouch();
 
@@ -148,6 +151,24 @@
     });
   }
 
+  // Google Ads: ativa a tag de anuncios (remarketing + gclid + enhanced conversions)
+  // somente com consentimento de marketing.
+  function loadGoogleAds() {
+    if (googleAdsLoaded) return;
+    googleAdsLoaded = true;
+    window.gtag('config', GOOGLE_ADS_ID, { allow_enhanced_conversions: true });
+  }
+
+  // Dispara a conversao do Google Ads quando ha um label mapeado para o evento.
+  function adsConversion(eventName, params) {
+    if (!consent.marketing || !googleAdsLoaded) return;
+    var label = ADS_CONVERSION_LABELS[eventName];
+    if (!label) return;
+    var data = { send_to: GOOGLE_ADS_ID + '/' + label };
+    if (params && typeof params.value === 'number') { data.value = params.value; data.currency = params.currency || 'BRL'; }
+    window.gtag('event', 'conversion', data);
+  }
+
   function loadClarity() {
     if (clarityLoaded) return;
     clarityLoaded = true;
@@ -240,7 +261,10 @@
     } else if (clarityLoaded && window.clarity) {
       window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'denied' });
     }
-    if (consent.marketing) loadMetaPixel();
+    if (consent.marketing) {
+      loadMetaPixel();
+      loadGoogleAds();
+    }
   }
 
   function saveConsent(next) {
@@ -291,6 +315,7 @@
     firstPartyTrack(eventName, params || {});
     window.gtag('event', eventName, payload);
     metaTrack(eventName, params || {}, makeUuid());
+    adsConversion(eventName, params || {});
     if (clarityLoaded && window.clarity && /^(generate_lead|view_item|whatsapp_click|phone_click|sara_results|owner_portal_open)$/.test(eventName)) {
       window.clarity('event', eventName);
     }
