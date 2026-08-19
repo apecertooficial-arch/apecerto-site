@@ -11,8 +11,12 @@
   var CAPI_URL = SUPABASE_URL + '/functions/v1/meta-capi';
   var CONSENT_KEY = 'apecerto_consent_v2';
   var LEGACY_CONSENT_KEY = 'apecerto_consent_v1';
-  var ATTRIBUTION_KEY = 'apecerto_attribution_v2';
+  var ATTRIBUTION_KEY = 'apecerto_attribution_v3';
+  var LEGACY_ATTRIBUTION_KEY = 'apecerto_attribution_v2';
+  var SESSION_KEY = 'apecerto_session_v1';
   var pageViewId = makeUuid();
+  var sessionId = '';
+  var googleIdentity = { client_id: '', session_id: '' };
   var googleLoaded = false;
   var clarityLoaded = false;
   var pixelLoaded = false;
@@ -88,19 +92,31 @@
   }
 
   function getFbp() {
-    return readCookie('_fbp') || '';
+    return consent.marketing ? (readCookie('_fbp') || '') : '';
   }
 
   function getFbc() {
+    if (!consent.marketing) return '';
     var stored = readCookie('_fbc');
     if (stored) return stored;
-    if (currentTouch.fbclid) return 'fb.1.' + Date.now() + '.' + currentTouch.fbclid;
+    var attribution = readAttributionStoreRaw();
+    var touch = currentTouch.fbclid
+      ? currentTouch
+      : ((attribution.last && attribution.last.fbclid) ? attribution.last : attribution.first);
+    if (touch && touch.fbclid) {
+      var capturedAt = Date.parse(touch.captured_at || '') || Date.now();
+      return 'fb.1.' + Math.floor(capturedAt / 1000) + '.' + touch.fbclid;
+    }
     return '';
   }
 
   function readCurrentTouch() {
     var query = new URLSearchParams(location.search);
-    var keys = ['gclid', 'gbraid', 'wbraid', 'fbclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+    var keys = [
+      'gclid', 'gbraid', 'wbraid', 'fbclid',
+      'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+      'campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id'
+    ];
     var data = { landing_path: pagePath(), captured_at: new Date().toISOString() };
     keys.forEach(function (key) {
       var value = clean(query.get(key), 200);
@@ -112,28 +128,90 @@
   }
 
   function attributionForStorage() {
-    var data = Object.assign({}, currentTouch);
+    return touchForConsent(currentTouch);
+  }
+
+  function touchForConsent(value) {
+    var data = Object.assign({}, value || {});
     if (!consent.marketing) {
       delete data.gclid;
       delete data.gbraid;
       delete data.wbraid;
       delete data.fbclid;
+      delete data.campaign_id;
+      delete data.adset_id;
+      delete data.ad_group_id;
+      delete data.ad_id;
+      delete data.creative_id;
     }
     return data;
+  }
+
+  function hasAcquisitionSignal(touch) {
+    if (!touch) return false;
+    return !!(
+      touch.gclid || touch.gbraid || touch.wbraid || touch.fbclid ||
+      touch.utm_source || touch.utm_medium || touch.utm_campaign ||
+      touch.utm_term || touch.utm_content || touch.campaign_id ||
+      touch.adset_id || touch.ad_group_id || touch.ad_id || touch.creative_id
+    );
+  }
+
+  function readAttributionStoreRaw() {
+    try {
+      var parsed = JSON.parse(localStorage.getItem(ATTRIBUTION_KEY) || 'null');
+      if (!parsed) parsed = JSON.parse(localStorage.getItem(LEGACY_ATTRIBUTION_KEY) || '{}');
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (e) { return {}; }
   }
 
   function persistAttribution() {
     if (!consent.analytics && !consent.marketing) return;
     try {
-      var stored = JSON.parse(localStorage.getItem(ATTRIBUTION_KEY) || '{}');
+      var stored = readAttributionStoreRaw();
       var touch = attributionForStorage();
-      localStorage.setItem(ATTRIBUTION_KEY, JSON.stringify({ first: stored.first || touch, last: touch }));
+      var first = stored.first || touch;
+      var last = hasAcquisitionSignal(touch) ? touch : (stored.last || touch);
+      localStorage.setItem(ATTRIBUTION_KEY, JSON.stringify({
+        version: 3,
+        first: touchForConsent(first),
+        last: touchForConsent(last),
+        updated_at: new Date().toISOString(),
+      }));
     } catch (e) {}
   }
 
   function readStoredAttribution() {
     if (!consent.analytics && !consent.marketing) return {};
-    try { return JSON.parse(localStorage.getItem(ATTRIBUTION_KEY) || '{}'); } catch (e) { return {}; }
+    var stored = readAttributionStoreRaw();
+    return {
+      first: touchForConsent(stored.first),
+      last: touchForConsent(stored.last),
+    };
+  }
+
+  function ensureSessionId() {
+    if (!consent.analytics) return '';
+    if (sessionId) return sessionId;
+    try {
+      sessionId = sessionStorage.getItem(SESSION_KEY) || '';
+      if (!/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(sessionId)) {
+        sessionId = makeUuid();
+        sessionStorage.setItem(SESSION_KEY, sessionId);
+      }
+    } catch (e) { sessionId = makeUuid(); }
+    return sessionId;
+  }
+
+  function refreshGoogleIdentity() {
+    if (!consent.analytics || !window.gtag) return;
+    ensureSessionId();
+    window.gtag('get', MEASUREMENT_ID, 'client_id', function (value) {
+      googleIdentity.client_id = clean(value, 120);
+    });
+    window.gtag('get', MEASUREMENT_ID, 'session_id', function (value) {
+      googleIdentity.session_id = clean(value, 120);
+    });
   }
 
   function loadGoogleTag() {
@@ -256,7 +334,10 @@
       allow_ad_personalization_signals: consent.marketing,
     });
     if (consent.analytics) {
+      ensureSessionId();
       persistAttribution();
+      refreshGoogleIdentity();
+      setTimeout(refreshGoogleIdentity, 1200);
       loadClarity();
     } else if (clarityLoaded && window.clarity) {
       window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'denied' });
@@ -285,6 +366,7 @@
   function firstPartyTrack(eventName, params) {
     var body = {
       page_view_id: pageViewId,
+      session_id: consent.analytics ? ensureSessionId() : null,
       event_name: clean(eventName, 60),
       page_path: pagePath(),
       referrer_host: referrerHost() || null,
@@ -311,6 +393,10 @@
     var payload = Object.assign({ page_location: location.href }, params || {});
     var attribution = readStoredAttribution();
     if (attribution.first && attribution.first.utm_campaign) payload.utm_campaign_first = attribution.first.utm_campaign;
+    if (attribution.last && attribution.last.utm_campaign) payload.utm_campaign_last = attribution.last.utm_campaign;
+    if (consent.analytics && ensureSessionId()) payload.apecerto_session_id = sessionId;
+    if (consent.analytics && googleIdentity.client_id) payload.ga_client_id = googleIdentity.client_id;
+    if (consent.analytics && googleIdentity.session_id) payload.ga_session_id = googleIdentity.session_id;
     if (consent.marketing && ((attribution.first && attribution.first.gclid) || currentTouch.gclid)) payload.has_gclid = true;
     firstPartyTrack(eventName, params || {});
     window.gtag('event', eventName, payload);
@@ -323,20 +409,27 @@
 
   window.apecertoLeadTracking = function () {
     var stored = readStoredAttribution();
-    var current = Object.assign({}, currentTouch);
-    if (!consent.marketing) {
-      delete current.gclid;
-      delete current.gbraid;
-      delete current.wbraid;
-      delete current.fbclid;
-    }
-    return {
-      version: 1,
+    var current = touchForConsent(currentTouch);
+    var first = stored.first && Object.keys(stored.first).length ? stored.first : current;
+    var last = stored.last && Object.keys(stored.last).length ? stored.last : current;
+    var identity = {
       page_view_id: pageViewId,
-      landing_path: pagePath(),
-      referrer_host: referrerHost() || null,
+      session_id: consent.analytics ? ensureSessionId() : null,
+      ga_client_id: consent.analytics ? (googleIdentity.client_id || null) : null,
+      ga_session_id: consent.analytics ? (googleIdentity.session_id || null) : null,
+      fbp: consent.marketing ? (getFbp() || null) : null,
+      fbc: consent.marketing ? (getFbc() || null) : null,
+    };
+    return {
+      version: 2,
+      page_view_id: pageViewId,
+      session_id: identity.session_id,
+      landing_path: first.landing_path || pagePath(),
+      current_path: pagePath(),
+      referrer_host: first.referrer_host || referrerHost() || null,
       consent: { analytics: consent.analytics, marketing: consent.marketing },
-      attribution: { first: stored.first || current, current: current },
+      identity: identity,
+      attribution: { first: first, last: last, current: current },
     };
   };
 

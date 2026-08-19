@@ -43,6 +43,12 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes('/functions/v1/site-track'), 'a telemetria first-party sem cookie deve estar ligada');
   assert.ok(analytics.includes("firstPartyTrack('page_view'"), 'a pagina deve registrar visualizacao anonima');
   assert.ok(analytics.includes('apecertoLeadTracking'), 'a origem deve acompanhar o lead ate o CRM');
+  assert.ok(analytics.includes("ATTRIBUTION_KEY = 'apecerto_attribution_v3'"), 'a atribuicao deve usar o contrato v3');
+  assert.ok(analytics.includes("attribution: { first: first, last: last, current: current }"), 'first, last e current touch devem acompanhar o lead');
+  assert.ok(analytics.includes("window.gtag('get', MEASUREMENT_ID, 'client_id'"), 'o GA client_id consentido deve acompanhar o lead');
+  assert.ok(analytics.includes("window.gtag('get', MEASUREMENT_ID, 'session_id'"), 'o GA session_id consentido deve acompanhar o lead');
+  assert.ok(analytics.includes("sessionStorage.getItem(SESSION_KEY)"), 'a sessao propria deve durar somente a aba do navegador');
+  assert.ok(analytics.includes("Math.floor(capturedAt / 1000)"), 'o fbc reconstruido deve manter o instante original do clique');
   assert.ok(analytics.includes("data-consent=\"analytics\""), 'Analytics deve ter consentimento separado');
   assert.ok(analytics.includes("data-consent=\"all\""), 'marketing deve exigir aceite explicito');
   assert.ok(out.includes('GTM-524TZP8X'), 'o Tag Manager deve estar ligado ao site');
@@ -66,6 +72,7 @@ test('build aplica a camada de producao e tracking', async () => {
 test('telemetria sem cookie minimiza dados e tem retencao', async () => {
   const fn = await readFile('supabase/functions/site-track/index.ts', 'utf8');
   const migration = await readFile('supabase/migrations/20260817210000_site_telemetry_and_crm_attribution.sql', 'utf8');
+  const identityMigration = await readFile('supabase/migrations/20260819110632_tracking_identity_attribution.sql', 'utf8');
   assert.ok(fn.includes('ALLOWED_EVENTS'), 'eventos devem usar lista permitida');
   assert.ok(fn.includes('ALLOWED_PROPERTY_KEYS'), 'propriedades devem usar lista permitida');
   assert.ok(!fn.includes('p_ip:'), 'IP nao pode ser enviado para a base analitica');
@@ -73,6 +80,12 @@ test('telemetria sem cookie minimiza dados e tem retencao', async () => {
   assert.ok(migration.includes("interval '48 hours'"), 'hash de rate limit deve expirar em 48 horas');
   assert.ok(migration.includes('revoke all on table private.site_events_anon'), 'eventos nao podem ser expostos ao navegador');
   assert.ok(migration.includes('site_lead_sync_crm'), 'leads do site devem entrar no CRM');
+  assert.ok(fn.includes('site_event_ingest_v2'), 'a telemetria deve usar o contrato com sessao consentida');
+  assert.ok(fn.includes('consentLevel !== "essential"'), 'sessao nao pode ser aceita como telemetria essencial');
+  assert.ok(identityMigration.includes('create table if not exists private.lead_attribution'), 'atribuicao normalizada deve usar leads.id como identidade canonica');
+  assert.ok(identityMigration.includes('last_session_id uuid'), 'a sessao consentida deve ser vinculada ao lead');
+  assert.ok(identityMigration.includes('revoke all on table private.lead_attribution from public, anon, authenticated'), 'atribuicao do lead nao pode ser publica');
+  assert.ok(identityMigration.includes("coalesce(extras -> 'site_first_touch', v_first_touch)"), 'o primeiro toque nao pode ser sobrescrito em um lead existente');
   const policies = await readFile('supabase/migrations/20260817211500_site_telemetry_private_policies.sql', 'utf8');
   assert.ok(policies.includes('to service_role'), 'tabelas privadas devem ter politica somente para o servidor');
 });
