@@ -6,9 +6,14 @@
 //   /proprietario/cadastre-seu-imovel/    -> destino das campanhas de captacao
 //
 // O roteamento em si vive no design (checkRota le location.pathname).
+// Injeta tambem <meta name="apecerto-design"> com o sha256 curto do design que
+// entrou no build, pra dar pra conferir de fora qual versao esta no ar.
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 
 const base = await readFile('dist/index.html', 'utf8');
+const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+const selo = createHash('sha256').update(Buffer.from(design, 'utf8')).digest('hex').slice(0, 12);
 
 const TITULO = '<title>ApeCerto | Apartamentos em Moema</title>';
 const CANONICAL = '<link rel="canonical" href="https://apecerto.com/">';
@@ -37,6 +42,10 @@ const troca = (txt, de, para) => {
   return txt.replace(de, para);
 };
 
+const selar = txt => troca(txt, '<meta name="theme-color" content="#FF7000">', '<meta name="theme-color" content="#FF7000">\n  <meta name="apecerto-design" content="' + selo + '">');
+
+await writeFile('dist/index.html', selar(base));
+
 for (const r of rotas) {
   let html = base;
   html = troca(html, TITULO, '<title>' + r.titulo + '</title>');
@@ -45,7 +54,10 @@ for (const r of rotas) {
   html = troca(html, OG_TITULO, '<meta property="og:title" content="' + r.titulo + '">');
   html = troca(html, DESC, '<meta name="description" content="' + r.desc + '">');
   html = troca(html, OG_DESC, '<meta property="og:description" content="' + r.desc + '">');
+  html = selar(html);
   await mkdir(r.dir, { recursive: true });
   await writeFile(r.dir + '/index.html', html);
   console.log('rota publicada:', r.dir + '/index.html', html.length, 'bytes');
 }
+
+console.log('selo do design:', selo);
