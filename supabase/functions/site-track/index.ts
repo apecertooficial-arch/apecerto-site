@@ -110,6 +110,10 @@ Deno.serve(async (request: Request) => {
     const consentLevel = ["essential", "analytics", "marketing"].includes(body?.consent_level)
       ? body.consent_level
       : "essential";
+    const sessionIdRaw = cleanText(body?.session_id, 36);
+    const sessionId = consentLevel !== "essential" && /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(sessionIdRaw)
+      ? sessionIdRaw
+      : null;
     const deviceCategory = ["mobile", "tablet", "desktop", "unknown"].includes(body?.device_category)
       ? body.device_category
       : "unknown";
@@ -123,9 +127,10 @@ Deno.serve(async (request: Request) => {
       { auth: { persistSession: false } },
     );
 
-    const { data: accepted, error } = await supabase.rpc("site_event_ingest", {
+    const { data: accepted, error } = await supabase.rpc("site_event_ingest_v2", {
       p_client_hash: clientHash,
       p_page_view_id: pageViewId,
+      p_session_id: sessionId,
       p_event_name: eventName,
       p_page_path: cleanPath(body?.page_path),
       p_referrer_host: cleanText(body?.referrer_host, 160) || null,
