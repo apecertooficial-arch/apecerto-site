@@ -54,4 +54,5 @@ button[data-act="replace"] {
   #apecerto-consent { align-items: stretch; flex-direction: column; gap: 14px; left: 12px; right: 12px; bottom: 12px; }
   .apecerto-consent-actions { flex-direction: column; }
   .apecerto-consent-actions button { width: 100%; }
+  .apecerto-finance-grid { grid-template-columns: minmax(0, 1fr) !important; }
 }

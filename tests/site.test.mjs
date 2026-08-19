@@ -65,6 +65,10 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(!out.includes('Precisamos do seu CPF pra rodar a simulação.'), 'o primeiro contato financeiro nao pode exigir CPF');
   assert.ok(!out.includes('name="cpf"'), 'CPF nao pode ser coletado no formulario publico inicial');
   assert.ok(!out.includes('name="rg"'), 'RG nao pode ser coletado no formulario publico inicial');
+  assert.ok(out.includes('apecerto-finance-grid'), 'o formulario financeiro deve ter gancho responsivo');
+  assert.ok(analytics.length > 0, 'o runtime de analytics deve existir');
+  const productionCss = await readFile('static/assets/production.css', 'utf8');
+  assert.ok(productionCss.includes('.apecerto-finance-grid'), 'o formulario financeiro deve virar uma coluna no celular');
   assert.ok(analytics.includes('page_view_id: tracking.page_view_id'), 'o lead deve carregar o identificador efemero da visita');
   assert.ok(out.includes('/functions/v1/sara-site'), 'a Sara deve consultar a Edge Function');
   assert.ok(out.includes('saraUnidades'), 'o card deve usar os dados da unidade encontrada pela Sara');

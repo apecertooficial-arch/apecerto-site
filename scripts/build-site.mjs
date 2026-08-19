@@ -186,7 +186,7 @@ const financeProductionForm = `          <div sc-camel-on-input="{{ fichaInput }
               <span style="color: var(--fg-3)">A financiar ({{ finPctLabel }}): <strong style="color: var(--ape-orange)">{{ finFinanciar }}</strong></span>
             </div>
             <div style="background: var(--success-bg); color: var(--success); border-radius: var(--radius-md); padding: 10px 14px; font-size: var(--text-sm)">Nesta etapa pedimos apenas os dados necessários para o contato. CPF, RG e documentos serão solicitados pela equipe somente se você decidir avançar.</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+            <div class="apecerto-finance-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
               <div style="display: flex; flex-direction: column; gap: 6px; grid-column: 1 / -1">
                 <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Nome completo *</label>
                 <input name="nome" autocomplete="name" placeholder="Seu nome" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
