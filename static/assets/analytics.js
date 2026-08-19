@@ -345,27 +345,25 @@
     return clean(value, 80);
   }
 
-  // Rastreia profundidade de rolagem tanto da janela quanto de containers
-  // internos (o site e uma SPA que rola dentro de um elemento, nao na janela).
+  // Rastreia profundidade de rolagem. O site e uma SPA cujo scroller e o
+  // document.body (window.scrollY/documentElement ficam em 0), entao pegamos o
+  // maior percentual entre body, scrollingElement, janela e o alvo do evento.
   function trackScrollDepth() {
     var sent = {};
     var points = [25, 50, 75, 90];
-    function pctOf(el) {
-      var st, sh, ch;
-      if (!el || el === window || el === document || el === document.documentElement || el === document.body) {
-        var d = document.documentElement;
-        st = window.scrollY || d.scrollTop || 0;
-        sh = Math.max(d.scrollHeight, document.body ? document.body.scrollHeight : 0);
-        ch = window.innerHeight;
-      } else {
-        st = el.scrollTop; sh = el.scrollHeight; ch = el.clientHeight;
-      }
-      return Math.round((st / Math.max(sh - ch, 1)) * 100);
+    function pct(el) {
+      if (!el) return 0;
+      var denom = Math.max(el.scrollHeight - el.clientHeight, 1);
+      return Math.round(((el.scrollTop || 0) / denom) * 100);
     }
     function measure(event) {
+      var d = document.documentElement;
+      var winPct = Math.round(((window.scrollY || 0) / Math.max(d.scrollHeight - window.innerHeight, 1)) * 100);
+      var percent = Math.max(pct(document.body), pct(document.scrollingElement || d), winPct);
       var target = event && event.target;
-      var el = (target && target.nodeType === 1 && typeof target.scrollHeight === 'number') ? target : null;
-      var percent = pctOf(el);
+      if (target && target.nodeType === 1 && typeof target.scrollHeight === 'number') {
+        percent = Math.max(percent, pct(target));
+      }
       points.forEach(function (point) {
         if (percent >= point && !sent[point]) {
           sent[point] = true;
