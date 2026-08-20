@@ -65,7 +65,8 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.doesNotMatch(analytics, /owner_(?:portal_open|cta_click):\s*'anMDCOmFieQcEI7398BE'/, 'clique ou abertura nao pode virar conversao do Google Ads');
   assert.ok(out.includes('GTM-524TZP8X'), 'o Tag Manager deve estar ligado ao site');
   assert.ok(out.includes('/assets/analytics.js'), 'o runtime de tracking deve ser carregado');
-  assert.equal((out.match(/<script src="\/assets\/analytics\.js" defer><\/script>/g) || []).length, 1, 'o runtime de tracking deve carregar uma unica vez');
+  assert.ok(out.indexOf('/assets/analytics.js') > out.indexOf('__bundler/template'), 'o tracking deve existir no documento visual definitivo');
+  assert.equal((out.match(/\/assets\/analytics\.js/g) || []).length, 1, 'o runtime de tracking deve carregar uma unica vez');
   assert.equal((out.match(/googletagmanager\.com\/gtm\.js\?id=/g) || []).length, 1, 'o Tag Manager deve carregar uma unica vez');
   assert.ok(out.includes('11980154312'), 'o WhatsApp oficial deve estar no bundle');
   assert.ok(out.includes("apecertoTrack('generate_lead'"), 'leads devem disparar evento');
@@ -76,6 +77,11 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(!out.includes('name="cpf"'), 'CPF nao pode ser coletado no formulario publico inicial');
   assert.ok(!out.includes('name="rg"'), 'RG nao pode ser coletado no formulario publico inicial');
   assert.ok(analytics.includes('page_view_id: tracking.page_view_id'), 'o lead deve carregar o identificador efemero da visita');
+  assert.ok(analytics.includes("event: 'apecerto_event'"), 'cada evento deve entrar no dataLayer padronizado do GTM');
+  assert.ok(analytics.includes("apecerto_event_id: eventId"), 'Pixel e CAPI devem compartilhar o identificador de deduplicacao');
+  assert.ok(analytics.includes("window.apecertoTrack('form_submit_attempt'"), 'tentativas de envio devem ser observaveis');
+  assert.ok(analytics.includes("window.apecertoTrack('form_error'"), 'erros de formulario devem ser observaveis');
+  assert.ok(analytics.includes("window.apecertoTrack('engagement_time'"), 'tempo ativo deve ser medido por faixas');
   assert.ok(out.includes('/functions/v1/sara-site'), 'a Sara deve consultar a Edge Function');
   assert.ok(out.includes('saraUnidades'), 'o card deve usar os dados da unidade encontrada pela Sara');
   assert.ok(out.includes('(saraAtiva || dormOk(r))'), 'a lista deve confiar nos dormitorios por unidade validados pela Sara');
@@ -120,6 +126,16 @@ test('Meta CAPI e versionada e nao transforma clique de proprietario em Lead', a
   assert.ok(fn.includes('event_id: eventId'), 'Pixel e CAPI devem manter o identificador de deduplicacao');
   assert.ok(fn.includes('consent_marketing !== true'), 'CAPI deve exigir consentimento de marketing');
   assert.ok(fn.includes('"capi_token_missing" }, 503'), 'token ausente deve produzir erro observavel');
+});
+
+test('contrato Tracking 360 alimenta a Inteligencia sem expor PII', async () => {
+  const migration = await readFile('supabase/migrations/20260820203000_tracking_360_contract.sql', 'utf8');
+  assert.ok(migration.includes('tracking_360_snapshot'), 'a Inteligencia deve ter um endpoint agregado estavel');
+  assert.ok(migration.includes('form_started_without_lead'), 'abandono de formulario deve ser calculado');
+  assert.ok(migration.includes('schedule_started_without_completion'), 'abandono de agendamento deve ser calculado');
+  assert.ok(migration.includes('meta_delivery'), 'a saude da entrega para Meta deve estar no contrato');
+  assert.ok(migration.includes('crm_attribution'), 'a atribuicao do CRM deve estar no contrato');
+  assert.ok(migration.includes('revoke all on function public.tracking_360_snapshot'), 'o snapshot nao pode ser publico');
 });
 
 test('Sara do site usa somente catalogo publico e protege a chave da IA', async () => {

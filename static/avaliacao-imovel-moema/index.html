@@ -90,7 +90,7 @@
           }
         });
         if (window.apecertoTrack) {
-          window.apecertoTrack('generate_lead', { lead_type: 'proprietario', bairro: data.get('bairro'), objetivo: data.get('objetivo') });
+          window.apecertoTrack('generate_lead', { lead_type: 'proprietario', bairro: data.get('bairro'), objetivo: data.get('objetivo'), __identity: { email: data.get('email') || '', phone: data.get('telefone') || '' } });
           window.apecertoTrack('whatsapp_click', { source: 'owner_landing' });
         }
         window.location.assign('https://wa.me/5511980154312?text=' + encodeURIComponent(message));

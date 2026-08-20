@@ -29,7 +29,13 @@ const EVENT_MAP: Record<string, string> = {
   generate_lead: "Lead",
   whatsapp_click: "Contact",
   phone_click: "Contact",
-  cta_click: "Schedule",
+  favorite_toggle: "AddToWishlist",
+  schedule_complete: "Schedule",
+  form_start: "FormStart",
+  owner_cta_click: "OwnerIntent",
+  financing_open: "FinancingStart",
+  schedule_start: "ScheduleStart",
+  gallery_interaction: "GalleryInteraction",
 };
 
 function corsHeaders(origin: string | null) {
@@ -90,22 +96,29 @@ Deno.serve(async (request: Request) => {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
       auth: { persistSession: false },
     });
-    const { data: delivery } = await supabase.schema("private").from("tracking_delivery_logs").upsert({
-      channel: "meta_browser",
-      event_id: eventId,
-      event_type: internal,
-      source_table: "site_events_anon",
-      source_id: eventId,
-      status: TOKEN ? "sending" : "blocked",
-      attempt_count: 1,
-      error_code: TOKEN ? null : "capi_token_missing",
-      last_error: TOKEN ? null : "META_CAPI_TOKEN ausente",
-      next_attempt_at: TOKEN ? null : new Date(Date.now() + 300_000).toISOString(),
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "channel,event_id" }).select("id").maybeSingle();
+    const { data: deliveryId, error: deliveryError } = await supabase.rpc("tracking_delivery_upsert", {
+      p_channel: "meta_browser",
+      p_event_id: eventId,
+      p_event_type: internal,
+      p_source_table: "site_events_anon",
+      p_source_id: eventId,
+      p_status: TOKEN ? "sending" : "blocked",
+      p_error_code: TOKEN ? null : "capi_token_missing",
+      p_last_error: TOKEN ? null : "META_CAPI_TOKEN ausente",
+      p_next_attempt_at: TOKEN ? null : new Date(Date.now() + 300_000).toISOString(),
+    });
+    if (deliveryError || !deliveryId) return response(origin, { ok: false, error: "delivery_log_unavailable" }, 503);
     const updateDelivery = async (values: Record<string, unknown>) => {
-      if (!delivery?.id) return;
-      await supabase.schema("private").from("tracking_delivery_logs").update({ ...values, updated_at: new Date().toISOString() }).eq("id", delivery.id);
+      await supabase.rpc("tracking_delivery_update", {
+        p_id: deliveryId,
+        p_status: values.status,
+        p_response_status: values.response_status ?? null,
+        p_fbtrace_id: values.fbtrace_id ?? null,
+        p_error_code: values.error_code ?? null,
+        p_last_error: values.last_error ?? null,
+        p_next_attempt_at: values.next_attempt_at ?? null,
+        p_delivered_at: values.delivered_at ?? null,
+      });
     };
     if (!TOKEN) return response(origin, { ok: false, error: "capi_token_missing" }, 503);
 
@@ -133,7 +146,7 @@ Deno.serve(async (request: Request) => {
     const payload: Record<string, unknown> = {
       data: [{
         event_name: metaEvent,
-        event_time: Math.floor(Date.now() / 1000),
+      event_time: Math.max(1, Number(body?.event_time) || Math.floor(Date.now() / 1000)),
         event_id: eventId,
         action_source: "website",
         event_source_url: clean(body?.event_source_url, 500) || "https://apecerto.com/",
@@ -141,7 +154,7 @@ Deno.serve(async (request: Request) => {
         custom_data: customData,
       }],
     };
-    if (TEST_CODE) payload.test_event_code = TEST_CODE;
+    if (TEST_CODE && body?.test_mode === true) payload.test_event_code = TEST_CODE;
 
     const metaResponse = await fetch(`${GRAPH}/${PIXEL_ID}/events?access_token=${encodeURIComponent(TOKEN)}`, {
       method: "POST",
@@ -170,6 +183,7 @@ Deno.serve(async (request: Request) => {
       ok: true,
       events_received: output?.events_received ?? null,
       fbtrace_id: output?.fbtrace_id ?? null,
+      test_mode: Boolean(TEST_CODE && body?.test_mode === true),
     }, 202);
   } catch {
     return response(origin, { ok: false, error: "unexpected_error" }, 500);

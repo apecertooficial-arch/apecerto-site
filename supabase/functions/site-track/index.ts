@@ -18,7 +18,9 @@ const ALLOWED_EVENTS = new Set([
   "sara_open", "sara_search", "sara_results", "sara_error",
   "favorite_toggle", "gallery_interaction", "property_search",
   "cta_click", "owner_cta_click", "owner_portal_open", "form_start",
-  "filter_change", "scroll_depth",
+  "form_submit_attempt", "form_error", "filter_change", "scroll_depth",
+  "engagement_time", "page_exit", "schedule_start", "schedule_field_select",
+  "schedule_complete", "financing_open", "financing_change",
 ]);
 
 const ALLOWED_PROPERTY_KEYS = new Set([
@@ -27,6 +29,9 @@ const ALLOWED_PROPERTY_KEYS = new Set([
   "has_bedroom_filter", "has_price_filter", "item_id", "item_name",
   "lead_type", "objetivo", "percent_scrolled", "query_length",
   "result_count", "social_network", "source", "status", "value",
+  "campaign_id", "adset_id", "ad_group_id", "ad_id", "creative_id",
+  "placement", "engagement_seconds", "field_name", "from_item_id",
+  "event_id",
 ]);
 
 function corsHeaders(origin: string | null) {

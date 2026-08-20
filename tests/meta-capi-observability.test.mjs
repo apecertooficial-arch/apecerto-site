@@ -22,11 +22,16 @@ test("crm-capi versionada resolve visita, proposta e venda e registra recibo", (
   assert.match(crmCapi, /sourceTable === "ncrm_proposta"/);
   assert.match(crmCapi, /sourceTable === "vendas"/);
   assert.match(crmCapi, /fbtrace_id/);
+  assert.match(crmCapi, /tracking_last_touch/);
+  assert.match(crmCapi, /lead_attribution/);
+  assert.match(crmCapi, /event_time: Math\.max\(1, eventTime\)/);
   assert.match(crmCapi, /capi_token_missing" }, 503/);
 });
 
 test("meta-capi do navegador também deixa trilha de entrega", () => {
-  assert.match(metaCapi, /tracking_delivery_logs/);
+  assert.match(metaCapi, /tracking_delivery_upsert/);
+  assert.match(metaCapi, /tracking_delivery_update/);
   assert.match(metaCapi, /channel: "meta_browser"/);
   assert.match(metaCapi, /status: "delivered"/);
+  assert.match(metaCapi, /body\?\.test_mode === true/);
 });

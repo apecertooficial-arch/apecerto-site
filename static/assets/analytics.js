@@ -22,6 +22,7 @@
   var googleLoaded = false;
   var clarityLoaded = false;
   var pixelLoaded = false;
+  var marketingPageViewSent = false;
   var googleAdsLoaded = false;
   var consent = { analytics: false, marketing: false };
   var currentTouch = readCurrentTouch();
@@ -35,8 +36,19 @@
     generate_lead: 'Lead',
     whatsapp_click: 'Contact',
     phone_click: 'Contact',
-    cta_click: 'Schedule'
+    favorite_toggle: 'AddToWishlist',
+    schedule_complete: 'Schedule',
+    form_start: 'FormStart',
+    owner_cta_click: 'OwnerIntent',
+    financing_open: 'FinancingStart',
+    schedule_start: 'ScheduleStart',
+    gallery_interaction: 'GalleryInteraction'
   };
+  var META_CUSTOM_EVENTS = new Set([
+    'form_start', 'owner_cta_click', 'financing_open',
+    'schedule_start', 'gallery_interaction'
+  ]);
+  var lastViewedItemId = '';
 
   window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
@@ -115,7 +127,7 @@
     var keys = [
       'gclid', 'gbraid', 'wbraid', 'fbclid',
       'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
-      'campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id'
+      'campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'placement'
     ];
     var data = { landing_path: pagePath(), captured_at: new Date().toISOString() };
     keys.forEach(function (key) {
@@ -138,11 +150,6 @@
       delete data.gbraid;
       delete data.wbraid;
       delete data.fbclid;
-      delete data.campaign_id;
-      delete data.adset_id;
-      delete data.ad_group_id;
-      delete data.ad_id;
-      delete data.creative_id;
     }
     return data;
   }
@@ -260,8 +267,6 @@
     window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'granted' });
   }
 
-  // Pixel da Meta: carrega somente com consentimento de marketing.
-  // Dispara PageView com event_id proprio para deduplicar com a CAPI.
   function loadMetaPixel() {
     if (pixelLoaded) return;
     pixelLoaded = true;
@@ -271,19 +276,17 @@
       t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
     }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
     window.fbq('init', PIXEL_ID);
-    var pvId = makeUuid();
-    window.fbq('track', 'PageView', {}, { eventID: pvId });
-    capiSend('page_view', {}, pvId);
   }
 
   // Envia o evento para a Conversions API (server-side) com o mesmo event_id do Pixel.
-  function capiSend(eventName, params, eventId) {
+  function capiSend(eventName, params, eventId, identity) {
     if (!consent.marketing) return;
     if (!META_EVENT_MAP[eventName]) return;
     var body = {
       event_name: eventName,
       event_id: eventId,
       event_source_url: location.href,
+      event_time: Math.floor(Date.now() / 1000),
       consent_marketing: true,
       custom_data: params || {},
     };
@@ -291,6 +294,9 @@
     var fbc = getFbc();
     if (fbp) body.fbp = fbp;
     if (fbc) body.fbc = fbc;
+    if (identity && identity.email) body.email = clean(identity.email, 160);
+    if (identity && identity.phone) body.phone = clean(identity.phone, 40);
+    if (identity && identity.external_id) body.external_id = clean(identity.external_id, 120);
     fetch(CAPI_URL, {
       method: 'POST',
       keepalive: true,
@@ -303,16 +309,32 @@
     }).catch(function () {});
   }
 
-  // Espelha um evento interno para o Pixel (navegador) e para a CAPI (servidor),
-  // ambos com o mesmo event_id para a Meta deduplicar.
-  function metaTrack(eventName, params, eventId) {
+  // Pixel e CAPI recebem o mesmo event_id publicado no dataLayer, permitindo
+  // deduplicacao. O GTM observa o contrato sem ser ponto unico de falha.
+  function metaTrack(eventName, params, eventId, identity) {
     if (!consent.marketing) return;
     var metaEvent = META_EVENT_MAP[eventName];
     if (!metaEvent) return;
     if (pixelLoaded && window.fbq) {
-      window.fbq('track', metaEvent, params || {}, { eventID: eventId });
+      window.fbq(META_CUSTOM_EVENTS.has(eventName) ? 'trackCustom' : 'track', metaEvent, params || {}, { eventID: eventId });
     }
-    capiSend(eventName, params || {}, eventId);
+    capiSend(eventName, params || {}, eventId, identity || null);
+  }
+
+  function marketingPageView() {
+    if (!consent.marketing || marketingPageViewSent) return;
+    marketingPageViewSent = true;
+    var eventId = makeUuid();
+    var payload = {
+      event: 'apecerto_event',
+      apecerto_event_name: 'page_view',
+      apecerto_event_id: eventId,
+      page_location: location.href,
+      event_id: eventId,
+    };
+    window.dataLayer.push(payload);
+    if (pixelLoaded && window.fbq) window.fbq('track', 'PageView', {}, { eventID: eventId });
+    capiSend('page_view', {}, eventId);
   }
 
   function applyConsent(next) {
@@ -345,6 +367,7 @@
     if (consent.marketing) {
       loadMetaPixel();
       loadGoogleAds();
+      marketingPageView();
     }
   }
 
@@ -364,6 +387,16 @@
   }
 
   function firstPartyTrack(eventName, params) {
+    var properties = Object.assign({}, params || {});
+    var attribution = readStoredAttribution();
+    var campaignTouch = attribution.last && Object.keys(attribution.last).length
+      ? attribution.last
+      : currentTouch;
+    if (campaignTouch) {
+      ['campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'placement'].forEach(function (key) {
+        if (campaignTouch[key]) properties[key] = campaignTouch[key];
+      });
+    }
     var body = {
       page_view_id: pageViewId,
       session_id: consent.analytics ? ensureSessionId() : null,
@@ -375,7 +408,7 @@
       utm_source: clean(currentTouch.utm_source, 120) || null,
       utm_medium: clean(currentTouch.utm_medium, 120) || null,
       utm_campaign: clean(currentTouch.utm_campaign, 160) || null,
-      properties: params || {},
+      properties: properties,
     };
     fetch(SUPABASE_URL + '/functions/v1/site-track', {
       method: 'POST',
@@ -390,7 +423,19 @@
   }
 
   window.apecertoTrack = function (eventName, params) {
-    var payload = Object.assign({ page_location: location.href }, params || {});
+    var sourceParams = params && typeof params === 'object' ? params : {};
+    var identity = sourceParams.__identity && typeof sourceParams.__identity === 'object'
+      ? sourceParams.__identity
+      : null;
+    var publicParams = Object.assign({}, sourceParams);
+    delete publicParams.__identity;
+    if (eventName === 'view_item') {
+      var nextItem = clean(publicParams.item_id, 100);
+      if (lastViewedItemId && nextItem && lastViewedItemId !== nextItem) publicParams.from_item_id = lastViewedItemId;
+      if (nextItem) lastViewedItemId = nextItem;
+    }
+    var eventId = makeUuid();
+    var payload = Object.assign({ page_location: location.href, event_id: eventId }, publicParams);
     var attribution = readStoredAttribution();
     if (attribution.first && attribution.first.utm_campaign) payload.utm_campaign_first = attribution.first.utm_campaign;
     if (attribution.last && attribution.last.utm_campaign) payload.utm_campaign_last = attribution.last.utm_campaign;
@@ -398,10 +443,21 @@
     if (consent.analytics && googleIdentity.client_id) payload.ga_client_id = googleIdentity.client_id;
     if (consent.analytics && googleIdentity.session_id) payload.ga_session_id = googleIdentity.session_id;
     if (consent.marketing && ((attribution.first && attribution.first.gclid) || currentTouch.gclid)) payload.has_gclid = true;
-    firstPartyTrack(eventName, params || {});
+    firstPartyTrack(eventName, Object.assign({ event_id: eventId }, publicParams));
+    window.dataLayer.push(Object.assign({
+      event: 'apecerto_event',
+      apecerto_event_name: eventName,
+      apecerto_event_id: eventId,
+    }, payload));
     window.gtag('event', eventName, payload);
-    metaTrack(eventName, params || {}, makeUuid());
-    adsConversion(eventName, params || {});
+    metaTrack(eventName, publicParams, eventId, identity);
+    if (identity && consent.marketing) {
+      window.gtag('set', 'user_data', {
+        email: identity.email || undefined,
+        phone_number: identity.phone || undefined,
+      });
+    }
+    adsConversion(eventName, publicParams);
     if (clarityLoaded && window.clarity && /^(generate_lead|view_item|whatsapp_click|phone_click|sara_results|owner_portal_open)$/.test(eventName)) {
       window.clarity('event', eventName);
     }
@@ -467,7 +523,15 @@
       tracking: tracking,
       context: context,
     };
-    if (!body.nome || !body.telefone) throw new Error('contact_required');
+    window.apecertoTrack('form_submit_attempt', {
+      form_context: leadType,
+      item_id: body.empreendimento_id ? String(body.empreendimento_id) : '',
+      item_name: body.empreendimento_nome || '',
+    });
+    if (!body.nome || !body.telefone) {
+      window.apecertoTrack('form_error', { form_context: leadType, error_type: 'contact_required' });
+      throw new Error('contact_required');
+    }
     var response = await fetch(SUPABASE_URL + '/rest/v1/site_leads', {
       method: 'POST',
       headers: {
@@ -478,7 +542,10 @@
       },
       body: JSON.stringify(body),
     });
-    if (!response.ok) throw new Error('lead_http_' + response.status);
+    if (!response.ok) {
+      window.apecertoTrack('form_error', { form_context: leadType, error_type: 'lead_http_' + response.status });
+      throw new Error('lead_http_' + response.status);
+    }
     return true;
   };
 
@@ -558,7 +625,10 @@
     var name = cleanLabel(field.getAttribute('name')).toLowerCase();
     var placeholder = cleanLabel(field.getAttribute('placeholder')).toLowerCase();
     if (/o que você procura|o que voce procura/.test(placeholder)) return 'sara';
-    if (/cpf|rg|renda|nascimento/.test(name + ' ' + placeholder)) return 'financiamento';
+    var surroundings = cleanLabel((field.closest('[data-clarity-mask],form,[role="dialog"]') || field.parentElement || field).textContent).toLowerCase();
+    if (/cpf|rg|renda|nascimento/.test(name + ' ' + placeholder) || /financiamento|simulação|simulacao/.test(surroundings)) return 'financiamento';
+    if (/agendar visita|escolha.*dia|horário|horario/.test(surroundings)) return 'agendamento';
+    if (/anunciar.*apê|anunciar.*ape|captar.*imóvel|captar.*imovel|proprietário|proprietario/.test(surroundings)) return 'proprietario';
     if (/senha/.test(name)) return 'portal_login';
     if (/telefone|email|nome/.test(name)) return 'lead';
     return 'busca';
@@ -595,7 +665,9 @@
       } else if (/buscar apê|buscar ape/i.test(label)) {
         window.apecertoTrack('property_search', { source: 'hero' });
       } else if (/agendar visita/i.test(label)) {
-        window.apecertoTrack('cta_click', { cta_name: 'agendar_visita' });
+        window.apecertoTrack('schedule_start', { cta_name: 'agendar_visita' });
+      } else if (/simular financiamento|financiamento/i.test(label)) {
+        window.apecertoTrack('financing_open', { cta_name: 'simular_financiamento' });
       } else if (/anunciar meu apê|anunciar meu ape/i.test(label)) {
         window.apecertoTrack('owner_cta_click', { source: 'site' });
       }
@@ -616,7 +688,35 @@
       if (!field) return;
       var type = field.tagName === 'SELECT' ? 'select' : 'price_range';
       window.apecertoTrack('filter_change', { filter_type: type });
+      var context = formContext(field);
+      if (context === 'agendamento' && /date|time/.test(field.type || '')) {
+        window.apecertoTrack('schedule_field_select', { form_context: context, field_name: cleanLabel(field.name || field.type) });
+      } else if (context === 'financiamento') {
+        window.apecertoTrack('financing_change', { form_context: context, field_name: cleanLabel(field.name || field.type) });
+      }
     }, true);
+  }
+
+  function trackEngagement() {
+    var activeSeconds = 0;
+    var sent = {};
+    var thresholds = [15, 30, 60, 120, 300];
+    var exited = false;
+    setInterval(function () {
+      if (document.visibilityState !== 'visible') return;
+      activeSeconds += 1;
+      thresholds.forEach(function (seconds) {
+        if (activeSeconds >= seconds && !sent[seconds]) {
+          sent[seconds] = true;
+          window.apecertoTrack('engagement_time', { engagement_seconds: seconds });
+        }
+      });
+    }, 1000);
+    window.addEventListener('pagehide', function () {
+      if (exited) return;
+      exited = true;
+      window.apecertoTrack('page_exit', { engagement_seconds: activeSeconds });
+    });
   }
 
   loadGoogleTag();
@@ -624,6 +724,7 @@
   if (storedConsent) applyConsent(storedConsent);
   bindAutomaticEvents();
   trackScrollDepth();
+  trackEngagement();
   firstPartyTrack('page_view', {});
 
   function trackingReady() {

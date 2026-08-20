@@ -25,6 +25,11 @@ async function sha256(value: string) {
   return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+function unixTime(value: unknown) {
+  const milliseconds = new Date(String(value ?? "")).getTime();
+  return Number.isFinite(milliseconds) ? Math.floor(milliseconds / 1000) : Math.floor(Date.now() / 1000);
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") return json({ ok: false, error: "method_not_allowed" }, 405);
 
@@ -47,7 +52,16 @@ Deno.serve(async (request: Request) => {
 
   const updateDelivery = async (values: Record<string, unknown>) => {
     if (!deliveryId) return;
-    await supabase.schema("private").from("tracking_delivery_logs").update({ ...values, updated_at: new Date().toISOString() }).eq("id", deliveryId);
+    await supabase.rpc("tracking_delivery_update", {
+      p_id: deliveryId,
+      p_status: values.status,
+      p_response_status: values.response_status ?? null,
+      p_fbtrace_id: values.fbtrace_id ?? null,
+      p_error_code: values.error_code ?? null,
+      p_last_error: values.last_error ?? null,
+      p_next_attempt_at: values.next_attempt_at ?? null,
+      p_delivered_at: values.delivered_at ?? null,
+    });
   };
 
   if (!metaEvent || !sourceId) {
@@ -58,17 +72,21 @@ Deno.serve(async (request: Request) => {
   let negocioId = body.negocio_id ? Number(body.negocio_id) : null;
   let purchaseValue: number | null = null;
   let proposalValue: number | null = null;
+  let eventTime = Math.floor(Date.now() / 1000);
 
   if (sourceTable === "visitas" && !negocioId) {
-    const { data } = await supabase.from("visitas").select("negocio_id").eq("id", sourceId).maybeSingle();
+    const { data } = await supabase.from("visitas").select("negocio_id,resultado_em,atualizado_em,criado_em").eq("id", sourceId).maybeSingle();
     negocioId = Number(data?.negocio_id) || null;
+    eventTime = unixTime(data?.resultado_em ?? data?.atualizado_em ?? data?.criado_em);
   } else if (sourceTable === "ncrm_proposta" && !negocioId) {
-    const { data } = await supabase.from("ncrm_proposta").select("negocio_id,valor").eq("id", sourceId).maybeSingle();
+    const { data } = await supabase.from("ncrm_proposta").select("negocio_id,valor,data_proposta,criada_em").eq("id", sourceId).maybeSingle();
     negocioId = Number(data?.negocio_id) || null;
     proposalValue = Number(data?.valor) || null;
+    eventTime = unixTime(data?.data_proposta ?? data?.criada_em);
   } else if (sourceTable === "vendas") {
-    const { data: venda } = await supabase.from("vendas").select("id,vgv,status").eq("id", sourceId).maybeSingle();
+    const { data: venda } = await supabase.from("vendas").select("id,vgv,status,data_venda,data_conclusao,created_at").eq("id", sourceId).maybeSingle();
     purchaseValue = Number(venda?.vgv) || 0;
+    eventTime = unixTime(venda?.data_conclusao ?? venda?.data_venda ?? venda?.created_at);
     if (!negocioId) {
       const { data: negocio } = await supabase.from("negocios").select("id").eq("venda_id", sourceId).limit(1).maybeSingle();
       negocioId = Number(negocio?.id) || null;
@@ -95,15 +113,28 @@ Deno.serve(async (request: Request) => {
   }
 
   const raw = (negocio.raw ?? {}) as Record<string, any>;
-  const tracking = (raw.tracking ?? {}) as Record<string, any>;
-  const current = (tracking?.attribution?.current ?? {}) as Record<string, any>;
+  const current = (raw.tracking_last_touch ?? raw.tracking?.attribution?.last ?? raw.tracking?.attribution?.current ?? {}) as Record<string, any>;
+  const identity = (raw.tracking_identity ?? raw.tracking?.identity ?? {}) as Record<string, any>;
+  const { data: attributionData } = await supabase.rpc("tracking_lead_attribution", { p_lead_id: negocio.lead_id });
+  const attribution = (attributionData ?? {}) as Record<string, any>;
   const lead = (negocio as any).leads ?? {};
   const userData: Record<string, unknown> = { external_id: await sha256(`negocio-${negocio.id}`) };
   if (lead.email) userData.em = await sha256(String(lead.email));
   if (lead.telefone) userData.ph = await sha256(String(lead.telefone).replace(/\D/g, ""));
-  if (current.fbclid) userData.fbc = `fb.1.${Date.now()}.${String(current.fbclid)}`;
+  if (attribution?.fbp ?? identity.fbp) userData.fbp = String(attribution?.fbp ?? identity.fbp);
+  if (attribution?.fbc ?? identity.fbc) userData.fbc = String(attribution?.fbc ?? identity.fbc);
 
-  const customData: Record<string, unknown> = { lead_event_source: "crm_canonico", stage_event: eventType };
+  const customData: Record<string, unknown> = {
+    lead_event_source: "crm_canonico",
+    stage_event: eventType,
+    campaign: attribution?.campaign ?? current.utm_campaign ?? undefined,
+    campaign_id: attribution?.campaign_id ?? current.campaign_id ?? undefined,
+    adset_id: attribution?.adset_id ?? current.adset_id ?? undefined,
+    ad_id: attribution?.ad_id ?? current.ad_id ?? undefined,
+    creative_id: attribution?.creative_id ?? current.creative_id ?? undefined,
+    source: attribution?.source ?? current.utm_source ?? undefined,
+    medium: attribution?.medium ?? current.utm_medium ?? undefined,
+  };
   if (eventType === "purchase") {
     customData.value = purchaseValue ?? (Number(negocio.valor) || 0);
     customData.currency = "BRL";
@@ -116,15 +147,15 @@ Deno.serve(async (request: Request) => {
   const payload: Record<string, unknown> = {
     data: [{
       event_name: metaEvent,
-      event_time: Math.floor(Date.now() / 1000),
+      event_time: Math.max(1, eventTime),
       event_id: eventId,
       action_source: "website",
-      event_source_url: tracking.landing_path ? `https://apecerto.com${String(tracking.landing_path)}` : "https://apecerto.com/",
+      event_source_url: attribution?.landing_path ? `https://apecerto.com${String(attribution.landing_path)}` : "https://apecerto.com/",
       user_data: userData,
       custom_data: customData,
     }],
   };
-  if (TEST_CODE) payload.test_event_code = TEST_CODE;
+  if (TEST_CODE && body.test_mode === true) payload.test_event_code = TEST_CODE;
 
   if (dryRun) return json({ ok: true, dry_run: true, meta_event: metaEvent, payload });
   if (!TOKEN) {
@@ -146,5 +177,5 @@ Deno.serve(async (request: Request) => {
   }
 
   await updateDelivery({ status: "delivered", response_status: metaResponse.status, fbtrace_id: (output as any)?.fbtrace_id ?? null, delivered_at: new Date().toISOString(), next_attempt_at: null });
-  return json({ ok: true, meta_event: metaEvent, events_received: (output as any)?.events_received ?? null, fbtrace_id: (output as any)?.fbtrace_id ?? null }, 202);
+  return json({ ok: true, meta_event: metaEvent, events_received: (output as any)?.events_received ?? null, fbtrace_id: (output as any)?.fbtrace_id ?? null, test_mode: Boolean(TEST_CODE && body.test_mode === true) }, 202);
 });

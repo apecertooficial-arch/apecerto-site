@@ -55,6 +55,12 @@ const trocaBlocoObrigatorio = (texto, inicio, fim, novo, rotulo) => {
   return texto.slice(0, a) + novo + texto.slice(b);
 };
 
+const trackingRuntimeHead = `
+  <script>window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments)};window.gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});</script>
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-524TZP8X');</script>
+  <link rel="stylesheet" href="/assets/production.css">
+  <script src="/assets/analytics.js" defer></script>`;
+
 const productionHead = `
   <meta name="description" content="Apartamentos para comprar em Moema e região, com curadoria local, atendimento digital 24 horas e visitas agendadas pela ApeCerto.">
   <meta name="robots" content="index,follow,max-image-preview:large">
@@ -67,18 +73,14 @@ const productionHead = `
   <meta property="og:url" content="https://apecerto.com/">
   <meta property="og:site_name" content="ApeCerto">
   <style id="apecerto-no-bundle-splash">#__bundler_loading,#__bundler_thumbnail{display:none!important}</style>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"RealEstateAgent","name":"ApeCerto","url":"https://apecerto.com/","telephone":"+55 11 98015-4312","email":"contato@apecerto.com","address":{"@type":"PostalAddress","streetAddress":"Avenida Iraí, 79, conjunto 95A","addressLocality":"São Paulo","addressRegion":"SP","addressCountry":"BR"},"areaServed":["Moema","Campo Belo","Vila Nova Conceição","Brooklin","Planalto Paulista"]}</script>
-  <script>window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments)};window.gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});</script>
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-524TZP8X');</script>
-  <link rel="stylesheet" href="/assets/production.css">
-  <script src="/assets/analytics.js" defer></script>`;
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"RealEstateAgent","name":"ApeCerto","url":"https://apecerto.com/","telephone":"+55 11 98015-4312","email":"contato@apecerto.com","address":{"@type":"PostalAddress","streetAddress":"Avenida Iraí, 79, conjunto 95A","addressLocality":"São Paulo","addressRegion":"SP","addressCountry":"BR"},"areaServed":["Moema","Campo Belo","Vila Nova Conceição","Brooklin","Planalto Paulista"]}</script>`;
 
 design = trocaObrigatoria(design, '<html><head>', '<html lang="pt-BR"><head>', 'idioma do design');
 design = trocaObrigatoria(
   design,
   '<meta name="viewport" content="width=device-width, initial-scale=1">',
-  '<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>ApeCerto | Apartamentos em Moema</title>',
-  'titulo do design sem tracking duplicado',
+  '<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>ApeCerto | Apartamentos em Moema</title>' + trackingRuntimeHead,
+  'titulo e runtime de tracking do documento definitivo',
 );
 design = trocaObrigatoria(
   design,
@@ -119,7 +121,7 @@ design = trocaObrigatoria(
 design = trocaObrigatoria(
   design,
   '      this.lead = {};\n      this.setState({ leadEnviando: false, leadOk: true });',
-  `      if (window.apecertoTrack) window.apecertoTrack('generate_lead', { lead_type: 'comprador', item_id: String(det.id || ''), item_name: det.nome || '' });\n      this.lead = {};\n      this.setState({ leadEnviando: false, leadOk: true });`,
+  `      if (window.apecertoTrack) window.apecertoTrack('generate_lead', { lead_type: 'comprador', item_id: String(det.id || ''), item_name: det.nome || '', __identity: { email: l.email || '', phone: l.telefone || '' } });\n      this.lead = {};\n      this.setState({ leadEnviando: false, leadOk: true });`,
   'evento lead comprador',
 );
 design = trocaObrigatoria(
@@ -131,7 +133,7 @@ design = trocaObrigatoria(
 design = trocaObrigatoria(
   design,
   '      this.fotosArq = []; this.fotosExist = []; this.form = {};',
-  `      if (window.apecertoTrack) window.apecertoTrack('generate_lead', { lead_type: 'proprietario', finalidade: f.finalidade || '' });\n      this.fotosArq = []; this.fotosExist = []; this.form = {};`,
+  `      if (window.apecertoTrack) window.apecertoTrack('generate_lead', { lead_type: 'proprietario', finalidade: f.finalidade || '', __identity: { email: f.email || '', phone: f.telefone || '' } });\n      this.fotosArq = []; this.fotosExist = []; this.form = {};`,
   'evento lead proprietario',
 );
 design = trocaObrigatoria(
@@ -170,7 +172,11 @@ const buyerLeadProductionMethod = `  async leadEnviar() {
           source: 'property_detail'
         }
       });
-      if (window.apecertoTrack) window.apecertoTrack('generate_lead', { lead_type: 'comprador', item_id: String(det.id || ''), item_name: det.nome || '' });
+      if (window.apecertoTrack) {
+        const identity = { email: l.email || '', phone: l.telefone || '' };
+        window.apecertoTrack('generate_lead', { lead_type: 'comprador', item_id: String(det.id || ''), item_name: det.nome || '', __identity: identity });
+        if (pref) window.apecertoTrack('schedule_complete', { item_id: String(det.id || ''), item_name: det.nome || '', __identity: identity });
+      }
       this.lead = {};
       this.setState({ leadEnviando: false, leadOk: true });
     } catch (e) { this.setState({ leadEnviando: false, leadErro: 'Não deu certo agora — tenta de novo ou chama no WhatsApp.' }); }
@@ -241,7 +247,7 @@ const financeLeadProductionMethod = `  async fichaEnviar() {
           source: 'finance_simulator'
         }
       });
-      if (window.apecertoTrack) window.apecertoTrack('generate_lead', { lead_type: 'financiamento', item_id: det ? String(det.id || '') : '' });
+      if (window.apecertoTrack) window.apecertoTrack('generate_lead', { lead_type: 'financiamento', item_id: det ? String(det.id || '') : '', __identity: { email: f.email || '', phone: f.telefone || '' } });
       this.ficha = {};
       this.setState({ fichaEnviando: false, fichaOk: true });
     } catch (e) { this.setState({ fichaEnviando: false, fichaErro: 'Não deu certo agora — tenta de novo ou chama a gente no WhatsApp.' }); }
