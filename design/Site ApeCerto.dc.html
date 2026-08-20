@@ -3692,12 +3692,13 @@ class Component extends DCLogic {
       const uns = r && r.status === 'pronto' && Array.isArray(r.unidades_site) ? r.unidades_site : [];
       if (!uns.length) { out.push(r); continue; }
       for (const u of uns) {
+        const unNum = u.numero == null ? 's/n' : String(u.numero).replace(/\.0+$/, '');
         const dm = String(u.tipologia || '').match(/^\s*(\d+)/);
         const dorm = /studio/i.test(u.tipologia || '') ? 0 : dm ? Number(dm[1]) : r.dormitorios;
         out.push(Object.assign({}, r, {
           id: r.id + ':' + (u.codigo || u.numero || out.length),
-          titulo: (r.titulo || r.nome) + ' · Un. ' + (u.numero || 's/n'),
-          nome: r.nome + ' · Un. ' + (u.numero || 's/n'),
+          titulo: (r.titulo || r.nome) + ' · Un. ' + unNum,
+          nome: r.nome + ' · Un. ' + unNum,
           codigo: u.codigo || r.codigo || null,
           preco_min: u.valor || r.preco_min,
           preco_max: u.valor || r.preco_max,
