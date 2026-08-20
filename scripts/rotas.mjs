@@ -35,6 +35,7 @@ const rotas = [
     url: 'https://apecerto.com/proprietario/cadastre-seu-imovel/',
     titulo: 'Cadastre seu imóvel | ApeCerto',
     desc: 'Cadastre seu apartamento em 3 minutos. A ApeCerto avalia, fotografa, anuncia e cuida das visitas e do contrato.',
+    source: 'dist/avaliacao-imovel-moema/index.html',
   },
 ];
 
@@ -48,6 +49,17 @@ const selar = txt => troca(txt, '<meta name="theme-color" content="#FF7000">', '
 await writeFile('dist/index.html', selar(base));
 
 for (const r of rotas) {
+  if (r.source) {
+    let html = await readFile(r.source, 'utf8');
+    html = html
+      .replace(/<title>[^<]*<\/title>/, '<title>' + r.titulo + '</title>')
+      .replace(/<link rel="canonical" href="[^"]+">/, '<link rel="canonical" href="' + r.url + '">')
+      .replace(/<meta name="description" content="[^"]+">/, '<meta name="description" content="' + r.desc + '">');
+    await mkdir(r.dir, { recursive: true });
+    await writeFile(r.dir + '/index.html', html);
+    console.log('landing de campanha publicada:', r.dir + '/index.html', html.length, 'bytes');
+    continue;
+  }
   let html = base;
   html = troca(html, TITULO, '<title>' + r.titulo + '</title>');
   html = troca(html, CANONICAL, '<link rel="canonical" href="' + r.url + '">');

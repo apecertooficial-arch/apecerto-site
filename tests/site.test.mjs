@@ -53,6 +53,11 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes("Math.floor(capturedAt / 1000)"), 'o fbc reconstruido deve manter o instante original do clique');
   assert.ok(analytics.includes("data-consent=\"analytics\""), 'Analytics deve ter consentimento separado');
   assert.ok(analytics.includes("data-consent=\"all\""), 'marketing deve exigir aceite explicito');
+  assert.ok(analytics.includes('apecerto-consent-settings'), 'o visitante deve conseguir reabrir as preferencias de privacidade');
+  assert.ok(!/owner_(?:portal_open|cta_click):\s*'Lead'/.test(analytics), 'abrir o portal ou clicar no CTA nao pode ser contado como Lead na Meta');
+  assert.match(analytics, /generate_lead:\s*'Lead'/, 'somente o envio concluido deve alimentar a conversao Lead');
+  assert.match(analytics, /ADS_CONVERSION_LABELS\s*=\s*\{[\s\S]*generate_lead:\s*'anMDCOmFieQcEI7398BE'/, 'o envio concluido deve alimentar a conversao principal do Google Ads');
+  assert.doesNotMatch(analytics, /owner_(?:portal_open|cta_click):\s*'anMDCOmFieQcEI7398BE'/, 'clique ou abertura nao pode virar conversao do Google Ads');
   assert.ok(out.includes('GTM-524TZP8X'), 'o Tag Manager deve estar ligado ao site');
   assert.ok(out.includes('/assets/analytics.js'), 'o runtime de tracking deve ser carregado');
   assert.equal((out.match(/<script src="\/assets\/analytics\.js" defer><\/script>/g) || []).length, 1, 'o runtime de tracking deve carregar uma unica vez');
@@ -103,6 +108,15 @@ test('telemetria sem cookie minimiza dados e tem retencao', async () => {
   assert.ok(policies.includes('to service_role'), 'tabelas privadas devem ter politica somente para o servidor');
 });
 
+test('Meta CAPI e versionada e nao transforma clique de proprietario em Lead', async () => {
+  const fn = await readFile('supabase/functions/meta-capi/index.ts', 'utf8');
+  assert.match(fn, /generate_lead:\s*"Lead"/, 'envio concluido deve gerar Lead na Meta');
+  assert.ok(!/owner_(?:portal_open|cta_click):\s*"Lead"/.test(fn), 'clique e abertura nao podem gerar Lead');
+  assert.ok(fn.includes('event_id: eventId'), 'Pixel e CAPI devem manter o identificador de deduplicacao');
+  assert.ok(fn.includes('consent_marketing !== true'), 'CAPI deve exigir consentimento de marketing');
+  assert.ok(fn.includes('"capi_token_missing" }, 503'), 'token ausente deve produzir erro observavel');
+});
+
 test('Sara do site usa somente catalogo publico e protege a chave da IA', async () => {
   const fn = await readFile('supabase/functions/sara-site/index.ts', 'utf8');
   const migration = await readFile('supabase/migrations/20260817153000_sara_site_rate_limit.sql', 'utf8');
@@ -123,4 +137,15 @@ test('build publica landings, privacidade e arquivos de busca', async () => {
     'dist/robots.txt',
     'dist/sitemap.xml',
   ]) assert.ok(await existe(path), path + ' deve existir');
+});
+
+test('rota de campanha abre a landing de captacao, nao a home', async () => {
+  execFileSync(process.execPath, ['scripts/build-site.mjs'], { stdio: 'inherit' });
+  execFileSync(process.execPath, ['scripts/rotas.mjs'], { stdio: 'inherit' });
+  const out = await readFile('dist/proprietario/cadastre-seu-imovel/index.html', 'utf8');
+  assert.ok(out.includes('id="owner-form"'), 'a rota de campanha deve mostrar o formulario de proprietario');
+  assert.ok(out.includes("lead_type: 'proprietario'"), 'o formulario deve criar lead de proprietario');
+  assert.ok(out.includes('apecertoSubmitSiteLead'), 'o formulario deve entrar pela porta canonica do CRM');
+  assert.ok(out.includes('https://apecerto.com/proprietario/cadastre-seu-imovel/'), 'a canonical deve apontar para a rota anunciada');
+  assert.ok(!out.includes('Apês escolhidos um por um'), 'a rota de campanha nao pode cair na home de compradores');
 });

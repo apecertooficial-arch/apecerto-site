@@ -5,7 +5,9 @@
   var CLARITY_ID = 'y3rdh7jjn5';
   var PIXEL_ID = '1088080836200357';
   var GOOGLE_ADS_ID = 'AW-18389793678';
-  var ADS_CONVERSION_LABELS = {};
+  var ADS_CONVERSION_LABELS = {
+    generate_lead: 'anMDCOmFieQcEI7398BE'
+  };
   var SUPABASE_URL = 'https://diaegvfveqezispcthwk.supabase.co';
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYWVndmZ2ZXFlemlzcGN0aHdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5OTU4MjIsImV4cCI6MjA5ODU3MTgyMn0.312n8BuI-loQrQ20x9j1hNjKZs2UO71ey9gvIo0eY0I';
   var CAPI_URL = SUPABASE_URL + '/functions/v1/meta-capi';
@@ -31,8 +33,6 @@
     property_search: 'Search',
     sara_results: 'Search',
     generate_lead: 'Lead',
-    owner_portal_open: 'Lead',
-    owner_cta_click: 'Lead',
     whatsapp_click: 'Contact',
     phone_click: 'Contact',
     cta_click: 'Schedule'
@@ -508,6 +508,18 @@
 
   window.apecertoOpenConsent = addConsentBanner;
 
+  function addConsentSettingsButton() {
+    if (document.getElementById('apecerto-consent-settings')) return;
+    var button = document.createElement('button');
+    button.id = 'apecerto-consent-settings';
+    button.type = 'button';
+    button.textContent = 'Preferências de privacidade';
+    button.setAttribute('aria-label', 'Reabrir preferências de privacidade');
+    button.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:2147482999;border:1px solid rgba(31,28,26,.18);border-radius:999px;background:#fff;color:#4a4541;padding:8px 12px;font:600 12px/1.2 Quicksand,Arial,sans-serif;box-shadow:0 2px 10px rgba(31,28,26,.12);cursor:pointer';
+    button.addEventListener('click', addConsentBanner);
+    document.body.appendChild(button);
+  }
+
   function cleanLabel(value) {
     return clean(value, 80);
   }
@@ -614,9 +626,11 @@
   trackScrollDepth();
   firstPartyTrack('page_view', {});
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () { if (!storedConsent) addConsentBanner(); });
-  } else if (!storedConsent) {
-    addConsentBanner();
+  function trackingReady() {
+    addConsentSettingsButton();
+    if (!storedConsent) addConsentBanner();
   }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', trackingReady);
+  else trackingReady();
 })();
