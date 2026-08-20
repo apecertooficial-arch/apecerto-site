@@ -6,9 +6,10 @@
 //   /proprietario/cadastre-seu-imovel/    -> destino das campanhas de captacao
 //
 // O roteamento em si vive no design (checkRota le location.pathname).
-// Injeta tambem <meta name="apecerto-design"> com o sha256 curto do design que
-// entrou no build, pra dar pra conferir de fora qual versao esta no ar.
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+// Injeta <meta name="apecerto-design"> com o sha256 curto do design que entrou no
+// build e publica DIAGNOSTICO.txt em /diagnostico.txt, pra dar pra conferir de fora
+// qual versao esta no ar e, se nao for a nova, por que.
+import { readFile, writeFile, mkdir, copyFile, access } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 
 const base = await readFile('dist/index.html', 'utf8');
@@ -58,6 +59,11 @@ for (const r of rotas) {
   await mkdir(r.dir, { recursive: true });
   await writeFile(r.dir + '/index.html', html);
   console.log('rota publicada:', r.dir + '/index.html', html.length, 'bytes');
+}
+
+if (await access('DIAGNOSTICO.txt').then(() => true, () => false)) {
+  await copyFile('DIAGNOSTICO.txt', 'dist/diagnostico.txt');
+  console.log('diagnostico publicado em /diagnostico.txt');
 }
 
 console.log('selo do design:', selo);
