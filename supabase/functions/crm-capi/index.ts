@@ -146,13 +146,19 @@ Deno.serve(async (request: Request) => {
   const attribution = (attributionData ?? {}) as Record<string, any>;
   const lead = (negocio as any).leads ?? {};
   const userData: Record<string, unknown> = { external_id: await sha256(`negocio-${negocio.id}`) };
+  // Meta Lead Ads entrega um ID numerico de 15 a 17 digitos. Quando o CRM
+  // possui esse identificador, ele e a chave de correspondencia mais forte
+  // para devolver a qualidade do lead a campanha que o originou.
+  const metaLeadId = String(attribution?.meta_lead_id ?? "").trim();
+  if (/^\d{15,17}$/.test(metaLeadId)) userData.lead_id = metaLeadId;
   if (lead.email) userData.em = await sha256(String(lead.email));
   if (lead.telefone) userData.ph = await sha256(String(lead.telefone).replace(/\D/g, ""));
   if (attribution?.fbp ?? identity.fbp) userData.fbp = String(attribution?.fbp ?? identity.fbp);
   if (attribution?.fbc ?? identity.fbc) userData.fbc = String(attribution?.fbc ?? identity.fbc);
 
   const customData: Record<string, unknown> = {
-    lead_event_source: "crm_canonico",
+    event_source: "crm",
+    lead_event_source: "ApeCerto CRM",
     stage_event: eventType,
     funnel_stage: FUNNEL_STAGE[eventType]?.name,
     stage_rank: FUNNEL_STAGE[eventType]?.rank,
@@ -182,8 +188,7 @@ Deno.serve(async (request: Request) => {
       event_name: metaEvent,
       event_time: Math.max(1, eventTime),
       event_id: eventId,
-      action_source: "website",
-      event_source_url: attribution?.landing_path ? `https://apecerto.com${String(attribution.landing_path)}` : "https://apecerto.com/",
+      action_source: "system_generated",
       user_data: userData,
       custom_data: customData,
     }],
