@@ -360,6 +360,7 @@ design = trocaObrigatoria(
         !saraUnidade && r.unidades_disponiveis > 0 ? r.unidades_disponiveis + (r.unidades_disponiveis > 1 ? ' unidades disponíveis' : ' unidade disponível') : null
       ].filter(Boolean).join(' · '),
       specIcons: [
+        r.codigo ? { ic: 'hash', v: String(r.codigo) } : null,
         areaExibida ? { ic: 'scan', v: Number(areaExibida).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' m²' } : null,
         dormitoriosExibidos != null ? { ic: 'bed-double', v: String(dormitoriosExibidos) } : null,
         r.banheiros ? { ic: 'bath', v: String(r.banheiros) } : null,
