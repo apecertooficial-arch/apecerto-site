@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 // Meta Conversions API da ApeCerto. O navegador e o servidor usam o mesmo
 // event_id, permitindo que a Meta deduplique Pixel e CAPI.
@@ -85,6 +86,27 @@ Deno.serve(async (request: Request) => {
 
     const eventId = clean(body?.event_id, 64);
     if (!eventId) return response(origin, { ok: false, error: "missing_event_id" }, 400);
+
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+      auth: { persistSession: false },
+    });
+    const { data: delivery } = await supabase.schema("private").from("tracking_delivery_logs").upsert({
+      channel: "meta_browser",
+      event_id: eventId,
+      event_type: internal,
+      source_table: "site_events_anon",
+      source_id: eventId,
+      status: TOKEN ? "sending" : "blocked",
+      attempt_count: 1,
+      error_code: TOKEN ? null : "capi_token_missing",
+      last_error: TOKEN ? null : "META_CAPI_TOKEN ausente",
+      next_attempt_at: TOKEN ? null : new Date(Date.now() + 300_000).toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "channel,event_id" }).select("id").maybeSingle();
+    const updateDelivery = async (values: Record<string, unknown>) => {
+      if (!delivery?.id) return;
+      await supabase.schema("private").from("tracking_delivery_logs").update({ ...values, updated_at: new Date().toISOString() }).eq("id", delivery.id);
+    };
     if (!TOKEN) return response(origin, { ok: false, error: "capi_token_missing" }, 503);
 
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
@@ -128,8 +150,22 @@ Deno.serve(async (request: Request) => {
     });
     const output = await metaResponse.json().catch(() => ({}));
     if (!metaResponse.ok) {
+      await updateDelivery({
+        status: "failed",
+        response_status: metaResponse.status,
+        error_code: "meta_rejected",
+        last_error: output?.error?.message ?? "Meta rejeitou o evento",
+        next_attempt_at: new Date(Date.now() + 300_000).toISOString(),
+      });
       return response(origin, { ok: false, error: "meta_rejected", detail: output?.error?.message ?? null }, 502);
     }
+    await updateDelivery({
+      status: "delivered",
+      response_status: metaResponse.status,
+      fbtrace_id: output?.fbtrace_id ?? null,
+      delivered_at: new Date().toISOString(),
+      next_attempt_at: null,
+    });
     return response(origin, {
       ok: true,
       events_received: output?.events_received ?? null,
