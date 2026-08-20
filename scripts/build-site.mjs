@@ -91,6 +91,17 @@ design = trocaObrigatoria(
 
 design = trocaObrigatoria(
   design,
+  `            <div style="height: 170px; position: relative">
+              <image-slot id="{{ b.slot }}" shape="rect" placeholder="{{ b.foto }}"></image-slot>
+            </div>`,
+  `            <a href="#apes" sc-camel-on-click="{{ b.filtrar }}" aria-label="Ver os apês de {{ b.nome }}" data-bairro-image-link="true" style="height: 170px; position: relative; display: block">
+              <image-slot id="{{ b.slot }}" shape="rect" placeholder="{{ b.foto }}" style="pointer-events: none"></image-slot>
+            </a>`,
+  'cards de bairro sem upload no site publico',
+);
+
+design = trocaObrigatoria(
+  design,
   '&quot;whatsappNumero&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;&quot;',
   '&quot;whatsappNumero&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;11980154312&quot;',
   'WhatsApp oficial',

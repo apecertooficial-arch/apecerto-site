@@ -10,6 +10,19 @@ test('catalogo publico consulta a view site_produtos', async () => {
   assert.ok(d.includes('/rest/v1/site_produtos'), 'o catalogo deve ler a view site_produtos');
 });
 
+test('cards de bairro nao abrem o seletor de arquivos no site publico', async () => {
+  execFileSync(process.execPath, ['scripts/build-site.mjs'], { stdio: 'inherit' });
+  const out = await readFile('dist/index.html', 'utf8');
+  assert.ok(
+    out.includes('data-bairro-image-link=\\"true\\"'),
+    'a imagem do bairro deve ser um link normal para o catalogo',
+  );
+  assert.ok(
+    out.includes('image-slot id=\\"{{ b.slot }}\\" shape=\\"rect\\" placeholder=\\"{{ b.foto }}\\" style=\\"pointer-events: none\\"'),
+    'o componente visual nao pode capturar o clique e abrir upload',
+  );
+});
+
 test('Sara ignora unidades retiradas do ar mesmo usando cliente de serviço', async () => {
   const fn = await readFile('supabase/functions/sara-site/index.ts', 'utf8');
   assert.match(fn, /\.eq\("publicado", true\)/);
