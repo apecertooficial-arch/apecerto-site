@@ -7,10 +7,23 @@ const TEST_CODE = Deno.env.get("META_TEST_EVENT_CODE") ?? "";
 const GRAPH = "https://graph.facebook.com/v21.0";
 
 const EVENT_MAP: Record<string, string> = {
-  qualified: "Qualificado",
+  responded: "LeadRespondido",
+  qualification_started: "QualificacaoIniciada",
+  visit_scheduled: "Schedule",
+  qualified: "LeadQualificado",
   visit: "VisitaRealizada",
   proposal: "PropostaEnviada",
   purchase: "Purchase",
+};
+
+const FUNNEL_STAGE: Record<string, { name: string; rank: number }> = {
+  responded: { name: "lead_respondido", rank: 20 },
+  qualification_started: { name: "qualificacao_iniciada", rank: 30 },
+  qualified: { name: "lead_qualificado", rank: 35 },
+  visit_scheduled: { name: "visita_agendada", rank: 40 },
+  visit: { name: "visita_realizada", rank: 50 },
+  proposal: { name: "proposta_enviada", rank: 60 },
+  purchase: { name: "venda_concluida", rank: 70 },
 };
 
 function json(body: unknown, status = 200) {
@@ -86,15 +99,15 @@ Deno.serve(async (request: Request) => {
   let negocioId = body.negocio_id ? Number(body.negocio_id) : null;
   let purchaseValue: number | null = null;
   let proposalValue: number | null = null;
-  let eventTime = Math.floor(Date.now() / 1000);
+  let eventTime = unixTime(body.event_time ?? Date.now());
 
-  if (sourceTable === "visitas" && !negocioId) {
+  if (sourceTable === "visitas") {
     const { data } = await supabase.from("visitas").select("negocio_id,resultado_em,atualizado_em,criado_em").eq("id", sourceId).maybeSingle();
-    negocioId = Number(data?.negocio_id) || null;
+    negocioId = negocioId ?? (Number(data?.negocio_id) || null);
     eventTime = unixTime(data?.resultado_em ?? data?.atualizado_em ?? data?.criado_em);
-  } else if (sourceTable === "ncrm_proposta" && !negocioId) {
+  } else if (sourceTable === "ncrm_proposta") {
     const { data } = await supabase.from("ncrm_proposta").select("negocio_id,valor,data_proposta,criada_em").eq("id", sourceId).maybeSingle();
-    negocioId = Number(data?.negocio_id) || null;
+    negocioId = negocioId ?? (Number(data?.negocio_id) || null);
     proposalValue = Number(data?.valor) || null;
     eventTime = unixTime(data?.data_proposta ?? data?.criada_em);
   } else if (sourceTable === "vendas") {
@@ -141,6 +154,8 @@ Deno.serve(async (request: Request) => {
   const customData: Record<string, unknown> = {
     lead_event_source: "crm_canonico",
     stage_event: eventType,
+    funnel_stage: FUNNEL_STAGE[eventType]?.name,
+    stage_rank: FUNNEL_STAGE[eventType]?.rank,
     campaign: attribution?.campaign ?? current.utm_campaign ?? undefined,
     campaign_id: attribution?.campaign_id ?? current.campaign_id ?? undefined,
     adset_id: attribution?.adset_id ?? current.adset_id ?? undefined,

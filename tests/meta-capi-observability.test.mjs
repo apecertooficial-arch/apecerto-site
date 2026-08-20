@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const migration = await readFile(new URL("../supabase/migrations/20260820182000_meta_capi_outbox_canonical.sql", import.meta.url), "utf8");
+const funnelMigration = await readFile(new URL("../supabase/migrations/20260820200546_meta_capi_funil_qualidade.sql", import.meta.url), "utf8");
 const crmCapi = await readFile(new URL("../supabase/functions/crm-capi/index.ts", import.meta.url), "utf8");
 const metaCapi = await readFile(new URL("../supabase/functions/meta-capi/index.ts", import.meta.url), "utf8");
 
@@ -17,6 +18,9 @@ test("conversões offline usam fatos canônicos e outbox idempotente", () => {
 });
 
 test("crm-capi versionada resolve visita, proposta e venda e registra recibo", () => {
+  assert.match(crmCapi, /LeadRespondido/);
+  assert.match(crmCapi, /QualificacaoIniciada/);
+  assert.match(crmCapi, /visit_scheduled: "Schedule"/);
   assert.match(crmCapi, /PropostaEnviada/);
   assert.match(crmCapi, /sourceTable === "visitas"/);
   assert.match(crmCapi, /sourceTable === "ncrm_proposta"/);
@@ -25,7 +29,19 @@ test("crm-capi versionada resolve visita, proposta e venda e registra recibo", (
   assert.match(crmCapi, /tracking_last_touch/);
   assert.match(crmCapi, /lead_attribution/);
   assert.match(crmCapi, /event_time: Math\.max\(1, eventTime\)/);
+  assert.match(crmCapi, /funnel_stage/);
+  assert.match(crmCapi, /stage_rank/);
   assert.match(crmCapi, /capi_token_missing" }, 503/);
+});
+
+test("funil de qualidade usa fatos reais, sem chamar Em atendimento de qualificado", () => {
+  assert.match(funnelMigration, /trg_lead_meta_capi/);
+  assert.match(funnelMigration, /trg_wa_resposta_meta_capi/);
+  assert.match(funnelMigration, /visit_scheduled/);
+  assert.match(funnelMigration, /qualification_started/);
+  assert.match(funnelMigration, /v_event_id text := p_event_type \|\| '-' \|\| p_source_id/);
+  assert.match(funnelMigration, /drop trigger if exists trg_negocio_meta_capi/);
+  assert.doesNotMatch(funnelMigration, /stage_id\s*=\s*68/);
 });
 
 test("meta-capi do navegador também deixa trilha de entrega", () => {
