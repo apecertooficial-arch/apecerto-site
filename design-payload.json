@@ -1,18 +1,3 @@
 {
-  "files": [
-    {
-      "path": "design/Site ApeCerto.dc.html",
-      "url": "https://0e3c9cd5-a3d6-4d54-a000-a7731cddaf01.claudeusercontent.com/v1/design/projects/0e3c9cd5-a3d6-4d54-a000-a7731cddaf01/serve/design/Site%20ApeCerto.dc.html?t=22529a7bf30201d4f1ea104670636716a2699ea7509ae8d1b2374af237662124.696aca1e-949c-4340-8db5-5c03c7c3170e.7a3399c9-4f46-455e-854f-9ae582ddb39b.1787189382.fp&direct=1",
-      "sha256": "e619c6c94ae3b91743114689476db61afe88b056bbfd55269c1f05af0328cb4d",
-      "bytes": 609082,
-      "mustContain": [
-        "class Component extends DCLogic",
-        "checkPainelDemo",
-        "cadastre-seu-imovel",
-        "Crie seu acesso \u00e0 \u00e1rea do propriet\u00e1rio",
-        "sc-camel-on-click=\"{{ abreCadastro }}\" style=\"color: var(--fg-2)\" style-hover=\"color: var(--ape-orange)\">Anunciar</a>",
-        "return finalidade !== 'aluguel' && valor > 0 && valor < 100000 ? valor * 1000 : valor;"
-      ]
-    }
-  ]
+  "files": []
 }

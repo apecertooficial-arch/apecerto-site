@@ -9,7 +9,9 @@
 // intactas e continuam derrubando o build se o design divergir das ancoras.
 //
 // O patch vive em design-patch/NN.b64 (pedacos de base64 de um gzip), cada um com
-// sha256 proprio na tabela ASSINATURAS — se um chegar corrompido, o log nomeia qual.
+// sha256 proprio em ASSINATURAS — se um chegar corrompido, o log nomeia qual.
+// A ORDEM e dada pelo array ORDEM, nunca por Object.keys: chaves como '10' sao
+// indices inteiros canonicos em JS e seriam reordenadas na frente de '01'.
 // Depois de juntar e descomprimir sai um JSONL: primeira linha = cabecalho com os
 // sha256 de base e alvo; cada linha seguinte e uma parte aplicada em ordem:
 //   { at, dn }   remove dn linhas a partir de at
@@ -25,7 +27,8 @@ const DIR = 'design-patch';
 const DIAG = 'DIAGNOSTICO.txt';
 const sha = s => createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
 
-// Ordem importa: os pedacos sao concatenados nesta sequencia.
+const ORDEM = ['01', '02', '03a', '03b', '03c', '04', '05', '06a', '06b', '06c', '07', '08', '09', '10', '11', '12', '13'];
+
 const ASSINATURAS = {
   '01': 'a9150a65e0f9c6aa5df765ceda67087de779c5074af99af476b5806b5cfd20f0',
   '02': '01a5d63075424f1901e16888cd763af9b63f8bdb07c68fd147943b79e9a9381a',
@@ -60,22 +63,22 @@ const desistir = async motivo => {
   process.exit(0);
 };
 
-const nomes = Object.keys(ASSINATURAS);
 let b64 = '';
 try {
   const existentes = (await readdir(DIR)).filter(f => f.endsWith('.b64')).map(f => f.replace('.b64', ''));
-  const faltando = nomes.filter(n => !existentes.includes(n));
-  const sobrando = existentes.filter(n => !nomes.includes(n));
-  anota('pedacos esperados: ' + nomes.length + ' | encontrados: ' + existentes.length + (sobrando.length ? ' (ignorados: ' + sobrando.join(', ') + ')' : ''));
+  const faltando = ORDEM.filter(n => !existentes.includes(n));
+  const sobrando = existentes.filter(n => !ORDEM.includes(n));
+  anota('pedacos esperados: ' + ORDEM.length + ' | encontrados: ' + existentes.length + (sobrando.length ? ' (ignorados: ' + sobrando.join(', ') + ')' : ''));
   if (faltando.length) await desistir('pedacos ausentes: ' + faltando.join(', '));
   const ruins = [];
-  for (const n of nomes) {
+  for (const n of ORDEM) {
     const t = (await readFile(DIR + '/' + n + '.b64', 'utf8')).replace(/\s+/g, '');
     const s = sha(t);
     if (s !== ASSINATURAS[n]) ruins.push(n + ' (esperado ' + ASSINATURAS[n].slice(0, 12) + ', encontrado ' + s.slice(0, 12) + ', ' + t.length + ' chars)');
     b64 += t;
   }
   if (ruins.length) await desistir('pedacos corrompidos -> ' + ruins.join(' ; '));
+  anota('base64 montado na ordem de ORDEM: ' + b64.length + ' chars');
 } catch (e) {
   await desistir('falha lendo os pedacos: ' + e.message);
 }
