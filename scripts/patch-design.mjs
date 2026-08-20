@@ -2,10 +2,17 @@
 // O design e versionado no repo: copia base + patch conferido por sha256, sem
 // depender de URL temporaria.
 //
-// O patch vive em design-patch/NN.b64 (pedacos de base64 de um gzip). Cada pedaco
-// tem sha256 propio na tabela ASSINATURAS: se um chegou corrompido, o log diz
-// exatamente qual, e basta reenviar esse pedaco.
+// Regra de seguranca: este script NUNCA derruba o build. Se o patch nao puder ser
+// aplicado com garantia total (pedaco corrompido, base diferente, sha do resultado
+// diferente), ele deixa design/Site ApeCerto.dc.html INTACTO e escreve o motivo em
+// DIAGNOSTICO.txt, que o rotas.mjs publica em /diagnostico.txt. O build segue com o
+// design cru que ja estava no repo — o site continua no ar na versao anterior, e o
+// selo <meta name="apecerto-design"> mostra qual versao foi publicada.
+// As checagens do build-site.mjs (trocaObrigatoria) seguem intactas e continuam
+// derrubando o build se o design cru divergir das ancoras de producao.
 //
+// O patch vive em design-patch/NN.b64 (pedacos de base64 de um gzip). Cada pedaco
+// tem sha256 propio na tabela ASSINATURAS.
 // Depois de juntar e descomprimir sai um JSONL: primeira linha = cabecalho com os
 // sha256 de base e alvo; cada linha seguinte e uma parte aplicada em ordem:
 //   { at, dn }   remove dn linhas a partir de at
@@ -18,6 +25,7 @@ import { gunzipSync } from 'node:zlib';
 
 const ALVO = 'design/Site ApeCerto.dc.html';
 const DIR = 'design-patch';
+const DIAG = 'DIAGNOSTICO.txt';
 const sha = s => createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
 
 const ASSINATURAS = {
@@ -36,60 +44,62 @@ const ASSINATURAS = {
   '13': '3d95e59438aa358abff2c3efbfb945370c577b898b7e69a33dbc55fdb3162cbc',
 };
 
-const nomes = Object.keys(ASSINATURAS).sort();
-const existentes = (await readdir(DIR)).filter(f => f.endsWith('.b64')).map(f => f.replace('.b64', '')).sort();
-const faltando = nomes.filter(n => !existentes.includes(n));
-if (faltando.length) {
-  console.error('pedacos ausentes em ' + DIR + '/: ' + faltando.join(', '));
-  process.exit(1);
-}
-const sobrando = existentes.filter(n => !nomes.includes(n));
-if (sobrando.length) console.warn('aviso: pedacos ignorados (fora da tabela): ' + sobrando.join(', '));
+const linhasDiag = ['data: ' + new Date().toISOString()];
+const anota = t => { linhasDiag.push(t); console.log('[patch] ' + t); };
+const desistir = async motivo => {
+  anota('RESULTADO: patch NAO aplicado — design cru do repo mantido');
+  anota('motivo: ' + motivo);
+  await writeFile(DIAG, linhasDiag.join('\n') + '\n');
+  process.exit(0);
+};
 
 let b64 = '';
-const ruins = [];
-for (const n of nomes) {
-  const t = (await readFile(DIR + '/' + n + '.b64', 'utf8')).replace(/\s+/g, '');
-  const s = sha(t);
-  if (s !== ASSINATURAS[n]) ruins.push(n + ' (esperado ' + ASSINATURAS[n].slice(0, 12) + ', encontrado ' + s.slice(0, 12) + ', ' + t.length + ' chars)');
-  b64 += t;
-}
-if (ruins.length) {
-  console.error('pedacos do patch corrompidos:');
-  for (const r of ruins) console.error('  - ' + r);
-  console.error('Reenvie apenas esses arquivos em ' + DIR + '/.');
-  process.exit(1);
+try {
+  const nomes = Object.keys(ASSINATURAS).sort();
+  const existentes = (await readdir(DIR)).filter(f => f.endsWith('.b64')).map(f => f.replace('.b64', '')).sort();
+  anota('pedacos esperados: ' + nomes.length + ' | encontrados: ' + existentes.length);
+  const faltando = nomes.filter(n => !existentes.includes(n));
+  const sobrando = existentes.filter(n => !nomes.includes(n));
+  if (sobrando.length) anota('pedacos fora da tabela (ignorados): ' + sobrando.join(', '));
+  if (faltando.length) await desistir('pedacos ausentes: ' + faltando.join(', '));
+  const ruins = [];
+  for (const n of nomes) {
+    const t = (await readFile(DIR + '/' + n + '.b64', 'utf8')).replace(/\s+/g, '');
+    const s = sha(t);
+    if (s !== ASSINATURAS[n]) ruins.push(n + ' (esperado ' + ASSINATURAS[n].slice(0, 12) + ', encontrado ' + s.slice(0, 12) + ', ' + t.length + ' chars)');
+    b64 += t;
+  }
+  if (ruins.length) await desistir('pedacos corrompidos -> ' + ruins.join(' ; '));
+  anota('base64 montado: ' + b64.length + ' chars');
+} catch (e) {
+  await desistir('falha lendo os pedacos: ' + e.message);
 }
 
 let jsonl;
 try {
   jsonl = gunzipSync(Buffer.from(b64, 'base64')).toString('utf8');
 } catch (e) {
-  console.error('nao consegui descomprimir o patch (' + b64.length + ' chars de base64): ' + e.message);
-  process.exit(1);
+  await desistir('gzip invalido: ' + e.message);
 }
 
 const linhas = jsonl.split('\n').filter(Boolean);
 const cab = JSON.parse(linhas[0]);
 const partes = linhas.slice(1).map(l => JSON.parse(l));
+anota('partes no patch: ' + partes.length + ' (cabecalho diz ' + cab.partes + ')');
 
 const atual = await readFile(ALVO, 'utf8');
 const shaAtual = sha(atual);
+anota('design no repo: ' + atual.length + ' bytes, sha ' + shaAtual.slice(0, 12));
+anota('base esperada:  ' + cab.base_bytes + ' bytes, sha ' + cab.base_sha256.slice(0, 12));
+anota('alvo esperado:  ' + cab.alvo_bytes + ' bytes, sha ' + cab.alvo_sha256.slice(0, 12));
 
 if (shaAtual === cab.alvo_sha256) {
-  console.log('design ja esta na versao alvo (' + atual.length + ' bytes)');
+  anota('RESULTADO: design ja estava na versao alvo');
+  await writeFile(DIAG, linhasDiag.join('\n') + '\n');
   process.exit(0);
 }
-if (shaAtual !== cab.base_sha256) {
-  console.error('a copia do repo nao e a base esperada pelo patch.');
-  console.error('  esperado   ' + cab.base_sha256 + ' (' + cab.base_bytes + ' bytes)');
-  console.error('  encontrado ' + shaAtual + ' (' + atual.length + ' bytes)');
-  process.exit(1);
-}
-if (partes.length !== cab.partes) {
-  console.error('patch incompleto: ' + partes.length + ' partes, esperado ' + cab.partes);
-  process.exit(1);
-}
+if (shaAtual !== cab.base_sha256) await desistir('a copia do repo nao e a base esperada pelo patch');
+if (partes.length !== cab.partes) await desistir('patch incompleto: ' + partes.length + ' de ' + cab.partes + ' partes');
 
 const arr = atual.split('\n');
 for (const p of partes) {
@@ -101,12 +111,8 @@ for (const p of partes) {
 
 const saida = arr.join('\n');
 const shaSaida = sha(saida);
-if (shaSaida !== cab.alvo_sha256) {
-  console.error('resultado nao confere com o alvo.');
-  console.error('  esperado  ' + cab.alvo_sha256 + ' (' + cab.alvo_bytes + ' bytes)');
-  console.error('  resultado ' + shaSaida + ' (' + saida.length + ' bytes)');
-  process.exit(1);
-}
+if (shaSaida !== cab.alvo_sha256) await desistir('resultado divergiu do alvo: ' + saida.length + ' bytes, sha ' + shaSaida.slice(0, 12));
 
 await writeFile(ALVO, saida);
-console.log('design atualizado:', partes.length, 'partes,', saida.length, 'bytes (sha256 confere)');
+anota('RESULTADO: design atualizado — ' + partes.length + ' partes, ' + saida.length + ' bytes (sha256 confere)');
+await writeFile(DIAG, linhasDiag.join('\n') + '\n');
