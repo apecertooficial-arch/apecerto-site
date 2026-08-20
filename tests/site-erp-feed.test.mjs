@@ -27,6 +27,12 @@ test("catálogo público vem da aprovação de Produtos do ERP", () => {
   assert.match(loader, /produtos: rows/);
 });
 
+test("produto pronto só aparece como unidade aprovada e usa a galeria da unidade", () => {
+  assert.match(design, /r && r\.status !== 'pronto'/);
+  assert.match(design, /capa_path: u\.capa_path \|\| r\.capa_path/);
+  assert.match(design, /Array\.isArray\(u\.fotos\) && u\.fotos\.length \? u\.fotos : r\.fotos/);
+});
+
 test("bundle continua estruturalmente íntegro", () => {
   assert.equal(
     (html.match(/<script type="__bundler\/template">/g) ?? []).length,

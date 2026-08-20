@@ -3690,7 +3690,9 @@ class Component extends DCLogic {
     const out = [];
     for (const r of rows || []) {
       const uns = r && r.status === 'pronto' && Array.isArray(r.unidades_site) ? r.unidades_site : [];
-      if (!uns.length) { out.push(r); continue; }
+      // Imóvel pronto só existe no site como unidade individual aprovada.
+      // Sem estoque aprovado, o prédio não vira um card genérico "sob consulta".
+      if (!uns.length) { if (r && r.status !== 'pronto') out.push(r); continue; }
       for (const u of uns) {
         const unNum = u.numero == null ? 's/n' : String(u.numero).replace(/\.0+$/, '');
         const dm = String(u.tipologia || '').match(/^\s*(\d+)/);
@@ -3705,7 +3707,9 @@ class Component extends DCLogic {
           area_util: u.area_m2 || r.area_util,
           vagas: u.vagas != null ? u.vagas : r.vagas,
           dormitorios: dorm,
-          unidades_disponiveis: 1
+          unidades_disponiveis: 1,
+          capa_path: u.capa_path || r.capa_path,
+          fotos: Array.isArray(u.fotos) && u.fotos.length ? u.fotos : r.fotos
         }));
       }
     }
