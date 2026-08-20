@@ -353,6 +353,7 @@ design = trocaObrigatoria(
         r.vagas ? { ic: 'car', v: String(r.vagas) } : null
       ].filter(Boolean),`,
   `      specs: [
+        r.codigo ? 'Cód. ' + r.codigo : null,
         areaExibida ? Number(areaExibida).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' m²' : null,
         dormitoriosExibidos != null ? dormitoriosExibidos + (dormitoriosExibidos === 1 ? ' dorm' : ' dorms') : null,
         vagasExibidas != null ? vagasExibidas + (vagasExibidas === 1 ? ' vaga' : ' vagas') : null,
