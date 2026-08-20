@@ -21,16 +21,19 @@ const DIR = 'design-patch';
 const sha = s => createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
 
 const ASSINATURAS = {
-  '01': 'b1064fcfd5f6b7fc23b7c6a71cdf6a25210fcb8a2bc1b04d7ee4e9e06d36cff5',
-  '02': 'de118e0ffa227ac01e342af68ba5728050b4abff542a81e02873902505fcfa14',
-  '03': '61c0ac90e5698258e56f6dff0dc447b1e2bd2457bcbba310caa67b825945f355',
-  '04': 'cc6e6c71145d20e50780d2147f2e1012ad39c712cba62d3efc80e63968970e2a',
-  '05': '9a7ce20d75f0dff87ff98a56bc1d75d557c54321faf2074529adbb9d76bf3afa',
-  '06': '29e624c62113a918d2cd52454515ce93701e5a376a73b9ff0d2d2c4ffbb7b837',
-  '07': '4599f2ae1b33e4f6eb13594009a8ef224d16c56a2205e056449485d2c15d4f4e',
-  '08': '9d119de697202130846757e276e1ad92e2ab4302098b602458428f474ba0fce3',
-  '09': '18025969e4e086055e4afb0ec5d84a17c466ecddf1afb59dc8869762d9969dfc',
-  '10': '83dd35a9623bb763c45847f30d689d0c7ca2946e147a5ae30357449b828b2d2e',
+  '01': 'a9150a65e0f9c6aa5df765ceda67087de779c5074af99af476b5806b5cfd20f0',
+  '02': '01a5d63075424f1901e16888cd763af9b63f8bdb07c68fd147943b79e9a9381a',
+  '03': '7ee1cfe0978dae516c413234442c4a67436f5b1bfd443706963c13cf73514c25',
+  '04': '5bac77bf5319050aaa14fb916b52c0b3a33a1ff67d2d10a4adddad41bded5e72',
+  '05': '0b6bbc23db255aeaab7da3ba5fa5dbf434977ab798488aed63b3e9b7e17730a4',
+  '06': '8f9a9b60b2ea61028bf3d8d9c8df0d5f5c20bf3e706fb79e4b529c5df70fc4f8',
+  '07': '9366fa673b6614948aa3688d52390e63ef1c0a29f5164576df0f17c9d0261d1c',
+  '08': '04f5bfc13676a7cd87a5b49fdc72f3864b9aad536a968783ad812b8e37149adf',
+  '09': '1e4de687c74e6024204b5c1f1076abd9acfdfe7c54a4ca09902bd817c0c7e656',
+  '10': '9c46c6dcb5cf280f6b9105d438af34b309d8db353f9a83e894af91e0b1a08066',
+  '11': 'a39835c148804411170f5ef7ba6597da519b0061a363f4af2b3ccb4b958f0e88',
+  '12': 'f73420e7b87c93932654975b458611ef31c261cc5f746ab332b11603c5bc479b',
+  '13': '3d95e59438aa358abff2c3efbfb945370c577b898b7e69a33dbc55fdb3162cbc',
 };
 
 const nomes = Object.keys(ASSINATURAS).sort();
@@ -40,8 +43,11 @@ if (faltando.length) {
   console.error('pedacos ausentes em ' + DIR + '/: ' + faltando.join(', '));
   process.exit(1);
 }
+const sobrando = existentes.filter(n => !nomes.includes(n));
+if (sobrando.length) console.warn('aviso: pedacos ignorados (fora da tabela): ' + sobrando.join(', '));
 
-let b64 = '', ruins = [];
+let b64 = '';
+const ruins = [];
 for (const n of nomes) {
   const t = (await readFile(DIR + '/' + n + '.b64', 'utf8')).replace(/\s+/g, '');
   const s = sha(t);
