@@ -18,7 +18,8 @@ test("conversões offline usam fatos canônicos e outbox idempotente", () => {
 });
 
 test("crm-capi versionada resolve visita, proposta e venda e registra recibo", () => {
-  assert.match(crmCapi, /LeadRespondido/);
+  assert.match(crmCapi, /LeadRespondeu/);
+  assert.doesNotMatch(crmCapi, /LeadRespondido/);
   assert.match(crmCapi, /QualificacaoIniciada/);
   assert.match(crmCapi, /visit_scheduled: "Schedule"/);
   assert.match(crmCapi, /PropostaEnviada/);
@@ -37,6 +38,7 @@ test("crm-capi versionada resolve visita, proposta e venda e registra recibo", (
 test("funil de qualidade usa fatos reais, sem chamar Em atendimento de qualificado", () => {
   assert.match(funnelMigration, /trg_lead_meta_capi/);
   assert.match(funnelMigration, /trg_wa_resposta_meta_capi/);
+  assert.match(funnelMigration, /new\.direcao[\s\S]*\('out','saida','saída','enviada','sent'\)/);
   assert.match(funnelMigration, /visit_scheduled/);
   assert.match(funnelMigration, /qualification_started/);
   assert.match(funnelMigration, /v_event_id text := p_event_type \|\| '-' \|\| p_source_id/);

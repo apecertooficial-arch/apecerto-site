@@ -13,7 +13,7 @@ Dar ao CEO uma leitura única do caminho anúncio → página → imóvel → in
 - Google Analytics 4: análise consentida e modelagem do Google.
 - Microsoft Clarity: mapas de calor e gravações mascaradas, somente com Analytics aceito.
 - Meta Pixel + CAPI: navegador e servidor compartilham `event_id` para deduplicação, somente com marketing aceito.
-- CRM CAPI: envia `LeadRespondido`, `QualificacaoIniciada`, `Schedule`, `VisitaRealizada`, `PropostaEnviada` e `Purchase` a partir de fatos canônicos do ERP, com recibo, deduplicação e retentativa.
+- CRM CAPI: envia `LeadRespondeu`, `QualificacaoIniciada`, `Schedule`, `VisitaRealizada`, `PropostaEnviada` e `Purchase` a partir de fatos canônicos do ERP, com recibo, deduplicação e retentativa.
 
 ## Endpoint para a área de Inteligência
 
@@ -70,7 +70,7 @@ Conversões Meta do site:
 
 Conversões Meta do CRM, em ordem de qualidade:
 
-- primeira resposta recebida no WhatsApp ou momento real `respondeu` → `LeadRespondido`
+- primeira mensagem recebida do lead no WhatsApp ou momento real `respondeu` → `LeadRespondeu`
 - momento real `qualificando` → `QualificacaoIniciada`
 - visita com status agendada → `Schedule`
 - visita com status realizada → `VisitaRealizada`
@@ -78,6 +78,8 @@ Conversões Meta do CRM, em ordem de qualidade:
 - venda concluída/paga → `Purchase`, com VGV e BRL
 
 Cada envio inclui `stage_event`, `funnel_stage` e `stage_rank`, além da atribuição disponível de campanha, conjunto, anúncio e criativo. O antigo número de etapa 68 não é tratado como qualificação: no banco ele significa “Em atendimento”.
+
+`LeadRespondeu` significa exclusivamente uma mensagem de entrada enviada pelo próprio lead. Mensagens de saída do corretor (`out`, `saida`, `enviada` ou `sent`) são descartadas pelo gatilho e não geram esse evento.
 
 ## Atribuição que acompanha o lead
 

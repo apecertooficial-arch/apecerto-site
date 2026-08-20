@@ -7,7 +7,7 @@ const TEST_CODE = Deno.env.get("META_TEST_EVENT_CODE") ?? "";
 const GRAPH = "https://graph.facebook.com/v21.0";
 
 const EVENT_MAP: Record<string, string> = {
-  responded: "LeadRespondido",
+  responded: "LeadRespondeu",
   qualification_started: "QualificacaoIniciada",
   visit_scheduled: "Schedule",
   qualified: "LeadQualificado",
