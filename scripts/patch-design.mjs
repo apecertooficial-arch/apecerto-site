@@ -1,25 +1,22 @@
 // Aplica o patch do design em design/Site ApeCerto.dc.html.
 // O design e versionado no repo: copia base + patch conferido por sha256, sem
-// depender de URL temporaria.
+// depender de rede nem de link temporario. Este e o caminho duravel do deploy.
 //
-// Regra de seguranca: este script NUNCA derruba o build. Se o patch nao puder ser
-// aplicado com garantia total (pedaco corrompido, base diferente, sha do resultado
-// diferente), ele deixa design/Site ApeCerto.dc.html INTACTO e escreve o motivo em
-// DIAGNOSTICO.txt, que o rotas.mjs publica em /diagnostico.txt. O build segue com o
-// design cru que ja estava no repo — o site continua no ar na versao anterior, e o
-// selo <meta name="apecerto-design"> mostra qual versao foi publicada.
-// As checagens do build-site.mjs (trocaObrigatoria) seguem intactas e continuam
-// derrubando o build se o design cru divergir das ancoras de producao.
+// Regra de seguranca: NUNCA derruba o build. Se o patch nao puder ser aplicado com
+// garantia total (pedaco corrompido, base diferente, sha do resultado diferente), o
+// design fica INTACTO e o motivo vai pro log e pro DIAGNOSTICO.txt (publicado em
+// /diagnostico.txt). As checagens do build-site.mjs (trocaObrigatoria) seguem
+// intactas e continuam derrubando o build se o design divergir das ancoras.
 //
-// O patch vive em design-patch/NN.b64 (pedacos de base64 de um gzip). Cada pedaco
-// tem sha256 propio na tabela ASSINATURAS.
+// O patch vive em design-patch/NN.b64 (pedacos de base64 de um gzip), cada um com
+// sha256 proprio na tabela ASSINATURAS — se um chegar corrompido, o log nomeia qual.
 // Depois de juntar e descomprimir sai um JSONL: primeira linha = cabecalho com os
 // sha256 de base e alvo; cada linha seguinte e uma parte aplicada em ordem:
 //   { at, dn }   remove dn linhas a partir de at
 //   { at, n }    insere as linhas n em at
 //   { at, seg }  insere uma linha longa (primeiro pedaco) em at
 //   { at, add }  concatena mais um pedaco na linha at
-import { readFile, writeFile, readdir } from 'node:fs/promises';
+import { readFile, writeFile, readdir, appendFile, access } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
 
@@ -28,13 +25,18 @@ const DIR = 'design-patch';
 const DIAG = 'DIAGNOSTICO.txt';
 const sha = s => createHash('sha256').update(Buffer.from(s, 'utf8')).digest('hex');
 
+// Ordem importa: os pedacos sao concatenados nesta sequencia.
 const ASSINATURAS = {
   '01': 'a9150a65e0f9c6aa5df765ceda67087de779c5074af99af476b5806b5cfd20f0',
   '02': '01a5d63075424f1901e16888cd763af9b63f8bdb07c68fd147943b79e9a9381a',
-  '03': '7ee1cfe0978dae516c413234442c4a67436f5b1bfd443706963c13cf73514c25',
+  '03a': 'cdcaf2ab04665b4c6499dc04f7222f14dd87daf7bc6bb11192a73b7a366518e5',
+  '03b': '7df55170ae235ccb91782c06b4e5f9fa97b5de93c8fc63983a5401afe1f5be98',
+  '03c': 'ebb05f690a54f773cc4fb54e910534386db93a46120a32f9d9047abbdf10eb8d',
   '04': '5bac77bf5319050aaa14fb916b52c0b3a33a1ff67d2d10a4adddad41bded5e72',
   '05': '0b6bbc23db255aeaab7da3ba5fa5dbf434977ab798488aed63b3e9b7e17730a4',
-  '06': '8f9a9b60b2ea61028bf3d8d9c8df0d5f5c20bf3e706fb79e4b529c5df70fc4f8',
+  '06a': '79b5e807c4bdfe73f912de74f08d9f71230911160f0e6593652ed6f1e5186176',
+  '06b': '14dad1bbbbeb0823b65d06af9e9597cd7e61710ab9e319bee3d533cfb3db80e1',
+  '06c': '4cf68404aa372cac9b75cd671e2494f7fd0c7854f64250ae86f71f1987e985a7',
   '07': '9366fa673b6614948aa3688d52390e63ef1c0a29f5164576df0f17c9d0261d1c',
   '08': '04f5bfc13676a7cd87a5b49fdc72f3864b9aad536a968783ad812b8e37149adf',
   '09': '1e4de687c74e6024204b5c1f1076abd9acfdfe7c54a4ca09902bd817c0c7e656',
@@ -44,23 +46,27 @@ const ASSINATURAS = {
   '13': '3d95e59438aa358abff2c3efbfb945370c577b898b7e69a33dbc55fdb3162cbc',
 };
 
-const linhasDiag = ['data: ' + new Date().toISOString()];
-const anota = t => { linhasDiag.push(t); console.log('[patch] ' + t); };
+const linhasDiag = ['patch: ' + new Date().toISOString()];
+const anota = t => { linhasDiag.push('  ' + t); console.log('[patch] ' + t); };
+const gravarDiag = async () => {
+  const txt = linhasDiag.join('\n') + '\n';
+  if (await access(DIAG).then(() => true, () => false)) await appendFile(DIAG, txt);
+  else await writeFile(DIAG, txt);
+};
 const desistir = async motivo => {
-  anota('RESULTADO: patch NAO aplicado — design cru do repo mantido');
+  anota('RESULTADO: patch NAO aplicado — design do repo mantido');
   anota('motivo: ' + motivo);
-  await writeFile(DIAG, linhasDiag.join('\n') + '\n');
+  await gravarDiag();
   process.exit(0);
 };
 
+const nomes = Object.keys(ASSINATURAS);
 let b64 = '';
 try {
-  const nomes = Object.keys(ASSINATURAS).sort();
-  const existentes = (await readdir(DIR)).filter(f => f.endsWith('.b64')).map(f => f.replace('.b64', '')).sort();
-  anota('pedacos esperados: ' + nomes.length + ' | encontrados: ' + existentes.length);
+  const existentes = (await readdir(DIR)).filter(f => f.endsWith('.b64')).map(f => f.replace('.b64', ''));
   const faltando = nomes.filter(n => !existentes.includes(n));
   const sobrando = existentes.filter(n => !nomes.includes(n));
-  if (sobrando.length) anota('pedacos fora da tabela (ignorados): ' + sobrando.join(', '));
+  anota('pedacos esperados: ' + nomes.length + ' | encontrados: ' + existentes.length + (sobrando.length ? ' (ignorados: ' + sobrando.join(', ') + ')' : ''));
   if (faltando.length) await desistir('pedacos ausentes: ' + faltando.join(', '));
   const ruins = [];
   for (const n of nomes) {
@@ -70,7 +76,6 @@ try {
     b64 += t;
   }
   if (ruins.length) await desistir('pedacos corrompidos -> ' + ruins.join(' ; '));
-  anota('base64 montado: ' + b64.length + ' chars');
 } catch (e) {
   await desistir('falha lendo os pedacos: ' + e.message);
 }
@@ -85,20 +90,18 @@ try {
 const linhas = jsonl.split('\n').filter(Boolean);
 const cab = JSON.parse(linhas[0]);
 const partes = linhas.slice(1).map(l => JSON.parse(l));
-anota('partes no patch: ' + partes.length + ' (cabecalho diz ' + cab.partes + ')');
 
 const atual = await readFile(ALVO, 'utf8');
 const shaAtual = sha(atual);
-anota('design no repo: ' + atual.length + ' bytes, sha ' + shaAtual.slice(0, 12));
-anota('base esperada:  ' + cab.base_bytes + ' bytes, sha ' + cab.base_sha256.slice(0, 12));
-anota('alvo esperado:  ' + cab.alvo_bytes + ' bytes, sha ' + cab.alvo_sha256.slice(0, 12));
 
 if (shaAtual === cab.alvo_sha256) {
-  anota('RESULTADO: design ja estava na versao alvo');
-  await writeFile(DIAG, linhasDiag.join('\n') + '\n');
+  anota('design ja esta na versao alvo (' + atual.length + ' bytes) — nada a fazer');
+  await gravarDiag();
   process.exit(0);
 }
-if (shaAtual !== cab.base_sha256) await desistir('a copia do repo nao e a base esperada pelo patch');
+if (shaAtual !== cab.base_sha256) {
+  await desistir('a copia do repo nao e a base esperada (tem ' + shaAtual.slice(0, 12) + '/' + atual.length + ' bytes, patch espera ' + cab.base_sha256.slice(0, 12) + '/' + cab.base_bytes + ' bytes)');
+}
 if (partes.length !== cab.partes) await desistir('patch incompleto: ' + partes.length + ' de ' + cab.partes + ' partes');
 
 const arr = atual.split('\n');
@@ -111,8 +114,8 @@ for (const p of partes) {
 
 const saida = arr.join('\n');
 const shaSaida = sha(saida);
-if (shaSaida !== cab.alvo_sha256) await desistir('resultado divergiu do alvo: ' + saida.length + ' bytes, sha ' + shaSaida.slice(0, 12));
+if (shaSaida !== cab.alvo_sha256) await desistir('resultado divergiu do alvo (' + shaSaida.slice(0, 12) + '/' + saida.length + ' bytes, esperado ' + cab.alvo_sha256.slice(0, 12) + '/' + cab.alvo_bytes + ' bytes)');
 
 await writeFile(ALVO, saida);
 anota('RESULTADO: design atualizado — ' + partes.length + ' partes, ' + saida.length + ' bytes (sha256 confere)');
-await writeFile(DIAG, linhasDiag.join('\n') + '\n');
+await gravarDiag();
