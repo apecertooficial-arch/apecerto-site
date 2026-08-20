@@ -69,6 +69,20 @@ Deno.serve(async (request: Request) => {
     return json({ ok: false, error: "invalid_input" }, 400);
   }
 
+  // A CAPI de CRM e exclusivamente interna. O UUID do outbox nao basta:
+  // o servidor confirma tambem evento, tabela e fato canonico antes de enviar.
+  // Assim um JWT publico nao consegue fabricar visita, proposta ou venda.
+  if (!deliveryId) return json({ ok: false, error: "internal_delivery_required" }, 403);
+  const { data: claimed, error: claimError } = await supabase.rpc("tracking_delivery_claim", {
+    p_id: deliveryId,
+    p_event_type: eventType,
+    p_source_table: sourceTable,
+    p_source_id: sourceId,
+  });
+  if (claimError || claimed !== true) {
+    return json({ ok: false, error: "internal_delivery_invalid" }, 403);
+  }
+
   let negocioId = body.negocio_id ? Number(body.negocio_id) : null;
   let purchaseValue: number | null = null;
   let proposalValue: number | null = null;

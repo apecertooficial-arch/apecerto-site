@@ -43,6 +43,7 @@ test('build aplica a camada de producao e tracking', async () => {
   const out = await readFile('dist/index.html', 'utf8');
   const analytics = await readFile('dist/assets/analytics.js', 'utf8');
   const siteTrack = await readFile('supabase/functions/site-track/index.ts', 'utf8');
+  const crmCapi = await readFile('supabase/functions/crm-capi/index.ts', 'utf8');
   assert.ok(analytics.includes('G-P63KVXKJDH'), 'o Analytics deve estar ligado ao site');
   assert.ok(analytics.includes('y3rdh7jjn5'), 'o Clarity deve estar ligado ao site');
   assert.ok(analytics.includes("window.clarity('consentv2'"), 'o Clarity deve respeitar consentimento');
@@ -84,6 +85,8 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes("window.apecertoTrack('form_error'"), 'erros de formulario devem ser observaveis');
   assert.ok(analytics.includes("window.apecertoTrack('engagement_time'"), 'tempo ativo deve ser medido por faixas');
   assert.ok(siteTrack.includes('"gtm_health"'), 'o GTM deve conseguir deixar prova de saude na telemetria propria');
+  assert.ok(crmCapi.includes('tracking_delivery_claim'), 'a CAPI do CRM deve aceitar somente fatos do outbox canonico');
+  assert.ok(crmCapi.includes('internal_delivery_required'), 'chamadas publicas nao podem fabricar visita, proposta ou venda');
   assert.ok(out.includes('data-tracking-form=\\"agendamento\\"'), 'o abandono do agendamento deve ser classificado corretamente');
   assert.ok(out.includes('data-tracking-form=\\"financiamento\\"'), 'o abandono do financiamento deve ser classificado corretamente');
   assert.ok(out.includes('data-tracking-form=\\"proprietario\\"'), 'o abandono da captacao deve ser classificado corretamente');
