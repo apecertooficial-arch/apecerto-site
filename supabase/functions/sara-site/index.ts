@@ -328,6 +328,7 @@ Deno.serve(async (request: Request) => {
         .from("unidades")
         .select("empreendimento_id,area_m2,tipologia,vagas,valor_tabela,valor_promo")
         .in("empreendimento_id", propertyIds)
+        .eq("publicado", true)
         .eq("disponivel", true)
       : { data: [], error: null };
     if (unitsError) return json(origin, { ok: false, erro: "unidades_indisponiveis" }, 503);

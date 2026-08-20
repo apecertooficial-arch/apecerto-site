@@ -10,6 +10,11 @@ test('catalogo publico consulta a view site_produtos', async () => {
   assert.ok(d.includes('/rest/v1/site_produtos'), 'o catalogo deve ler a view site_produtos');
 });
 
+test('Sara ignora unidades retiradas do ar mesmo usando cliente de serviço', async () => {
+  const fn = await readFile('supabase/functions/sara-site/index.ts', 'utf8');
+  assert.match(fn, /\.eq\("publicado", true\)/);
+});
+
 test('build injeta o design no pacote-base', async t => {
   if (!(await existe('index.html'))) return t.skip('index.html (pacote-base) ainda nao esta no repo');
   execFileSync(process.execPath, ['scripts/build-site.mjs'], { stdio: 'inherit' });
