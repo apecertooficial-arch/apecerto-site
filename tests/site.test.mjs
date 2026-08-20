@@ -42,6 +42,7 @@ test('build aplica a camada de producao e tracking', async () => {
   execFileSync(process.execPath, ['scripts/build-site.mjs'], { stdio: 'inherit' });
   const out = await readFile('dist/index.html', 'utf8');
   const analytics = await readFile('dist/assets/analytics.js', 'utf8');
+  const siteTrack = await readFile('supabase/functions/site-track/index.ts', 'utf8');
   assert.ok(analytics.includes('G-P63KVXKJDH'), 'o Analytics deve estar ligado ao site');
   assert.ok(analytics.includes('y3rdh7jjn5'), 'o Clarity deve estar ligado ao site');
   assert.ok(analytics.includes("window.clarity('consentv2'"), 'o Clarity deve respeitar consentimento');
@@ -82,6 +83,14 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes("window.apecertoTrack('form_submit_attempt'"), 'tentativas de envio devem ser observaveis');
   assert.ok(analytics.includes("window.apecertoTrack('form_error'"), 'erros de formulario devem ser observaveis');
   assert.ok(analytics.includes("window.apecertoTrack('engagement_time'"), 'tempo ativo deve ser medido por faixas');
+  assert.ok(siteTrack.includes('"gtm_health"'), 'o GTM deve conseguir deixar prova de saude na telemetria propria');
+  assert.ok(out.includes('data-tracking-form=\\"agendamento\\"'), 'o abandono do agendamento deve ser classificado corretamente');
+  assert.ok(out.includes('data-tracking-form=\\"financiamento\\"'), 'o abandono do financiamento deve ser classificado corretamente');
+  assert.ok(out.includes('data-tracking-form=\\"proprietario\\"'), 'o abandono da captacao deve ser classificado corretamente');
+  assert.ok(out.includes("window.apecertoTrack('schedule_field_select'"), 'data e horario do agendamento devem gerar eventos');
+  assert.ok(out.includes("window.apecertoTrack('gallery_interaction', { item_id:"), 'galeria deve carregar o imovel no evento');
+  assert.ok(out.includes("window.apecertoTrack('favorite_toggle', { item_id:"), 'favorito deve carregar o imovel no evento');
+  assert.ok(!analytics.includes("/favorit/i.test(label)"), 'o filtro Favoritos nao pode virar falso AddToWishlist');
   assert.ok(out.includes('/functions/v1/sara-site'), 'a Sara deve consultar a Edge Function');
   assert.ok(out.includes('saraUnidades'), 'o card deve usar os dados da unidade encontrada pela Sara');
   assert.ok(out.includes('(saraAtiva || dormOk(r))'), 'a lista deve confiar nos dormitorios por unidade validados pela Sara');

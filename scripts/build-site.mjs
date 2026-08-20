@@ -115,8 +115,85 @@ design = trocaObrigatoria(
 design = trocaObrigatoria(
   design,
   '  abrirDetalhe(r) {\n    this.lead = {};',
-  `  abrirDetalhe(r) {\n    if (window.apecertoTrack) window.apecertoTrack('view_item', { item_id: String(r.id || ''), item_name: r.nome || '', bairro: r.bairro || '', value: this.precoDe(r), currency: 'BRL' });\n    this.lead = {};`,
+  `  abrirDetalhe(r) {\n    window.apecertoCurrentItem = { id: String(r.id || ''), name: r.nome || '' };\n    if (window.apecertoTrack) window.apecertoTrack('view_item', { item_id: String(r.id || ''), item_name: r.nome || '', bairro: r.bairro || '', value: this.precoDe(r), currency: 'BRL' });\n    this.lead = {};`,
   'evento view_item',
+);
+
+design = trocaObrigatoria(
+  design,
+  'const setIdx = (e, i) => { e.stopPropagation(); this.setState({ cardGal: Object.assign({}, this.state.cardGal, { [r.id]: i }) }); };',
+  "const setIdx = (e, i) => { e.stopPropagation(); if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(r.id || ''), item_name: r.nome || '', action_label: i > idx ? 'Próxima foto' : 'Foto anterior' }); this.setState({ cardGal: Object.assign({}, this.state.cardGal, { [r.id]: i }) }); };",
+  'galeria do card com contexto do imovel',
+);
+
+design = trocaObrigatoria(
+  design,
+  '        if (favs[r.id]) delete favs[r.id]; else favs[r.id] = true;\n        try { localStorage.setItem(\'apecerto_favs\', JSON.stringify(favs)); } catch (err) {}',
+  "        if (favs[r.id]) delete favs[r.id]; else favs[r.id] = true;\n        if (window.apecertoTrack) window.apecertoTrack('favorite_toggle', { item_id: String(r.id || ''), item_name: r.nome || '', status: favs[r.id] ? 'added' : 'removed' });\n        try { localStorage.setItem('apecerto_favs', JSON.stringify(favs)); } catch (err) {}",
+  'favorito do card com contexto do imovel',
+);
+
+design = trocaObrigatoria(
+  design,
+  '      fecharDet: () => { if (this.mapa) { this.mapa.remove(); this.mapa = null; }',
+  '      fecharDet: () => { window.apecertoCurrentItem = null; if (this.mapa) { this.mapa.remove(); this.mapa = null; }',
+  'limpeza do contexto do imovel',
+);
+
+design = trocaObrigatoria(
+  design,
+  '      detFavTgl: () => { const d = this.state.det; if (!d) return; const favs = Object.assign({}, this.state.favs); if (favs[d.id]) delete favs[d.id]; else favs[d.id] = true; try { localStorage.setItem(\'apecerto_favs\', JSON.stringify(favs)); } catch (err) {} this.setState({ favs }); },',
+  "      detFavTgl: () => { const d = this.state.det; if (!d) return; const favs = Object.assign({}, this.state.favs); if (favs[d.id]) delete favs[d.id]; else favs[d.id] = true; if (window.apecertoTrack) window.apecertoTrack('favorite_toggle', { item_id: String(d.id || ''), item_name: d.nome || '', status: favs[d.id] ? 'added' : 'removed' }); try { localStorage.setItem('apecerto_favs', JSON.stringify(favs)); } catch (err) {} this.setState({ favs }); },",
+  'favorito do detalhe com contexto do imovel',
+);
+
+design = trocaObrigatoria(
+  design,
+  '      galPrev: e => { e.stopPropagation(); this.setState({ galIdx: (gi - 1 + fotosDet.length) % fotosDet.length }); },\n      galNext: e => { e.stopPropagation(); this.setState({ galIdx: (gi + 1) % fotosDet.length }); },\n      galThumbs: fotosDet.map((u, i) => ({ url: u, sel: e => { e.stopPropagation(); this.setState({ galIdx: i }); }, borda: i === gi ? \'var(--ape-orange)\' : \'transparent\', op: i === gi ? \'1\' : \'0.6\' })),',
+  "      galPrev: e => { e.stopPropagation(); if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Foto anterior' }); this.setState({ galIdx: (gi - 1 + fotosDet.length) % fotosDet.length }); },\n      galNext: e => { e.stopPropagation(); if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Próxima foto' }); this.setState({ galIdx: (gi + 1) % fotosDet.length }); },\n      galThumbs: fotosDet.map((u, i) => ({ url: u, sel: e => { e.stopPropagation(); if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Miniatura ' + (i + 1) }); this.setState({ galIdx: i }); }, borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' })),",
+  'galeria do detalhe com contexto do imovel',
+);
+
+design = trocaObrigatoria(
+  design,
+  '        sel: ok ? () => this.setState({ leadDia: val, calOn: false }) : () => {}',
+  "        sel: ok ? () => { if (window.apecertoTrack) window.apecertoTrack('schedule_field_select', { field_name: 'date', item_id: String((this.state.det || {}).id || ''), item_name: (this.state.det || {}).nome || '' }); this.setState({ leadDia: val, calOn: false }); } : () => {}",
+  'selecao de data do agendamento',
+);
+
+design = trocaObrigatoria(
+  design,
+  "      leadHoras: (() => { const hs = []; for (let h = 8; h <= 19; h++) { hs.push(String(h).padStart(2, '0') + ':00'); if (h < 19) hs.push(String(h).padStart(2, '0') + ':30'); } return hs; })().map(h => ({ label: h, sel: () => this.setState({ leadHora: h, horaOn: false }),",
+  "      leadHoras: (() => { const hs = []; for (let h = 8; h <= 19; h++) { hs.push(String(h).padStart(2, '0') + ':00'); if (h < 19) hs.push(String(h).padStart(2, '0') + ':30'); } return hs; })().map(h => ({ label: h, sel: () => { if (window.apecertoTrack) window.apecertoTrack('schedule_field_select', { field_name: 'time', item_id: String((this.state.det || {}).id || ''), item_name: (this.state.det || {}).nome || '' }); this.setState({ leadHora: h, horaOn: false }); },",
+  'selecao de horario do agendamento',
+);
+
+design = trocaObrigatoria(
+  design,
+  '<div sc-camel-on-input="{{ leadInput }}" style="display: flex; flex-direction: column; gap: 10px; border-top:',
+  '<div data-tracking-form="agendamento" sc-camel-on-input="{{ leadInput }}" style="display: flex; flex-direction: column; gap: 10px; border-top:',
+  'contexto do formulario de agendamento',
+);
+
+design = trocaObrigatoria(
+  design,
+  '<div sc-camel-on-input="{{ finInput }}" style="display: flex">',
+  '<div data-tracking-context="financiamento" sc-camel-on-input="{{ finInput }}" style="display: flex">',
+  'contexto do slider de financiamento',
+);
+
+design = trocaObrigatoria(
+  design,
+  '<div sc-camel-on-input="{{ fichaInput }}" style="display: flex; flex-direction: column; gap: 14px">',
+  '<div data-tracking-form="financiamento" sc-camel-on-input="{{ fichaInput }}" style="display: flex; flex-direction: column; gap: 14px">',
+  'contexto do formulario de financiamento',
+);
+
+design = trocaObrigatoria(
+  design,
+  '<div sc-camel-on-input="{{ formInput }}" sc-camel-on-change="{{ formInput }}" style="background:',
+  '<div data-tracking-form="proprietario" sc-camel-on-input="{{ formInput }}" sc-camel-on-change="{{ formInput }}" style="background:',
+  'contexto do formulario de proprietario',
 );
 design = trocaObrigatoria(
   design,
@@ -185,7 +262,7 @@ const buyerLeadProductionMethod = `  async leadEnviar() {
 
 design = trocaBlocoObrigatorio(design, '  async leadEnviar() {', '  async compartilhar() {', buyerLeadProductionMethod, 'lead comprador unificado no CRM');
 
-const financeProductionForm = `          <div sc-camel-on-input="{{ fichaInput }}" style="display: flex; flex-direction: column; gap: 14px">
+const financeProductionForm = `          <div data-tracking-form="financiamento" sc-camel-on-input="{{ fichaInput }}" style="display: flex; flex-direction: column; gap: 14px">
             <div style="background: var(--bg-sunken); border-radius: var(--radius-md); padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: var(--text-sm)">
               <span style="color: var(--fg-3)">Imóvel: <strong style="color: var(--fg-1)">{{ fichaImovel }}</strong></span>
               <span style="color: var(--fg-3)">Entrada ({{ finEntradaPct }}): <strong style="color: var(--fg-1)">{{ finEntrada }}</strong></span>
@@ -214,7 +291,7 @@ const financeProductionForm = `          <div sc-camel-on-input="{{ fichaInput }
 
 design = trocaBlocoObrigatorio(
   design,
-  '          <div sc-camel-on-input="{{ fichaInput }}" style="display: flex; flex-direction: column; gap: 14px">',
+  '          <div data-tracking-form="financiamento" sc-camel-on-input="{{ fichaInput }}" style="display: flex; flex-direction: column; gap: 14px">',
   '            <sc-if value="{{ fichaErro }}" hint-placeholder-val="{{ false }}">',
   financeProductionForm,
   'formulario financeiro minimizado',

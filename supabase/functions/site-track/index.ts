@@ -20,7 +20,7 @@ const ALLOWED_EVENTS = new Set([
   "cta_click", "owner_cta_click", "owner_portal_open", "form_start",
   "form_submit_attempt", "form_error", "filter_change", "scroll_depth",
   "engagement_time", "page_exit", "schedule_start", "schedule_field_select",
-  "schedule_complete", "financing_open", "financing_change",
+  "schedule_complete", "financing_open", "financing_change", "gtm_health",
 ]);
 
 const ALLOWED_PROPERTY_KEYS = new Set([

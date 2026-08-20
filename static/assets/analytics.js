@@ -49,6 +49,7 @@
     'schedule_start', 'gallery_interaction'
   ]);
   var lastViewedItemId = '';
+  var lastViewedItemName = '';
 
   window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
@@ -432,7 +433,18 @@
     if (eventName === 'view_item') {
       var nextItem = clean(publicParams.item_id, 100);
       if (lastViewedItemId && nextItem && lastViewedItemId !== nextItem) publicParams.from_item_id = lastViewedItemId;
-      if (nextItem) lastViewedItemId = nextItem;
+      if (nextItem) {
+        lastViewedItemId = nextItem;
+        lastViewedItemName = clean(publicParams.item_name, 160);
+        window.apecertoCurrentItem = { id: lastViewedItemId, name: lastViewedItemName };
+      }
+    }
+    var currentItem = window.apecertoCurrentItem && typeof window.apecertoCurrentItem === 'object'
+      ? window.apecertoCurrentItem
+      : null;
+    if (currentItem && currentItem.id && !publicParams.item_id && /^(gallery_interaction|favorite_toggle|whatsapp_click|phone_click|schedule_start|schedule_field_select|financing_open|financing_change|form_start|form_submit_attempt|form_error)$/.test(eventName)) {
+      publicParams.item_id = clean(currentItem.id, 100);
+      if (currentItem.name) publicParams.item_name = clean(currentItem.name, 160);
     }
     var eventId = makeUuid();
     var payload = Object.assign({ page_location: location.href, event_id: eventId }, publicParams);
@@ -622,6 +634,11 @@
   }
 
   function formContext(field) {
+    var explicit = field.closest('[data-tracking-form],[data-tracking-context]');
+    if (explicit) {
+      var declared = cleanLabel(explicit.getAttribute('data-tracking-form') || explicit.getAttribute('data-tracking-context')).toLowerCase();
+      if (/^(agendamento|financiamento|proprietario|lead|portal_login|busca)$/.test(declared)) return declared;
+    }
     var name = cleanLabel(field.getAttribute('name')).toLowerCase();
     var placeholder = cleanLabel(field.getAttribute('placeholder')).toLowerCase();
     if (/o que você procura|o que voce procura/.test(placeholder)) return 'sara';
@@ -633,8 +650,6 @@
     if (/telefone|email|nome/.test(name)) return 'lead';
     return 'busca';
   }
-
-  var lastGallery = 0;
 
   function bindAutomaticEvents() {
     document.addEventListener('click', function (event) {
@@ -655,16 +670,9 @@
       var label = cleanLabel(button.getAttribute('aria-label') || button.innerText);
       if (/Buscar com a Sara/i.test(label)) {
         window.apecertoTrack('sara_open', { source: 'hero' });
-      } else if (/favorit/i.test(label)) {
-        window.apecertoTrack('favorite_toggle', { action_label: label });
-      } else if (/foto anterior|próxima foto|proxima foto/i.test(label)) {
-        var now = Date.now();
-        if (now - lastGallery < 400) return;
-        lastGallery = now;
-        window.apecertoTrack('gallery_interaction', { action_label: label });
       } else if (/buscar apê|buscar ape/i.test(label)) {
         window.apecertoTrack('property_search', { source: 'hero' });
-      } else if (/agendar visita/i.test(label)) {
+      } else if (/agendar visita|melhor dia|pedir visita/i.test(label)) {
         window.apecertoTrack('schedule_start', { cta_name: 'agendar_visita' });
       } else if (/simular financiamento|financiamento/i.test(label)) {
         window.apecertoTrack('financing_open', { cta_name: 'simular_financiamento' });
