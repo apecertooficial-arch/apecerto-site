@@ -79,7 +79,7 @@ Conversões Meta do CRM, em ordem de qualidade:
 
 Cada envio inclui `stage_event`, `funnel_stage` e `stage_rank`, além da atribuição disponível de campanha, conjunto, anúncio e criativo. O antigo número de etapa 68 não é tratado como qualificação: no banco ele significa “Em atendimento”.
 
-`LeadRespondeu` significa exclusivamente uma mensagem de entrada enviada pelo próprio lead. Mensagens de saída do corretor (`out`, `saida`, `enviada` ou `sent`) são descartadas pelo gatilho e não geram esse evento.
+`LeadRespondeu` significa exclusivamente uma mensagem de entrada enviada pelo próprio lead. O evento leva `response_actor: lead` e `message_direction: inbound`. Mensagens de saída do corretor (`out`, `saida`, `enviada` ou `sent`) são descartadas pelo gatilho e não geram esse evento.
 
 ## Atribuição que acompanha o lead
 

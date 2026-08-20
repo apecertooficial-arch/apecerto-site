@@ -164,6 +164,10 @@ Deno.serve(async (request: Request) => {
     source: attribution?.source ?? current.utm_source ?? undefined,
     medium: attribution?.medium ?? current.utm_medium ?? undefined,
   };
+  if (eventType === "responded") {
+    customData.response_actor = "lead";
+    customData.message_direction = "inbound";
+  }
   if (eventType === "purchase") {
     customData.value = purchaseValue ?? (Number(negocio.valor) || 0);
     customData.currency = "BRL";

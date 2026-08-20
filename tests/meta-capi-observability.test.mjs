@@ -20,6 +20,8 @@ test("conversões offline usam fatos canônicos e outbox idempotente", () => {
 test("crm-capi versionada resolve visita, proposta e venda e registra recibo", () => {
   assert.match(crmCapi, /LeadRespondeu/);
   assert.doesNotMatch(crmCapi, /LeadRespondido/);
+  assert.match(crmCapi, /response_actor = "lead"/);
+  assert.match(crmCapi, /message_direction = "inbound"/);
   assert.match(crmCapi, /QualificacaoIniciada/);
   assert.match(crmCapi, /visit_scheduled: "Schedule"/);
   assert.match(crmCapi, /PropostaEnviada/);
