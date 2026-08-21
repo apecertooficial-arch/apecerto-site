@@ -47,8 +47,9 @@ for (const [uuid, entry] of Object.entries(originalManifest)) {
 // Camada de producao aplicada sobre o design versionado. As substituicoes
 // obrigatorias falham de forma explicita se a estrutura aprovada mudar.
 const trocaObrigatoria = (texto, de, para, rotulo) => {
-  if (!texto.includes(de)) throw new Error('trecho obrigatorio ausente: ' + rotulo);
-  return texto.replace(de, para);
+  if (texto.includes(de)) return texto.replace(de, para);
+  if (texto.includes(para)) return texto;
+  throw new Error('trecho obrigatorio ausente: ' + rotulo);
 };
 
 const trocaBlocoObrigatorio = (texto, inicio, fim, novo, rotulo) => {
@@ -135,8 +136,8 @@ design = trocaObrigatoria(
 
 design = trocaObrigatoria(
   design,
-  '      fecharDet: () => { if (this.mapa) { this.mapa.remove(); this.mapa = null; }',
-  '      fecharDet: () => { window.apecertoCurrentItem = null; if (this.mapa) { this.mapa.remove(); this.mapa = null; }',
+  '  fecharDetalhe() {\n    if (this.mapa) { this.mapa.remove(); this.mapa = null; }',
+  '  fecharDetalhe() {\n    window.apecertoCurrentItem = null;\n    if (this.mapa) { this.mapa.remove(); this.mapa = null; }',
   'limpeza do contexto do imovel',
 );
 
@@ -170,8 +171,8 @@ design = trocaObrigatoria(
 
 design = trocaObrigatoria(
   design,
-  '<div sc-camel-on-input="{{ leadInput }}" style="display: flex; flex-direction: column; gap: 10px; border-top:',
-  '<div data-tracking-form="agendamento" sc-camel-on-input="{{ leadInput }}" style="display: flex; flex-direction: column; gap: 10px; border-top:',
+  '<div data-lead-form="" sc-camel-on-input="{{ leadInput }}" style="display: flex; flex-direction: column; gap: 10px; border-top:',
+  '<div data-lead-form="" data-tracking-form="agendamento" sc-camel-on-input="{{ leadInput }}" style="display: flex; flex-direction: column; gap: 10px; border-top:',
   'contexto do formulario de agendamento',
 );
 
@@ -473,7 +474,7 @@ design = trocaObrigatoria(
   'ficha resumida da unidade encontrada pela Sara',
 );
 design = trocaObrigatoria(design, "      precoAntes: r.preco_promo && Number(r.preco) > Number(r.preco_promo) ? this.fmtR$(r.preco) : false,", "      precoAntes: !saraUnidade && r.preco_promo && Number(r.preco) > Number(r.preco_promo) ? this.fmtR$(r.preco) : false,", 'preco anterior somente fora da Sara');
-design = trocaObrigatoria(design, "Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar', fFinalidade: 'venda' }, patch)", "Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar', fFinalidade: 'venda', saraIds: null, saraEmpreendimentoIds: null }, patch)", 'limpeza Sara no menu');
+design = trocaObrigatoria(design, "Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null }, patch)", "Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null, saraEmpreendimentoIds: null }, patch)", 'limpeza Sara no menu');
 design = trocaObrigatoria(design, '    const { fBairro, fStatus, fPreco, fDorms, fVagas, fFinalidade } = this.state;', "    const { fBairro, fStatus, fPreco, fDorms, fVagas, fFinalidade } = this.state;\n    const saraAtiva = Array.isArray(this.state.saraIds);\n    const saraIds = saraAtiva ? this.state.saraIds.map(String) : null;", 'filtro IDs da Sara');
 design = trocaObrigatoria(design, "      (!this.state.soFavs || this.state.favs[r.id]) &&", "      (!this.state.soFavs || this.state.favs[r.id]) &&\n      (!saraAtiva || saraIds.includes(String(r.id))) &&", 'aplicacao IDs da Sara');
 design = trocaObrigatoria(design, "      (aba !== 'lancamentos' || r.status === 'em_obras' || r.status === 'lancamento') &&", "      (saraAtiva || aba !== 'lancamentos' || r.status === 'em_obras' || r.status === 'lancamento') &&", 'Sara ignora aba derivada');
@@ -485,15 +486,15 @@ design = trocaObrigatoria(design, "      (fPreco == null || fPreco >= teto || !t
 design = trocaObrigatoria(design, '    let nota = null;\n    const ativos', "    if (saraAtiva) {\n      const ordemSara = new Map(saraIds.map((id, index) => [String(id), index]));\n      out.sort((a, b) => (ordemSara.get(String(a.id)) ?? Number.MAX_SAFE_INTEGER) - (ordemSara.get(String(b.id)) ?? Number.MAX_SAFE_INTEGER));\n    }\n    let nota = null;\n    const ativos", 'ordem de preco devolvida pela Sara');
 design = trocaObrigatoria(design, '    if (!out.length && baseFinalidade.length) {', "    if (!out.length && baseFinalidade.length && !saraAtiva) {", 'sem fallback enganoso da Sara');
 design = trocaObrigatoria(design, "    } else if (!out.length && rows.length) {", "    } else if (saraAtiva && !out.length) {\n      nota = 'Nenhum apê bate exatamente com o pedido feito à Sara.';\n    } else if (!out.length && rows.length) {", 'nota vazia da Sara');
-design = trocaObrigatoria(design, "fPreco: 890000, fPrecoT: null, precoTocado: false })", "fPreco: 890000, fPrecoT: null, precoTocado: false, saraIds: null })", 'limpar filtros da Sara');
+design = trocaObrigatoria(design, "limparFiltros: () => this.aplicarFiltros({ fBairro: '', fStatus: '', fDorms: '', fVagas: '', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null })", "limparFiltros: () => this.aplicarFiltros({ fBairro: '', fStatus: '', fDorms: '', fVagas: '', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null, saraEmpreendimentoIds: null })", 'limpar filtros da Sara');
 design = trocaObrigatoria(design, "setFBairro: e => this.aplicarFiltros({ fBairro: e.target.value })", "setFBairro: e => this.aplicarFiltros({ fBairro: e.target.value, saraIds: null })", 'bairro manual limpa Sara');
 design = trocaObrigatoria(design, "setFStatus: e => this.aplicarFiltros({ fStatus: e.target.value })", "setFStatus: e => this.aplicarFiltros({ fStatus: e.target.value, saraIds: null })", 'status manual limpa Sara');
 design = trocaObrigatoria(design, "this.aplicarFiltros({ fDorms: on ? '' : o.v })", "this.aplicarFiltros({ fDorms: on ? '' : o.v, saraIds: null })", 'dormitorios manuais limpam Sara');
 design = trocaObrigatoria(design, "this.aplicarFiltros({ fVagas: on ? '' : o.v })", "this.aplicarFiltros({ fVagas: on ? '' : o.v, saraIds: null })", 'vagas manuais limpam Sara');
 design = trocaObrigatoria(design, "precoTocado: true }); },", "precoTocado: true, saraIds: null }); },", 'preco manual limpa Sara');
-design = trocaObrigatoria(design, "setComprar: () => this.aplicarFiltros({ aba: 'comprar', fFinalidade: 'venda' })", "setComprar: () => this.aplicarFiltros({ aba: 'comprar', fFinalidade: 'venda', fPreco: null, fPrecoT: null, precoTocado: false, saraIds: null })", 'aba comprar limpa Sara');
-design = trocaObrigatoria(design, "setLanc: () => this.aplicarFiltros({ aba: 'lancamentos', fFinalidade: 'venda' })", "setLanc: () => this.aplicarFiltros({ aba: 'lancamentos', fFinalidade: 'venda', fPreco: null, fPrecoT: null, precoTocado: false, saraIds: null })", 'aba lancamentos limpa Sara');
-design = trocaObrigatoria(design, "setAlugar: () => this.aplicarFiltros({ aba: 'alugar', fFinalidade: 'aluguel' })", "setAlugar: () => this.aplicarFiltros({ aba: 'alugar', fFinalidade: 'aluguel', fPreco: null, fPrecoT: null, precoTocado: false, saraIds: null })", 'aba alugar limpa Sara');
+design = trocaObrigatoria(design, "setComprar: () => this.aplicarFiltros({ aba: 'comprar', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null })", "setComprar: () => this.aplicarFiltros({ aba: 'comprar', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null, saraEmpreendimentoIds: null })", 'aba comprar limpa Sara');
+design = trocaObrigatoria(design, "setLanc: () => this.aplicarFiltros({ aba: 'lancamentos', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null })", "setLanc: () => this.aplicarFiltros({ aba: 'lancamentos', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null, saraEmpreendimentoIds: null })", 'aba lancamentos limpa Sara');
+design = trocaObrigatoria(design, "setAlugar: () => this.aplicarFiltros({ aba: 'alugar', fFinalidade: 'aluguel', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null })", "setAlugar: () => this.aplicarFiltros({ aba: 'alugar', fFinalidade: 'aluguel', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null, saraEmpreendimentoIds: null })", 'aba alugar limpa Sara');
 
 // Clarity grava movimento/cliques, mas nunca recebe os blocos que podem conter
 // conversa, documentos, dados de lead ou informacoes internas do portal.

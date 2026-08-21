@@ -45,9 +45,10 @@ test('cards de bairro nao abrem o seletor de arquivos no site publico', async ()
   );
 });
 
-test('Sara ignora unidades retiradas do ar mesmo usando cliente de serviço', async () => {
+test('Sara consulta somente a vitrine pública já filtrada pelo banco', async () => {
   const fn = await readFile('supabase/functions/sara-site/index.ts', 'utf8');
-  assert.match(fn, /\.eq\("publicado", true\)/);
+  assert.match(fn, /\.from\("site_produtos"\)/);
+  assert.doesNotMatch(fn, /\.from\("(?:empreendimentos|unidades)"\)/);
 });
 
 test('build injeta o design no pacote-base', async t => {
@@ -149,7 +150,7 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(out.includes("window.apecertoTrack('schedule_field_select'"), 'data e horario do agendamento devem gerar eventos');
   assert.ok(out.includes("window.apecertoTrack('gallery_interaction', { item_id:"), 'galeria deve carregar o imovel no evento');
   assert.ok(out.includes("window.apecertoTrack('favorite_toggle', { item_id:"), 'favorito deve carregar o imovel no evento');
-  assert.ok(design.includes("if (r.codigo) u.searchParams.set('cod', String(r.codigo))"), 'cada unidade deve ter URL compartilhavel pelo codigo unico');
+  assert.ok(design.includes("u.pathname = '/imovel/' + encodeURIComponent(this.slugParte(r.slug || r.codigo || r.id)) + '/';"), 'cada unidade deve ter URL limpa e compartilhavel pelo slug ou codigo unico');
   assert.ok(analytics.includes("/^(gallery_interaction|favorite_toggle|whatsapp_click|phone_click|schedule_start"), 'WhatsApp e demais intencoes devem herdar o imovel aberto');
   assert.ok(!analytics.includes("/favorit/i.test(label)"), 'o filtro Favoritos nao pode virar falso AddToWishlist');
   assert.ok(analytics.includes('unidade_id: uuidOrNull(source.unidade_id)'), 'o lead deve preservar a unidade real selecionada');

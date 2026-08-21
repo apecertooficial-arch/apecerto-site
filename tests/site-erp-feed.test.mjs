@@ -9,7 +9,7 @@ const design = fs.readFileSync(
   "utf8",
 );
 const analytics = fs.readFileSync(
-  new URL("../dist/assets/analytics.js", import.meta.url),
+  new URL("../dist/" + version.assetMap["/assets/analytics.js"].replace(/^\/+/, ""), import.meta.url),
   "utf8",
 );
 const templateMatch = html.match(
@@ -38,8 +38,8 @@ test("catálogo público vem da aprovação de Produtos do ERP", () => {
 
 test("produto pronto só aparece como unidade aprovada e usa a galeria da unidade", () => {
   assert.match(design, /r && r\.status !== 'pronto'/);
-  assert.match(design, /capa_path: u\.capa_path \|\| r\.capa_path/);
-  assert.match(design, /Array\.isArray\(u\.fotos\) && u\.fotos\.length \? u\.fotos : r\.fotos/);
+  assert.match(design, /const capaUnidade = u\.capa_path \|\| fotosUnidade\[0\] \|\| r\.capa_path \|\| null/);
+  assert.match(design, /const fotosUnidade = Array\.isArray\(u\.fotos\) && u\.fotos\.length \? u\.fotos\.slice\(\) : \(Array\.isArray\(r\.fotos\) \? r\.fotos\.slice\(\) : \[\]\)/);
 });
 
 test("bundle continua estruturalmente íntegro", () => {
