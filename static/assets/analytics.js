@@ -246,11 +246,14 @@
   }
 
   // Dispara a conversao do Google Ads quando ha um label mapeado para o evento.
-  function adsConversion(eventName, params) {
+  function adsConversion(eventName, params, eventId) {
     if (!consent.marketing || !googleAdsLoaded) return;
     var label = ADS_CONVERSION_LABELS[eventName];
     if (!label) return;
-    var data = { send_to: GOOGLE_ADS_ID + '/' + label };
+    var data = {
+      send_to: GOOGLE_ADS_ID + '/' + label,
+      transaction_id: clean(eventId, 120),
+    };
     if (params && typeof params.value === 'number') { data.value = params.value; data.currency = params.currency || 'BRL'; }
     window.gtag('event', 'conversion', data);
   }
@@ -449,6 +452,14 @@
     var eventId = makeUuid();
     var payload = Object.assign({ page_location: location.href, event_id: eventId }, publicParams);
     var attribution = readStoredAttribution();
+    var campaignTouch = attribution.last && Object.keys(attribution.last).length
+      ? attribution.last
+      : currentTouch;
+    if (campaignTouch) {
+      ['campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'placement'].forEach(function (key) {
+        if (campaignTouch[key] && !payload[key]) payload[key] = campaignTouch[key];
+      });
+    }
     if (attribution.first && attribution.first.utm_campaign) payload.utm_campaign_first = attribution.first.utm_campaign;
     if (attribution.last && attribution.last.utm_campaign) payload.utm_campaign_last = attribution.last.utm_campaign;
     if (consent.analytics && ensureSessionId()) payload.apecerto_session_id = sessionId;
@@ -469,7 +480,7 @@
         phone_number: identity.phone || undefined,
       });
     }
-    adsConversion(eventName, publicParams);
+    adsConversion(eventName, publicParams, eventId);
     if (clarityLoaded && window.clarity && /^(generate_lead|view_item|whatsapp_click|phone_click|sara_results|owner_portal_open)$/.test(eventName)) {
       window.clarity('event', eventName);
     }

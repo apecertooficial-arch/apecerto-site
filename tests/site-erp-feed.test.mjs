@@ -7,6 +7,10 @@ const design = fs.readFileSync(
   new URL("../design/Site ApeCerto.dc.html", import.meta.url),
   "utf8",
 );
+const analytics = fs.readFileSync(
+  new URL("../dist/assets/analytics.js", import.meta.url),
+  "utf8",
+);
 const templateMatch = html.match(
   /<script type="__bundler\/template">\s*([\s\S]*?)\s*<\/script>/,
 );
@@ -42,7 +46,7 @@ test("bundle continua estruturalmente íntegro", () => {
   assert.match(template, /mapProduto\(r\)/);
   assert.match(template, /11980154312/);
   assert.match(template, /apecertoTrack\('generate_lead'/);
-  assert.match(template, /apecertoSubmitSiteLead/);
+  assert.match(analytics, /apecertoSubmitSiteLead/);
   assert.match(template, /lead_type: 'financiamento'/);
   assert.doesNotMatch(template, /\/rest\/v1\/site_simulacoes/);
   assert.doesNotMatch(template, /name="cpf"/);

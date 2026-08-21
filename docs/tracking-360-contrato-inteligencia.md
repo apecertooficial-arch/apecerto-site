@@ -13,7 +13,18 @@ Dar ao CEO uma leitura única do caminho anúncio → página → imóvel → in
 - Google Analytics 4: análise consentida e modelagem do Google.
 - Microsoft Clarity: mapas de calor e gravações mascaradas, somente com Analytics aceito.
 - Meta Pixel + CAPI: navegador e servidor compartilham `event_id` para deduplicação, somente com marketing aceito.
-- CRM CAPI: envia `LeadRespondeu`, `QualificacaoIniciada`, `Schedule`, `VisitaRealizada`, `PropostaEnviada` e `Purchase` a partir de fatos canônicos do ERP, com recibo, deduplicação e retentativa.
+- CRM CAPI: envia `LeadRespondeu`, `QualificacaoIniciada`, `LeadQualificado`, `Schedule`, `VisitaRealizada`, `PropostaEnviada` e `Purchase` a partir de fatos canônicos do ERP, com recibo, deduplicação e retentativa.
+
+## Contrato explícito da Central de Automações
+
+A atribuição Meta de entrada não é criada por gatilho, cron ou consumidor oculto da fila. O único fluxo oficial é `Entrada → Operações de campos → Registrar rastreamento Meta → próximo bloco`. O módulo `sync-meta-attribution-field-operation` chama `private.motor_atribuicao_meta_por_campos`; sua saída e `private.lead_attribution` são as fontes canônicas.
+
+- sem `meta_lead_id`/`leadgen_id`, o módulo retorna `aplicado: false` e `meta_lead_id_ausente`;
+- campanha, conjunto, anúncio, formulário, página, IDs e datas nunca são inventados;
+- conflito de Meta Lead ID não remapeia outro lead silenciosamente;
+- nenhuma função auxiliar pode escrever diretamente em `private.lead_attribution`;
+- leitores, relatórios e exportações consomem `tracking_lead_attribution` ou o snapshot agregado;
+- o módulo não distribui lead, não aborda, não altera etapa e só continua pela conexão desenhada no construtor.
 
 ## Endpoint para a área de Inteligência
 
@@ -72,6 +83,7 @@ Conversões Meta do CRM, em ordem de qualidade:
 
 - primeira mensagem recebida do lead no WhatsApp ou momento real `respondeu` → `LeadRespondeu`
 - momento real `qualificando` → `QualificacaoIniciada`
+- conclusão comprovada da qualificação, registrada explicitamente pelo fluxo comercial → `LeadQualificado`
 - visita com status agendada → `Schedule`
 - visita com status realizada → `VisitaRealizada`
 - proposta criada → `PropostaEnviada`

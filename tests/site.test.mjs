@@ -54,6 +54,7 @@ test('build injeta o design no pacote-base', async t => {
 test('build aplica a camada de producao e tracking', async () => {
   execFileSync(process.execPath, ['scripts/build-site.mjs'], { stdio: 'inherit' });
   const out = await readFile('dist/index.html', 'utf8');
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const analytics = await readFile('dist/assets/analytics.js', 'utf8');
   const siteTrack = await readFile('supabase/functions/site-track/index.ts', 'utf8');
   const crmCapi = await readFile('supabase/functions/crm-capi/index.ts', 'utf8');
@@ -77,6 +78,9 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(!/owner_(?:portal_open|cta_click):\s*'Lead'/.test(analytics), 'abrir o portal ou clicar no CTA nao pode ser contado como Lead na Meta');
   assert.match(analytics, /generate_lead:\s*'Lead'/, 'somente o envio concluido deve alimentar a conversao Lead');
   assert.match(analytics, /ADS_CONVERSION_LABELS\s*=\s*\{[\s\S]*generate_lead:\s*'anMDCOmFieQcEI7398BE'/, 'o envio concluido deve alimentar a conversao principal do Google Ads');
+  assert.ok(analytics.includes('transaction_id: clean(eventId, 120)'), 'a conversao do Google Ads deve ser deduplicada pelo event_id');
+  assert.ok(analytics.includes("window.gtag('set', 'user_data'"), 'conversoes otimizadas devem receber os dados consentidos do lead');
+  assert.ok(analytics.includes("['campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'placement']"), 'GA e o banco devem receber os identificadores da campanha');
   assert.doesNotMatch(analytics, /owner_(?:portal_open|cta_click):\s*'anMDCOmFieQcEI7398BE'/, 'clique ou abertura nao pode virar conversao do Google Ads');
   assert.ok(out.includes('GTM-524TZP8X'), 'o Tag Manager deve estar ligado ao site');
   assert.ok(out.includes('/assets/analytics.js'), 'o runtime de tracking deve ser carregado');
@@ -100,12 +104,16 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(siteTrack.includes('"gtm_health"'), 'o GTM deve conseguir deixar prova de saude na telemetria propria');
   assert.ok(crmCapi.includes('tracking_delivery_claim'), 'a CAPI do CRM deve aceitar somente fatos do outbox canonico');
   assert.ok(crmCapi.includes('internal_delivery_required'), 'chamadas publicas nao podem fabricar visita, proposta ou venda');
+  assert.ok(crmCapi.includes('meta_lead_id: attribution?.meta_lead_id'), 'o retorno comercial deve carregar o Meta Lead ID canônico');
+  assert.ok(crmCapi.includes('adset_name: attribution?.adset_name'), 'o retorno comercial deve preservar o conjunto de anúncios');
   assert.ok(out.includes('data-tracking-form=\\"agendamento\\"'), 'o abandono do agendamento deve ser classificado corretamente');
   assert.ok(out.includes('data-tracking-form=\\"financiamento\\"'), 'o abandono do financiamento deve ser classificado corretamente');
   assert.ok(out.includes('data-tracking-form=\\"proprietario\\"'), 'o abandono da captacao deve ser classificado corretamente');
   assert.ok(out.includes("window.apecertoTrack('schedule_field_select'"), 'data e horario do agendamento devem gerar eventos');
   assert.ok(out.includes("window.apecertoTrack('gallery_interaction', { item_id:"), 'galeria deve carregar o imovel no evento');
   assert.ok(out.includes("window.apecertoTrack('favorite_toggle', { item_id:"), 'favorito deve carregar o imovel no evento');
+  assert.ok(design.includes("u.searchParams.set('imovel', String(r.slug || r.id))"), 'cada imovel deve ter URL compartilhavel e unica');
+  assert.ok(analytics.includes("/^(gallery_interaction|favorite_toggle|whatsapp_click|phone_click|schedule_start"), 'WhatsApp e demais intencoes devem herdar o imovel aberto');
   assert.ok(!analytics.includes("/favorit/i.test(label)"), 'o filtro Favoritos nao pode virar falso AddToWishlist');
   assert.ok(out.includes('/functions/v1/sara-site'), 'a Sara deve consultar a Edge Function');
   assert.ok(out.includes('saraUnidades'), 'o card deve usar os dados da unidade encontrada pela Sara');
