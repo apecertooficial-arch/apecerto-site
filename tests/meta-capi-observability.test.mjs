@@ -6,6 +6,7 @@ const migration = await readFile(new URL("../supabase/migrations/20260820182000_
 const funnelMigration = await readFile(new URL("../supabase/migrations/20260820200546_meta_capi_funil_qualidade.sql", import.meta.url), "utf8");
 const crmCapi = await readFile(new URL("../supabase/functions/crm-capi/index.ts", import.meta.url), "utf8");
 const metaCapi = await readFile(new URL("../supabase/functions/meta-capi/index.ts", import.meta.url), "utf8");
+const historicalRepair = await readFile(new URL("../supabase/migrations/20260821235500_tracking_360_historical_repair.sql", import.meta.url), "utf8");
 
 test("conversões offline usam fatos canônicos e outbox idempotente", () => {
   assert.match(migration, /private\.tracking_delivery_logs/);
@@ -23,6 +24,8 @@ test("crm-capi versionada resolve visita, proposta e venda e registra recibo", (
   assert.match(crmCapi, /response_actor = "lead"/);
   assert.match(crmCapi, /message_direction = "inbound"/);
   assert.match(crmCapi, /QualificacaoIniciada/);
+  assert.match(crmCapi, /qualified: "Qualificado"/);
+  assert.doesNotMatch(crmCapi, /qualified: "LeadQualificado"/);
   assert.match(crmCapi, /visit_scheduled: "Schedule"/);
   assert.match(crmCapi, /PropostaEnviada/);
   assert.match(crmCapi, /sourceTable === "visitas"/);
@@ -54,4 +57,12 @@ test("meta-capi do navegador também deixa trilha de entrega", () => {
   assert.match(metaCapi, /channel: "meta_browser"/);
   assert.match(metaCapi, /status: "delivered"/);
   assert.match(metaCapi, /body\?\.test_mode === true/);
+});
+
+test("reparo histórico usa contratos canônicos sem automação oculta", () => {
+  assert.match(historicalRepair, /motor_atribuicao_meta_por_campos/);
+  assert.match(historicalRepair, /enqueue_meta_crm_event/);
+  assert.match(historicalRepair, /CONVERSANDO_QUALIFICANDO/);
+  assert.doesNotMatch(historicalRepair, /create\s+(?:or\s+replace\s+)?trigger/i);
+  assert.doesNotMatch(historicalRepair, /cron\.schedule/i);
 });

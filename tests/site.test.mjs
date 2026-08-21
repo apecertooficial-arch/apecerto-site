@@ -198,6 +198,7 @@ test('rota de campanha abre a landing de captacao, nao a home', async () => {
   execFileSync(process.execPath, ['scripts/rotas.mjs'], { stdio: 'inherit' });
   const out = await readFile('dist/proprietario/cadastre-seu-imovel/index.html', 'utf8');
   assert.ok(out.includes('id="owner-form"'), 'a rota de campanha deve mostrar o formulario de proprietario');
+  assert.ok(out.includes('data-tracking-form="proprietario"'), 'a landing deve classificar o abandono como captacao de proprietario');
   assert.ok(out.includes("lead_type: 'proprietario'"), 'o formulario deve criar lead de proprietario');
   assert.ok(out.includes('apecertoSubmitSiteLead'), 'o formulario deve entrar pela porta canonica do CRM');
   assert.ok(out.includes('https://apecerto.com/proprietario/cadastre-seu-imovel/'), 'a canonical deve apontar para a rota anunciada');

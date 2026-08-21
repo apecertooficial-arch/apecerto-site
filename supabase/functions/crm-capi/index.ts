@@ -10,7 +10,9 @@ const EVENT_MAP: Record<string, string> = {
   responded: "LeadRespondeu",
   qualification_started: "QualificacaoIniciada",
   visit_scheduled: "Schedule",
-  qualified: "LeadQualificado",
+  // Keep this name aligned with the existing Meta custom conversion
+  // "Lead Qualificado (CRM)". Meta does not allow editing that rule later.
+  qualified: "Qualificado",
   visit: "VisitaRealizada",
   proposal: "PropostaEnviada",
   purchase: "Purchase",
