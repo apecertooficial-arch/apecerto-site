@@ -3326,7 +3326,7 @@ class Component extends DCLogic {
   state = { aba: null, mmOn: false, produtos: undefined, totalApes: null, dbErro: false,
     portalOn: false, tela: 'auth', authModo: 'entrar', authErro: null, authMsg: null, recMsg: null,
     sess: null, caps: undefined, passo: 1, wizErro: null, fotosNomes: [], enviando: false, editId: null,
-    fBairro: '', fStatus: '', fPrecoMin: null, fPrecoMax: 890000, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, fVagas: '', det: null, galIdx: 0, galOn: false, cardGal: {}, favs: {}, vista: 'dividida', soFavs: false,
+    fBairro: '', fStatus: '', fPreco: 890000, fPrecoMin: null, fPrecoMax: 890000, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, fVagas: '', det: null, galIdx: 0, galOn: false, cardGal: {}, favs: {}, vista: 'dividida', soFavs: false,
     eqAba: 'anun', eqAnun: undefined, eqAnunForm: null, anErro: null, anSalvando: false, anFotosNomes: [], anImportN: 0,
     leadOk: false, leadErro: null, leadEnviando: false, finPct: 80, shareOk: false,
     fichaOn: false, fichaOk: false, fichaErro: null, fichaEnviando: false, fichaConjOn: false, leadDia: null, leadHora: null, detDescExpId: null, calOn: false, calOff: 0, horaOn: false, ecOn: false, fichaEc: null, nascOn: false, nascAno: 1990, nascMes: 0, fichaNasc: null, saraOn: false, saraMsgs: [] };
@@ -3802,7 +3802,7 @@ class Component extends DCLogic {
   }
   filtrar() {
     const rows = this.state.produtos || [];
-    const { fBairro, fStatus, fPrecoMin, fPrecoMax, fDorms, fVagas } = this.state;
+    const { fBairro, fStatus, fPreco, fDorms, fVagas } = this.state; const { fPrecoMin, fPrecoMax } = this.state;
     const teto = this.tetoPreco();
     const aba = this.state.aba || this.props.abaInicial || 'comprar';
     const dormOk = r => !fDorms || (fDorms === 'd1' ? (r.dormitorios || 0) <= 1 : fDorms === 'd2' ? r.dormitorios === 2 : (r.dormitorios || 0) >= 3);
@@ -3814,7 +3814,7 @@ class Component extends DCLogic {
       (!fStatus || r.status === fStatus) &&
       dormOk(r) &&
       vagasOk(r) &&
-      (fPrecoMax == null || fPrecoMax >= teto || !this.precoDe(r) || this.precoDe(r) <= fPrecoMax) &&      (fPrecoMin == null || fPrecoMin <= 100000 || !this.precoDe(r) || this.precoDe(r) >= fPrecoMin));
+      (fPrecoMin == null || fPrecoMin <= 100000 || !this.precoDe(r) || this.precoDe(r) >= fPrecoMin) &&      (fPreco == null || fPreco >= teto || !this.precoDe(r) || this.precoDe(r) <= fPreco));
     let nota = null;
     const ativos = fBairro || fStatus || fDorms || fVagas || (this.state.precoTocado && ((fPrecoMax != null && fPrecoMax < teto) || (fPrecoMin != null && fPrecoMin > 100000)));
     if (this.state.soFavs && !out.length) {
@@ -4030,7 +4030,7 @@ class Component extends DCLogic {
       tglTodosLabel: mostrarTodos ? 'Mostrar menos' : 'Ver todos os ' + filtradosAll.length + ' apês →',
       verMaisOn: escondidos > 0,
       verMaisLabel: 'Ver mais ' + escondidos + (escondidos > 1 ? ' apês' : ' apê'),
-      limparFiltros: () => this.setState({ fBairro: '', fStatus: '', fDorms: '', fVagas: '', fPrecoMin: null, fPrecoMax: 890000, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false }),
+      limparFiltros: () => this.setState({ fBairro: '', fStatus: '', fDorms: '', fVagas: '', fPrecoMin: null, fPrecoMax: 890000, fPrecoMinT: null, fPrecoMaxT: null, fPreco: 890000, fPrecoT: null, precoTocado: false }),
       ...(() => {
         const rows = Array.isArray(st.produtos) ? st.produtos : [];
         const mini = r => ({
@@ -4086,7 +4086,7 @@ class Component extends DCLogic {
       precoMeioLabel: this.fmtMi(this.precoDeT(50)),
       precoLabel: (() => { const minOn = fPrecoMin > 100000, maxOn = fPrecoMax < teto; if (!minOn && !maxOn) return 'sem limite'; if (minOn && maxOn) return this.fmtMi(fPrecoMin) + ' – ' + this.fmtMi(fPrecoMax); return minOn ? ('a partir de ' + this.fmtMi(fPrecoMin)) : ('até ' + this.fmtMi(fPrecoMax)); })(),
       precoFillBg: (() => { const pctMin = st.fPrecoMinT != null ? st.fPrecoMinT : this.tDePreco(fPrecoMin); const pctMax = st.fPrecoMaxT != null ? st.fPrecoMaxT : this.tDePreco(fPrecoMax); return 'linear-gradient(to right, #EFE9E3 0%, #EFE9E3 ' + pctMin + '%, #FF7000 ' + pctMin + '%, #FF7000 ' + pctMax + '%, #EFE9E3 ' + pctMax + '%, #EFE9E3 100%)'; })(),
-      setFPrecoMin: e => { const maxT = st.fPrecoMaxT != null ? st.fPrecoMaxT : this.tDePreco(fPrecoMax); const t = Math.min(Number(e.target.value), maxT); this.setState({ fPrecoMinT: t, fPrecoMin: t <= 0 ? null : this.precoDeT(t), precoTocado: true }); }, setFPrecoMax: e => { const minT = st.fPrecoMinT != null ? st.fPrecoMinT : this.tDePreco(fPrecoMin); const t = Math.max(Number(e.target.value), minT); this.setState({ fPrecoMaxT: t, fPrecoMax: t >= 100 ? null : this.precoDeT(t), precoTocado: true }); },
+      setFPrecoMin: e => { const maxT = st.fPrecoMaxT != null ? st.fPrecoMaxT : this.tDePreco(fPrecoMax); const t = Math.min(Number(e.target.value), maxT); this.setState({ fPrecoMinT: t, fPrecoMin: t <= 0 ? null : this.precoDeT(t), precoTocado: true }); }, setFPrecoMax: e => { const minT = st.fPrecoMinT != null ? st.fPrecoMinT : this.tDePreco(fPrecoMin); const t = Math.max(Number(e.target.value), minT); const v = t >= 100 ? null : this.precoDeT(t); this.setState({ fPrecoMaxT: t, fPrecoMax: v, fPreco: v, precoTocado: true }); },
       buscar: () => { const el = document.getElementById('apes'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' }); },
       detOn: !!det,
       fecharDet: () => { if (this.mapa) { this.mapa.remove(); this.mapa = null; } try { const u = new URL(location.href); u.searchParams.delete('imovel'); history.replaceState({}, '', u.pathname + u.search + u.hash); } catch (e) {} this.setState({ det: null }); },
@@ -4371,7 +4371,7 @@ class Component extends DCLogic {
       ].map(b => Object.assign(b, { filtrar: () => {
         const opts = this.bairrosUnicos();
         const m = opts.find(o => this.mesmoBairro(o, b.nome) || b.nome.toLowerCase().includes(o.toLowerCase()) || o.toLowerCase().includes(b.nome.toLowerCase())) || '';
-        this.setState({ fBairro: m, fStatus: '', fPrecoMin: null, fPrecoMax: null });
+        this.setState({ fBairro: m, fStatus: '', fPreco: null, fPrecoMin: null, fPrecoMax: null });
       } })),
 
       dicas: [
