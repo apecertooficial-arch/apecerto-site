@@ -1,13 +1,24 @@
 (function () {
   'use strict';
 
+  var TRACKING_CONFIG = window.APECERTO_TRACKING_CONFIG && typeof window.APECERTO_TRACKING_CONFIG === 'object'
+    ? window.APECERTO_TRACKING_CONFIG
+    : {};
   var MEASUREMENT_ID = 'G-P63KVXKJDH';
   var CLARITY_ID = 'y3rdh7jjn5';
   var PIXEL_ID = '1088080836200357';
   var GOOGLE_ADS_ID = 'AW-18389793678';
+  // Mantém os labels homologados e permite sobrescrita explícita pelo deploy.
   var ADS_CONVERSION_LABELS = {
     generate_lead: 'anMDCOmFieQcEI7398BE'
   };
+  var configuredAdsConversionLabels = TRACKING_CONFIG.google_ads_conversion_labels &&
+    typeof TRACKING_CONFIG.google_ads_conversion_labels === 'object'
+    ? TRACKING_CONFIG.google_ads_conversion_labels
+    : {};
+  Object.keys(configuredAdsConversionLabels).forEach(function (eventName) {
+    ADS_CONVERSION_LABELS[eventName] = configuredAdsConversionLabels[eventName];
+  });
   var SUPABASE_URL = 'https://diaegvfveqezispcthwk.supabase.co';
   var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYWVndmZ2ZXFlemlzcGN0aHdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5OTU4MjIsImV4cCI6MjA5ODU3MTgyMn0.312n8BuI-loQrQ20x9j1hNjKZs2UO71ey9gvIo0eY0I';
   var CAPI_URL = SUPABASE_URL + '/functions/v1/meta-capi';
@@ -34,12 +45,12 @@
     property_search: 'Search',
     sara_results: 'Search',
     generate_lead: 'Lead',
+    owner_cta_click: 'OwnerIntent',
     whatsapp_click: 'Contact',
     phone_click: 'Contact',
     favorite_toggle: 'AddToWishlist',
     schedule_complete: 'Schedule',
     form_start: 'FormStart',
-    owner_cta_click: 'OwnerIntent',
     financing_open: 'FinancingStart',
     schedule_start: 'ScheduleStart',
     gallery_interaction: 'GalleryInteraction'
@@ -79,8 +90,27 @@
     return out.replace(/\s+/g, ' ').trim().slice(0, max || 120);
   }
 
+  function uuidOrNull(value) {
+    var normalized = clean(value, 36);
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)
+      ? normalized
+      : null;
+  }
+
   function pagePath() {
     return clean(location.pathname || '/', 240) || '/';
+  }
+
+  function safePageUrl() {
+    try {
+      var url = new URL(location.href);
+      url.hash = '';
+      ['access_token', 'refresh_token', 'token', 'token_hash', 'code', 'error', 'error_code', 'error_description']
+        .forEach(function (key) { url.searchParams.delete(key); });
+      return url.origin + url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '');
+    } catch (e) {
+      return clean(location.origin, 180) + pagePath();
+    }
   }
 
   function referrerHost() {
@@ -232,6 +262,7 @@
     window.gtag('js', new Date());
     window.gtag('config', MEASUREMENT_ID, {
       send_page_view: true,
+      page_location: safePageUrl(),
       allow_google_signals: false,
       allow_ad_personalization_signals: false,
     });
@@ -248,8 +279,8 @@
   // Dispara a conversao do Google Ads quando ha um label mapeado para o evento.
   function adsConversion(eventName, params, eventId) {
     if (!consent.marketing || !googleAdsLoaded) return;
-    var label = ADS_CONVERSION_LABELS[eventName];
-    if (!label) return;
+    var label = clean(ADS_CONVERSION_LABELS[eventName], 120);
+    if (!/^[A-Za-z0-9_-]+$/.test(label)) return;
     var data = {
       send_to: GOOGLE_ADS_ID + '/' + label,
       transaction_id: clean(eventId, 120),
@@ -289,7 +320,7 @@
     var body = {
       event_name: eventName,
       event_id: eventId,
-      event_source_url: location.href,
+      event_source_url: safePageUrl(),
       event_time: Math.floor(Date.now() / 1000),
       consent_marketing: true,
       custom_data: params || {},
@@ -333,7 +364,7 @@
       event: 'apecerto_event',
       apecerto_event_name: 'page_view',
       apecerto_event_id: eventId,
-      page_location: location.href,
+      page_location: safePageUrl(),
       event_id: eventId,
     };
     window.dataLayer.push(payload);
@@ -450,7 +481,7 @@
       if (currentItem.name) publicParams.item_name = clean(currentItem.name, 160);
     }
     var eventId = makeUuid();
-    var payload = Object.assign({ page_location: location.href, event_id: eventId }, publicParams);
+    var payload = Object.assign({ page_location: safePageUrl(), event_id: eventId }, publicParams);
     var attribution = readStoredAttribution();
     var campaignTouch = attribution.last && Object.keys(attribution.last).length
       ? attribution.last
@@ -520,7 +551,7 @@
       ? source.lead_type
       : 'comprador';
     var allowedContext = [
-      'empreendimento_id', 'empreendimento_nome', 'preferencia_horario',
+      'empreendimento_id', 'unidade_id', 'empreendimento_nome', 'preferencia_horario',
       'captacao_id', 'finalidade', 'bairro', 'cidade', 'area_util',
       'valor_imovel', 'percentual_financiado', 'valor_entrada',
       'valor_financiar', 'renda_mensal', 'estado_civil', 'objetivo',
@@ -539,7 +570,8 @@
       email: clean(source.email, 254) || null,
       origem: 'site',
       lead_type: leadType,
-      empreendimento_id: source.empreendimento_id || null,
+      empreendimento_id: uuidOrNull(source.empreendimento_id),
+      unidade_id: uuidOrNull(source.unidade_id),
       empreendimento_nome: clean(source.empreendimento_nome, 200) || null,
       preferencia_horario: clean(source.preferencia_horario, 200) || null,
       page_view_id: tracking.page_view_id || null,
@@ -575,6 +607,7 @@
   function addConsentBanner() {
     var existing = document.getElementById('apecerto-consent');
     if (existing) existing.remove();
+    document.documentElement.classList.add('apecerto-consent-open');
     var banner = document.createElement('section');
     banner.id = 'apecerto-consent';
     banner.setAttribute('aria-label', 'Preferências de privacidade');
@@ -591,6 +624,7 @@
       saveConsent(next);
       applyConsent(next);
       banner.remove();
+      document.documentElement.classList.remove('apecerto-consent-open');
       window.apecertoTrack('consent_update', { consent_choice: choice });
     });
     document.body.appendChild(banner);

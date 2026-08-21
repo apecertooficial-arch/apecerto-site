@@ -3,12 +3,13 @@ import fs from "node:fs";
 import test from "node:test";
 
 const html = fs.readFileSync(new URL("../dist/index.html", import.meta.url), "utf8");
+const version = JSON.parse(fs.readFileSync(new URL("../dist/version.json", import.meta.url), "utf8"));
 const design = fs.readFileSync(
   new URL("../design/Site ApeCerto.dc.html", import.meta.url),
   "utf8",
 );
 const analytics = fs.readFileSync(
-  new URL("../dist/assets/analytics.js", import.meta.url),
+  new URL("../dist/" + version.assetMap["/assets/analytics.js"].replace(/^\/+/, ""), import.meta.url),
   "utf8",
 );
 const templateMatch = html.match(
@@ -16,25 +17,29 @@ const templateMatch = html.match(
 );
 
 assert.ok(templateMatch, "o bundle precisa manter o template principal");
-const template = JSON.parse(templateMatch[1]);
+const templatePayload = JSON.parse(templateMatch[1]);
+const template = typeof templatePayload === "string"
+  ? templatePayload
+  : fs.readFileSync(new URL("../dist/" + version.templatePath.replace(/^\/+/, ""), import.meta.url), "utf8");
 
 const loaderMatch = template.match(
-  /  carregarProdutos\(\) \{[\s\S]*?\n  \}/,
+  /  carregarProdutos\([^)]*\) \{[\s\S]*?\n  uuidValido\(/,
 );
 
 assert.ok(loaderMatch, "o site precisa manter o carregador de produtos");
 const loader = loaderMatch[0];
 
 test("catálogo público vem da aprovação de Produtos do ERP", () => {
-  assert.match(loader, /\/rest\/v1\/site_produtos\?select=\*/);
+  assert.match(template, /\/rest\/v1\/site_produtos\?/);
+  assert.match(template, /params\.set\('select', '\*'\)/);
   assert.doesNotMatch(loader, /\/rest\/v1\/anuncios_site/);
-  assert.match(loader, /produtos: rows/);
+  assert.match(loader, /this\.setState\(\{ produtos,/);
 });
 
 test("produto pronto só aparece como unidade aprovada e usa a galeria da unidade", () => {
   assert.match(design, /r && r\.status !== 'pronto'/);
-  assert.match(design, /capa_path: u\.capa_path \|\| r\.capa_path/);
-  assert.match(design, /Array\.isArray\(u\.fotos\) && u\.fotos\.length \? u\.fotos : r\.fotos/);
+  assert.match(design, /const capaUnidade = u\.capa_path \|\| fotosUnidade\[0\] \|\| r\.capa_path \|\| null/);
+  assert.match(design, /const fotosUnidade = Array\.isArray\(u\.fotos\) && u\.fotos\.length \? u\.fotos\.slice\(\) : \(Array\.isArray\(r\.fotos\) \? r\.fotos\.slice\(\) : \[\]\)/);
 });
 
 test("bundle continua estruturalmente íntegro", () => {

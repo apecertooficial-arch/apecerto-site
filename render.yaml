@@ -2,6 +2,42 @@ services:
   - type: web
     name: apecerto-site
     runtime: static
-    buildCommand: npm run build
+    buildCommand: npm run ci
     staticPublishPath: ./dist
-    autoDeployTrigger: commit
+    autoDeployTrigger: checksPass
+    routes:
+      - type: rewrite
+        source: /sitemap.xml
+        destination: https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/sitemap.xml
+      - type: rewrite
+        source: /imovel/*
+        destination: /index.html
+    headers:
+      - path: /sitemap.xml
+        name: Content-Type
+        value: application/xml; charset=utf-8
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /version.json
+        name: Cache-Control
+        value: no-store
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=63072000; includeSubDomains; preload
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Content-Security-Policy-Report-Only
+        value: >-
+          default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self' https://wa.me; script-src 'self' 'unsafe-inline' https://unpkg.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://www.clarity.ms https://scripts.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.supabase.co https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://www.facebook.com https://www.google-analytics.com https://www.googletagmanager.com https://*.clarity.ms; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://connect.facebook.net https://www.facebook.com https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com https://maps.google.com; media-src 'self' blob: https://*.supabase.co; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests

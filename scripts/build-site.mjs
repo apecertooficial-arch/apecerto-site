@@ -1,51 +1,55 @@
-// Gera dist/index.html injetando design/Site ApeCerto.dc.html no pacote-base (index.html).
-// Se existir design-payload.json na raiz, baixa antes os arquivos listados. O servidor de
-// arquivos injeta tags <style/script data-omelette-injected> e quebras de linha no HTML
-// servido; removemos as tags e aceitamos diferenca residual de ate 8 bytes, desde que os
-// marcadores obrigatorios estejam presentes.
-import { readFile, writeFile, mkdir, access, cp } from 'node:fs/promises';
+// Gera dist/index.html usando exclusivamente fontes versionadas no repositorio.
+// Downloads e payloads temporarios nao fazem parte do build de producao: uma mesma
+// revisao deve sempre gerar o mesmo site, mesmo sem acesso a rede.
+import { readFile, writeFile, mkdir, access, cp, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { dirname } from 'node:path';
+import { gunzipSync } from 'node:zlib';
 
 const existe = p => access(p).then(() => true, () => false);
-const limpaInjecao = txt => txt.replace(/<(style|script)[^>]*data-omelette-injected[^>]*>[\s\S]*?<\/\1>/g, '');
-
-if (await existe('design-payload.json')) {
-  const { files } = JSON.parse(await readFile('design-payload.json', 'utf8'));
-  for (const f of files) {
-    try {
-      const r = await fetch(f.url, { redirect: 'follow' });
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      const bruto = Buffer.from(await r.arrayBuffer()).toString('utf8');
-      const txt = limpaInjecao(bruto);
-      const buf = Buffer.from(txt, 'utf8');
-      const sha = createHash('sha256').update(buf).digest('hex');
-      const shaOk = sha === f.sha256;
-      const lenOk = f.bytes ? Math.abs(buf.length - f.bytes) <= 8 : false;
-      const marksOk = (f.mustContain || []).every(m => txt.includes(m));
-      if (!shaOk && !(lenOk && marksOk)) {
-        console.warn('DEBUG', f.path, '-> bytes pos-limpeza:', buf.length, '(esperado', f.bytes + ')', '| sha:', sha, '| head:', JSON.stringify(txt.slice(0, 160)));
-        throw new Error('conteudo nao confere (sha ' + sha.slice(0, 12) + ', ' + buf.length + ' bytes)');
-      }
-      await mkdir(dirname(f.path) || '.', { recursive: true });
-      await writeFile(f.path, buf);
-      console.log('payload ok:', f.path, buf.length, 'bytes', shaOk ? '(sha256)' : '(tamanho+marcadores)');
-    } catch (e) {
-      if (await existe(f.path)) console.warn('payload falhou pra', f.path, '- usando a copia do repo (' + e.message + ')');
-      else throw new Error('payload falhou pra ' + f.path + ' e nao ha copia no repo: ' + e.message);
-    }
-  }
-}
 
 const base = await readFile('index.html', 'utf8');
 let design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+const heroVariants = JSON.parse(await readFile('build-assets/hero-variants.json', 'utf8'));
+const optimizedBundleAssets = JSON.parse(await readFile('build-assets/bundle-optimized.json', 'utf8'));
+const embeddedAssets = new Map();
 
-// Camada de producao aplicada depois do payload externo. Isso evita que dados de
-// contato, tracking e afirmacoes institucionais voltem ao estado de prototipo no
-// proximo deploy.
+const manifestMatch = base.match(/<script type="__bundler\/manifest">\s*([\s\S]*?)\s*<\/script>/);
+if (!manifestMatch) throw new Error('manifesto do pacote-base ausente');
+const originalManifest = JSON.parse(manifestMatch[1]);
+const bundleManifest = {};
+const bundleExtension = mime => ({
+  'application/javascript': 'js',
+  'text/javascript': 'js',
+  'font/ttf': 'ttf',
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'text/html': 'html',
+})[mime] || 'bin';
+
+for (const [uuid, entry] of Object.entries(originalManifest)) {
+  const encoded = Buffer.from(entry.data, 'base64');
+  const bytes = entry.compressed ? gunzipSync(encoded) : encoded;
+  const sourceHash = createHash('sha256').update(bytes).digest('hex');
+  const optimized = optimizedBundleAssets[uuid];
+  if (optimized) {
+    if (sourceHash !== optimized.sourceSha256) throw new Error('fonte do asset otimizado divergiu: ' + uuid);
+    const optimizedBytes = await readFile('static/' + optimized.path.replace(/^\/+/, ''));
+    const optimizedHash = createHash('sha256').update(optimizedBytes).digest('hex');
+    if (optimizedHash !== optimized.sha256 || optimizedBytes.length !== optimized.bytes) throw new Error('asset otimizado divergiu: ' + uuid);
+    bundleManifest[uuid] = { mime: optimized.mime, compressed: false, url: optimized.path };
+    continue;
+  }
+  const relative = 'assets/bundle/' + sourceHash.slice(0, 20) + '.' + bundleExtension(entry.mime);
+  embeddedAssets.set(relative, bytes);
+  bundleManifest[uuid] = { mime: entry.mime, compressed: false, url: '/' + relative };
+}
+
+// Camada de producao aplicada sobre o design versionado. As substituicoes
+// obrigatorias falham de forma explicita se a estrutura aprovada mudar.
 const trocaObrigatoria = (texto, de, para, rotulo) => {
-  if (!texto.includes(de)) throw new Error('trecho obrigatorio ausente: ' + rotulo);
-  return texto.replace(de, para);
+  if (texto.includes(de)) return texto.replace(de, para);
+  if (texto.includes(para)) return texto;
+  throw new Error('trecho obrigatorio ausente: ' + rotulo);
 };
 
 const trocaBlocoObrigatorio = (texto, inicio, fim, novo, rotulo) => {
@@ -54,12 +58,6 @@ const trocaBlocoObrigatorio = (texto, inicio, fim, novo, rotulo) => {
   if (a < 0 || b < 0) throw new Error('bloco obrigatorio ausente: ' + rotulo);
   return texto.slice(0, a) + novo + texto.slice(b);
 };
-
-const trackingRuntimeHead = `
-  <script>window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments)};window.gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});</script>
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-524TZP8X');</script>
-  <link rel="stylesheet" href="/assets/production.css">
-  <script src="/assets/analytics.js" defer></script>`;
 
 const productionHead = `
   <meta name="description" content="Apartamentos para comprar em Moema e região, com curadoria local, atendimento digital 24 horas e visitas agendadas pela ApeCerto.">
@@ -73,14 +71,19 @@ const productionHead = `
   <meta property="og:url" content="https://apecerto.com/">
   <meta property="og:site_name" content="ApeCerto">
   <style id="apecerto-no-bundle-splash">#__bundler_loading,#__bundler_thumbnail{display:none!important}</style>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"RealEstateAgent","name":"ApeCerto","url":"https://apecerto.com/","telephone":"+55 11 98015-4312","email":"contato@apecerto.com","address":{"@type":"PostalAddress","streetAddress":"Avenida Iraí, 79, conjunto 95A","addressLocality":"São Paulo","addressRegion":"SP","addressCountry":"BR"},"areaServed":["Moema","Campo Belo","Vila Nova Conceição","Brooklin","Planalto Paulista"]}</script>`;
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"RealEstateAgent","name":"ApeCerto","url":"https://apecerto.com/","telephone":"+55 11 98015-4312","email":"contato@apecerto.com","address":{"@type":"PostalAddress","streetAddress":"Avenida Iraí, 79, conjunto 95A","addressLocality":"São Paulo","addressRegion":"SP","addressCountry":"BR"},"areaServed":["Moema","Campo Belo","Vila Nova Conceição","Brooklin","Planalto Paulista"]}</script>
+  <script id="apecerto-recovery-scrub">(function(){try{var p=new URLSearchParams(String(location.hash||'').replace(/^#/,''));var t=p.get('type');var a=p.get('access_token');var e=p.get('error_description');if((a&&t==='recovery')||e){Object.defineProperty(window,'__APECERTO_RECOVERY__',{value:{type:t,access_token:a,error_description:e},configurable:true});history.replaceState({},'',location.pathname+location.search)}}catch(_){}})();</script>
+  <script>window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments)};window.gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});</script>
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-524TZP8X');</script>
+  <link rel="stylesheet" href="/assets/production.css">
+  <script src="/assets/analytics.js" defer></script>`;
 
 design = trocaObrigatoria(design, '<html><head>', '<html lang="pt-BR"><head>', 'idioma do design');
 design = trocaObrigatoria(
   design,
   '<meta name="viewport" content="width=device-width, initial-scale=1">',
-  '<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>ApeCerto | Apartamentos em Moema</title>' + trackingRuntimeHead,
-  'titulo e runtime de tracking do documento definitivo',
+  '<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>ApeCerto | Apartamentos em Moema</title>',
+  'titulo do design sem tracking duplicado',
 );
 design = trocaObrigatoria(
   design,
@@ -112,19 +115,6 @@ design = trocaObrigatoria(design, '>4,9</div>', '>Moema</div>', 'metrica Moema')
 design = trocaObrigatoria(design, '>nota média no Google</div>', '>especialistas na região</div>', 'legenda Moema');
 design = trocaObrigatoria(
   design,
-  '© 2026 apêcerto imóveis ltda · CRECI-SP 00000-J · CNPJ 00.000.000/0001-00',
-  '© 2026 apêcerto imóveis · Av. Iraí, 79, conjunto 95A',
-  'rodape institucional',
-);
-design = trocaObrigatoria(
-  design,
-  '© 2026 apêcerto imóveis ltda · CRECI-SP 00000-J',
-  '© 2026 apêcerto imóveis · Av. Iraí, 79, conjunto 95A',
-  'rodape do detalhe',
-);
-
-design = trocaObrigatoria(
-  design,
   '  abrirDetalhe(r) {\n    this.lead = {};',
   `  abrirDetalhe(r) {\n    window.apecertoCurrentItem = { id: String(r.id || ''), name: r.nome || '' };\n    if (window.apecertoTrack) window.apecertoTrack('view_item', { item_id: String(r.id || ''), item_name: r.nome || '', bairro: r.bairro || '', value: this.precoDe(r), currency: 'BRL' });\n    this.lead = {};`,
   'evento view_item',
@@ -146,8 +136,8 @@ design = trocaObrigatoria(
 
 design = trocaObrigatoria(
   design,
-  '      fecharDet: () => { if (this.mapa) { this.mapa.remove(); this.mapa = null; }',
-  '      fecharDet: () => { window.apecertoCurrentItem = null; if (this.mapa) { this.mapa.remove(); this.mapa = null; }',
+  '  fecharDetalhe() {\n    if (this.mapa) { this.mapa.remove(); this.mapa = null; }',
+  '  fecharDetalhe() {\n    window.apecertoCurrentItem = null;\n    if (this.mapa) { this.mapa.remove(); this.mapa = null; }',
   'limpeza do contexto do imovel',
 );
 
@@ -181,8 +171,8 @@ design = trocaObrigatoria(
 
 design = trocaObrigatoria(
   design,
-  '<div sc-camel-on-input="{{ leadInput }}" style="display: flex; flex-direction: column; gap: 10px; border-top:',
-  '<div data-tracking-form="agendamento" sc-camel-on-input="{{ leadInput }}" style="display: flex; flex-direction: column; gap: 10px; border-top:',
+  '<div data-lead-form="" sc-camel-on-input="{{ leadInput }}" style="display: flex; flex-direction: column; gap: 10px; border-top:',
+  '<div data-lead-form="" data-tracking-form="agendamento" sc-camel-on-input="{{ leadInput }}" style="display: flex; flex-direction: column; gap: 10px; border-top:',
   'contexto do formulario de agendamento',
 );
 
@@ -232,8 +222,8 @@ design = trocaObrigatoria(
 );
 design = trocaObrigatoria(
   design,
-  "      abrePortal: (e) => { if (e && e.preventDefault) e.preventDefault(); const s = this.state.sess;",
-  "      abrePortal: (e) => { if (e && e.preventDefault) e.preventDefault(); if (window.apecertoTrack) window.apecertoTrack('owner_portal_open', { source: 'site' }); const s = this.state.sess;",
+  "  abrirRotaProprietario(cadastro, e) {\n    if (e && e.preventDefault) e.preventDefault();",
+  "  abrirRotaProprietario(cadastro, e) {\n    if (e && e.preventDefault) e.preventDefault();\n    if (window.apecertoTrack) window.apecertoTrack('owner_portal_open', { source: cadastro ? 'cadastro_imovel' : 'portal' });",
   'evento portal proprietario',
 );
 
@@ -245,29 +235,33 @@ const buyerLeadProductionMethod = `  async leadEnviar() {
     try {
       if (!window.apecertoSubmitSiteLead) throw new Error('tracking_unavailable');
       const pref = [this.state.leadDia, this.state.leadHora].filter(Boolean).join(' às ') || null;
+      const empreendimentoId = this.empreendimentoId(det);
+      const unidadeId = this.unidadeId(det);
       await window.apecertoSubmitSiteLead({
         lead_type: 'comprador',
-        empreendimento_id: det.id,
+        empreendimento_id: empreendimentoId,
+        unidade_id: unidadeId,
         empreendimento_nome: det.nome,
         preferencia_horario: pref,
         nome: l.nome,
         telefone: l.telefone,
         email: l.email || null,
         context: {
-          empreendimento_id: det.id,
+          empreendimento_id: empreendimentoId,
+          unidade_id: unidadeId,
           empreendimento_nome: det.nome,
           preferencia_horario: pref,
           source: 'property_detail'
         }
       });
       if (window.apecertoTrack) {
-        const identity = { email: l.email || '', phone: l.telefone || '' };
-        window.apecertoTrack('generate_lead', { lead_type: 'comprador', item_id: String(det.id || ''), item_name: det.nome || '', __identity: identity });
-        if (pref) window.apecertoTrack('schedule_complete', { item_id: String(det.id || ''), item_name: det.nome || '', __identity: identity });
+        const item = { lead_type: 'comprador', item_id: String(det.id || ''), item_name: det.nome || '', __identity: { email: l.email || '', phone: l.telefone || '' } };
+        window.apecertoTrack('generate_lead', item);
+        if (pref) window.apecertoTrack('schedule_complete', item);
       }
       this.lead = {};
       this.setState({ leadEnviando: false, leadOk: true });
-    } catch (e) { this.setState({ leadEnviando: false, leadErro: 'Não deu certo agora — tenta de novo ou chama no WhatsApp.' }); }
+    } catch (e) { this.registrarErro('lead_comprador', e); this.setState({ leadEnviando: false, leadErro: 'Não deu certo agora — tenta de novo ou chama no WhatsApp.' }); }
   }
 `;
 
@@ -317,15 +311,19 @@ const financeLeadProductionMethod = `  async fichaEnviar() {
     const preco = det ? this.precoDe(det) : 0;
     try {
       if (!window.apecertoSubmitSiteLead) throw new Error('tracking_unavailable');
+      const empreendimentoId = det ? this.empreendimentoId(det) : null;
+      const unidadeId = det ? this.unidadeId(det) : null;
       await window.apecertoSubmitSiteLead({
         lead_type: 'financiamento',
-        empreendimento_id: det ? det.id : null,
+        empreendimento_id: empreendimentoId,
+        unidade_id: unidadeId,
         empreendimento_nome: det ? det.nome : null,
         nome: f.nome,
         telefone: f.telefone,
         email: f.email,
         context: {
-          empreendimento_id: det ? det.id : null,
+          empreendimento_id: empreendimentoId,
+          unidade_id: unidadeId,
           empreendimento_nome: det ? det.nome : null,
           renda_mensal: this.num(f.renda),
           valor_imovel: preco || null,
@@ -338,11 +336,17 @@ const financeLeadProductionMethod = `  async fichaEnviar() {
       if (window.apecertoTrack) window.apecertoTrack('generate_lead', { lead_type: 'financiamento', item_id: det ? String(det.id || '') : '', __identity: { email: f.email || '', phone: f.telefone || '' } });
       this.ficha = {};
       this.setState({ fichaEnviando: false, fichaOk: true });
-    } catch (e) { this.setState({ fichaEnviando: false, fichaErro: 'Não deu certo agora — tenta de novo ou chama a gente no WhatsApp.' }); }
+    } catch (e) { this.registrarErro('lead_financiamento', e); this.setState({ fichaEnviando: false, fichaErro: 'Não deu certo agora — tenta de novo ou chama a gente no WhatsApp.' }); }
   }
 `;
 
 design = trocaBlocoObrigatorio(design, '  async fichaEnviar() {', '  similares(det) {', financeLeadProductionMethod, 'financiamento unificado no CRM');
+design = trocaObrigatoria(
+  design,
+  '  abrirFicha() {\n    this.fichaFocusOrigin = document.activeElement;',
+  "  abrirFicha() {\n    const det = this.state.det;\n    if (window.apecertoTrack) window.apecertoTrack('financing_open', { item_id: det ? String(det.id || '') : '', item_name: det ? det.nome || '' : '' });\n    this.fichaFocusOrigin = document.activeElement;",
+  'evento abertura do financiamento',
+);
 design = trocaObrigatoria(design, 'Preenche seus dados e a simulação do financiamento chega no seu e-mail.', 'Informe seus dados de contato e receba a orientação da equipe sobre financiamento.', 'texto seguro do financiamento');
 design = trocaObrigatoria(design, 'Ficha enviada!', 'Pedido de simulação enviado!', 'confirmacao do financiamento');
 
@@ -350,8 +354,9 @@ design = trocaObrigatoria(design, 'Ficha enviada!', 'Pedido de simulação envia
 // recebe a chave do modelo e a funcao devolve somente IDs da view site_produtos.
 const saraProductionMethod = `  async saraBuscar(txt) {
     const pergunta = String(txt || '').trim().slice(0, 240);
+    const finalidadeAtual = this.state.fFinalidade || ((this.state.aba || this.props.abaInicial) === 'alugar' ? 'aluguel' : 'venda');
     const msgs = (this.state.saraMsgs || []).concat([{ eu: true, txt: pergunta }]);
-    this.setState({ saraMsgs: msgs.concat([{ eu: false, txt: 'Só um instante — estou cruzando seu pedido com os imóveis disponíveis…' }]), saraIds: null });
+    this.setState({ saraMsgs: msgs.concat([{ eu: false, txt: 'Só um instante — estou cruzando seu pedido com os imóveis disponíveis…' }]), saraIds: null, saraEmpreendimentoIds: null });
     if (window.apecertoTrack) window.apecertoTrack('sara_search', { query_length: pergunta.length });
     try {
       let clientId = '';
@@ -365,15 +370,19 @@ const saraProductionMethod = `  async saraBuscar(txt) {
       const r = await fetch(this.SB_URL + '/functions/v1/sara-site', {
         method: 'POST',
         headers: { apikey: this.SB_KEY, Authorization: 'Bearer ' + this.SB_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pergunta, client_id: clientId })
+        body: JSON.stringify({ pergunta, client_id: clientId, finalidade: finalidadeAtual })
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok || !data.ok) throw new Error(data.mensagem || data.erro || ('erro ' + r.status));
       const f = data.filters || {};
+      const finalidadeSara = f.finalidade === 'aluguel' ? 'aluguel' : 'venda';
       const minD = Number(f.dormitorios_min);
       const maxD = f.dormitorios_max == null ? null : Number(f.dormitorios_max);
+      const unidadesSara = data.units && typeof data.units === 'object' ? data.units : {};
+      const paisSara = Array.from(new Set(Object.values(unidadesSara).map(u => u && u.empreendimento_id).filter(id => this.uuidValido(id)).map(String)));
       const patch = {
-        aba: 'comprar',
+        aba: finalidadeSara === 'aluguel' ? 'alugar' : 'comprar',
+        fFinalidade: finalidadeSara,
         fBairro: f.bairro || '',
         fStatus: f.status || '',
         fDorms: Number.isFinite(minD) ? (minD <= 1 && maxD !== null && maxD <= 1 ? 'd1' : minD === 2 && maxD === 2 ? 'd2' : minD >= 3 ? 'd3' : '') : '',
@@ -382,11 +391,12 @@ const saraProductionMethod = `  async saraBuscar(txt) {
         fPrecoT: f.preco_max ? this.tDePreco(Number(f.preco_max)) : null,
         precoTocado: !!f.preco_max,
         saraIds: Array.isArray(data.ids) ? data.ids.map(String) : [],
+        saraEmpreendimentoIds: paisSara,
         saraPrecos: data.prices || {},
-        saraUnidades: data.units || {},
+        saraUnidades: unidadesSara,
         saraMsgs: msgs.concat([{ eu: false, txt: data.reply || 'Busca concluída.' }])
       };
-      this.setState(patch, () => {
+      this.aplicarFiltros(patch, () => {
         if (window.apecertoTrack) window.apecertoTrack('sara_results', {
           result_count: Number(data.count || 0),
           bairro: f.bairro || '',
@@ -403,6 +413,7 @@ const saraProductionMethod = `  async saraBuscar(txt) {
     } catch (e) {
       this.setState({
         saraIds: null,
+        saraEmpreendimentoIds: null,
         saraMsgs: msgs.concat([{ eu: false, txt: 'Não consegui consultar o catálogo agora. Tenta de novo em instantes ou chama a gente no WhatsApp.' }])
       });
       if (window.apecertoTrack) window.apecertoTrack('sara_error', { error_type: 'request_failed' });
@@ -414,15 +425,15 @@ design = trocaBlocoObrigatorio(design, '  saraBuscar(txt) {', '  menuFiltra(patc
 design = trocaObrigatoria(
   design,
   `  precoDe(r) {
-    const valor = Number(r.preco_promo || r.preco_min || r.preco) || 0;
-    const finalidade = String(r.finalidade || 'venda').trim().toLowerCase();
-    return finalidade !== 'aluguel' && valor > 0 && valor < 100000 ? valor * 1000 : valor;
+    if (!r) return 0;
+    const bruto = r.preco_promo != null && this.valorNumerico(r.preco_promo) > 0 ? r.preco_promo : (r.preco_min != null ? r.preco_min : r.preco);
+    return this.normalizarPrecoImovel(bruto, this.finalidadeDe(r));
   }`,
   `  precoDe(r) {
+    if (!r) return 0;
     const p = Array.isArray(this.state.saraIds) && this.state.saraIds.includes(String(r.id)) && this.state.saraPrecos ? this.state.saraPrecos[String(r.id)] : null;
-    const valor = Number(p || r.preco_promo || r.preco_min || r.preco) || 0;
-    const finalidade = String(r.finalidade || 'venda').trim().toLowerCase();
-    return finalidade !== 'aluguel' && valor > 0 && valor < 100000 ? valor * 1000 : valor;
+    const bruto = this.valorNumerico(p) > 0 ? p : (r.preco_promo != null && this.valorNumerico(r.preco_promo) > 0 ? r.preco_promo : (r.preco_min != null ? r.preco_min : r.preco));
+    return this.normalizarPrecoImovel(bruto, this.finalidadeDe(r));
   }`,
   'preco da unidade encontrada pela Sara',
 );
@@ -463,8 +474,8 @@ design = trocaObrigatoria(
   'ficha resumida da unidade encontrada pela Sara',
 );
 design = trocaObrigatoria(design, "      precoAntes: r.preco_promo && Number(r.preco) > Number(r.preco_promo) ? this.fmtR$(r.preco) : false,", "      precoAntes: !saraUnidade && r.preco_promo && Number(r.preco) > Number(r.preco_promo) ? this.fmtR$(r.preco) : false,", 'preco anterior somente fora da Sara');
-design = trocaObrigatoria(design, "Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar' }, patch)", "Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar', saraIds: null }, patch)", 'limpeza Sara no menu');
-design = trocaObrigatoria(design, '    const { fBairro, fStatus, fPreco, fDorms, fVagas } = this.state;', "    const { fBairro, fStatus, fPreco, fDorms, fVagas } = this.state;\n    const saraAtiva = Array.isArray(this.state.saraIds);\n    const saraIds = saraAtiva ? this.state.saraIds.map(String) : null;", 'filtro IDs da Sara');
+design = trocaObrigatoria(design, "Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null }, patch)", "Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null, saraEmpreendimentoIds: null }, patch)", 'limpeza Sara no menu');
+design = trocaObrigatoria(design, '    const { fBairro, fStatus, fPreco, fDorms, fVagas, fFinalidade } = this.state;', "    const { fBairro, fStatus, fPreco, fDorms, fVagas, fFinalidade } = this.state;\n    const saraAtiva = Array.isArray(this.state.saraIds);\n    const saraIds = saraAtiva ? this.state.saraIds.map(String) : null;", 'filtro IDs da Sara');
 design = trocaObrigatoria(design, "      (!this.state.soFavs || this.state.favs[r.id]) &&", "      (!this.state.soFavs || this.state.favs[r.id]) &&\n      (!saraAtiva || saraIds.includes(String(r.id))) &&", 'aplicacao IDs da Sara');
 design = trocaObrigatoria(design, "      (aba !== 'lancamentos' || r.status === 'em_obras' || r.status === 'lancamento') &&", "      (saraAtiva || aba !== 'lancamentos' || r.status === 'em_obras' || r.status === 'lancamento') &&", 'Sara ignora aba derivada');
 design = trocaObrigatoria(design, "      (!fBairro || this.mesmoBairro(r.bairro, fBairro)) &&", "      (saraAtiva || !fBairro || this.mesmoBairro(r.bairro, fBairro)) &&", 'Sara usa bairro validado no servidor');
@@ -472,16 +483,18 @@ design = trocaObrigatoria(design, "      (!fStatus || r.status === fStatus) &&",
 design = trocaObrigatoria(design, "      dormOk(r) &&", "      (saraAtiva || dormOk(r)) &&", 'Sara usa dormitorios da unidade encontrada');
 design = trocaObrigatoria(design, "      vagasOk(r) &&", "      (saraAtiva || vagasOk(r)) &&", 'Sara usa vagas da unidade encontrada');
 design = trocaObrigatoria(design, "      (fPreco == null || fPreco >= teto || !this.precoDe(r) || this.precoDe(r) <= fPreco));", "      (saraAtiva || fPreco == null || fPreco >= teto || !this.precoDe(r) || this.precoDe(r) <= fPreco));", 'Sara usa preco da unidade encontrada');
-design = trocaObrigatoria(design, '    if (!out.length && rows.length) {', "    if (!out.length && rows.length && !saraAtiva) {", 'sem fallback enganoso da Sara');
-design = trocaObrigatoria(design, "    } else if (ativos && out.length) {", "    } else if (saraAtiva && !out.length) {\n      nota = 'Nenhum apê bate exatamente com o pedido feito à Sara.';\n    } else if (ativos && out.length) {", 'nota vazia da Sara');
-design = trocaObrigatoria(design, "fPreco: 890000, fPrecoT: null, precoTocado: false })", "fPreco: 890000, fPrecoT: null, precoTocado: false, saraIds: null })", 'limpar filtros da Sara');
-design = trocaObrigatoria(design, "setFBairro: e => this.setState({ fBairro: e.target.value })", "setFBairro: e => this.setState({ fBairro: e.target.value, saraIds: null })", 'bairro manual limpa Sara');
-design = trocaObrigatoria(design, "setFStatus: e => this.setState({ fStatus: e.target.value })", "setFStatus: e => this.setState({ fStatus: e.target.value, saraIds: null })", 'status manual limpa Sara');
-design = trocaObrigatoria(design, "this.setState({ fDorms: on ? '' : o.v })", "this.setState({ fDorms: on ? '' : o.v, saraIds: null })", 'dormitorios manuais limpam Sara');
-design = trocaObrigatoria(design, "this.setState({ fVagas: on ? '' : o.v })", "this.setState({ fVagas: on ? '' : o.v, saraIds: null })", 'vagas manuais limpam Sara');
+design = trocaObrigatoria(design, '    let nota = null;\n    const ativos', "    if (saraAtiva) {\n      const ordemSara = new Map(saraIds.map((id, index) => [String(id), index]));\n      out.sort((a, b) => (ordemSara.get(String(a.id)) ?? Number.MAX_SAFE_INTEGER) - (ordemSara.get(String(b.id)) ?? Number.MAX_SAFE_INTEGER));\n    }\n    let nota = null;\n    const ativos", 'ordem de preco devolvida pela Sara');
+design = trocaObrigatoria(design, '    if (!out.length && baseFinalidade.length) {', "    if (!out.length && baseFinalidade.length && !saraAtiva) {", 'sem fallback enganoso da Sara');
+design = trocaObrigatoria(design, "    } else if (!out.length && rows.length) {", "    } else if (saraAtiva && !out.length) {\n      nota = 'Nenhum apê bate exatamente com o pedido feito à Sara.';\n    } else if (!out.length && rows.length) {", 'nota vazia da Sara');
+design = trocaObrigatoria(design, "limparFiltros: () => this.aplicarFiltros({ fBairro: '', fStatus: '', fDorms: '', fVagas: '', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null })", "limparFiltros: () => this.aplicarFiltros({ fBairro: '', fStatus: '', fDorms: '', fVagas: '', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null, saraEmpreendimentoIds: null })", 'limpar filtros da Sara');
+design = trocaObrigatoria(design, "setFBairro: e => this.aplicarFiltros({ fBairro: e.target.value })", "setFBairro: e => this.aplicarFiltros({ fBairro: e.target.value, saraIds: null })", 'bairro manual limpa Sara');
+design = trocaObrigatoria(design, "setFStatus: e => this.aplicarFiltros({ fStatus: e.target.value })", "setFStatus: e => this.aplicarFiltros({ fStatus: e.target.value, saraIds: null })", 'status manual limpa Sara');
+design = trocaObrigatoria(design, "this.aplicarFiltros({ fDorms: on ? '' : o.v })", "this.aplicarFiltros({ fDorms: on ? '' : o.v, saraIds: null })", 'dormitorios manuais limpam Sara');
+design = trocaObrigatoria(design, "this.aplicarFiltros({ fVagas: on ? '' : o.v })", "this.aplicarFiltros({ fVagas: on ? '' : o.v, saraIds: null })", 'vagas manuais limpam Sara');
 design = trocaObrigatoria(design, "precoTocado: true }); },", "precoTocado: true, saraIds: null }); },", 'preco manual limpa Sara');
-design = trocaObrigatoria(design, "setComprar: () => this.setState({ aba: 'comprar' })", "setComprar: () => this.setState({ aba: 'comprar', saraIds: null })", 'aba comprar limpa Sara');
-design = trocaObrigatoria(design, "setLanc: () => this.setState({ aba: 'lancamentos' })", "setLanc: () => this.setState({ aba: 'lancamentos', saraIds: null })", 'aba lancamentos limpa Sara');
+design = trocaObrigatoria(design, "setComprar: () => this.aplicarFiltros({ aba: 'comprar', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null })", "setComprar: () => this.aplicarFiltros({ aba: 'comprar', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null, saraEmpreendimentoIds: null })", 'aba comprar limpa Sara');
+design = trocaObrigatoria(design, "setLanc: () => this.aplicarFiltros({ aba: 'lancamentos', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null })", "setLanc: () => this.aplicarFiltros({ aba: 'lancamentos', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null, saraEmpreendimentoIds: null })", 'aba lancamentos limpa Sara');
+design = trocaObrigatoria(design, "setAlugar: () => this.aplicarFiltros({ aba: 'alugar', fFinalidade: 'aluguel', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null })", "setAlugar: () => this.aplicarFiltros({ aba: 'alugar', fFinalidade: 'aluguel', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null, saraEmpreendimentoIds: null })", 'aba alugar limpa Sara');
 
 // Clarity grava movimento/cliques, mas nunca recebe os blocos que podem conter
 // conversa, documentos, dados de lead ou informacoes internas do portal.
@@ -489,20 +502,103 @@ design = trocaObrigatoria(design, '<div class="rw-sara" style=', '<div class="rw
 design = trocaObrigatoria(design, '<div sc-camel-on-click="{{ fichaFechar }}" style="position: fixed; inset: 0; z-index: 220;', '<div sc-camel-on-click="{{ fichaFechar }}" data-clarity-mask="true" style="position: fixed; inset: 0; z-index: 220;', 'mascara ficha financeira');
 design = trocaObrigatoria(design, '<div style="position: fixed; inset: 0; z-index: 100; background: var(--bg-page); overflow-y: auto">', '<div data-clarity-mask="true" style="position: fixed; inset: 0; z-index: 100; background: var(--bg-page); overflow-y: auto">', 'mascara portal do proprietario');
 
-const MARK = '<script type="__bundler/template">';
-const s = base.indexOf(MARK);
-if (s < 0) throw new Error('bloco __bundler/template nao encontrado no index.html');
-const contentStart = base.indexOf('\n', s) + 1;
-const end = base.indexOf('</scr' + 'ipt>', contentStart);
-if (end < 0) throw new Error('fim do bloco __bundler/template nao encontrado');
+// Imagens grandes inline aumentam o HTML inicial e precisam ser decodificadas
+// antes da primeira pintura. No pacote publicado elas viram arquivos imutaveis
+// com nome pelo conteudo; a URL muda somente quando os pixels mudam.
+const MEDIA_INLINE_MAX_BYTES = 32 * 1024;
+const mediaExtension = type => ({ jpeg: 'jpg', jpg: 'jpg', png: 'png', webp: 'webp', gif: 'gif', avif: 'avif', 'svg+xml': 'svg' })[type.toLowerCase()] || null;
+let heroFallback = null;
+design = design.replace(/data:image\/([a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)/g, (uri, type, encodedData) => {
+  const extension = mediaExtension(type);
+  if (!extension) return uri;
+  const bytes = Buffer.from(encodedData, 'base64');
+  if (bytes.length <= MEDIA_INLINE_MAX_BYTES) return uri;
+  const fingerprint = createHash('sha256').update(bytes).digest('hex').slice(0, 20);
+  const relative = 'assets/media/' + fingerprint + '.' + extension;
+  embeddedAssets.set(relative, bytes);
+  if (createHash('sha256').update(bytes).digest('hex') === heroVariants.sourceSha256) heroFallback = '/' + relative;
+  return '/' + relative;
+});
 
-const encoded = JSON.stringify(design).replace(/<\//g, '<\\u002F');
-let out = base.slice(0, contentStart) + encoded + '\n  ' + base.slice(end);
+if (!heroFallback) throw new Error('imagem hero declarada no manifesto nao foi encontrada no design');
+for (const [name, variant] of Object.entries(heroVariants.variants || {})) {
+  if (!/^\/assets\/media\/[a-f0-9]{20}\.(?:avif|jpg|webp)$/.test(variant.path || '')) throw new Error('variante hero com caminho invalido: ' + name);
+  const bytes = await readFile('static/' + variant.path.replace(/^\/+/, ''));
+  const hash = createHash('sha256').update(bytes).digest('hex');
+  if (hash !== variant.sha256 || bytes.length !== variant.bytes) throw new Error('variante hero divergiu do manifesto: ' + name);
+}
+const heroImg = '<img src="' + heroFallback + '" alt="Sala decorada de um apê pronto pra morar em Moema" style="width: 100%; height: 100%; object-fit: cover; border-radius: 24px; display: block; box-shadow: var(--shadow-md)">';
+const heroPicture = '<picture style="display:block;width:100%;height:100%">' +
+  '<source type="image/avif" srcset="' + heroVariants.variants.avif_640.path + ' 640w, ' + heroVariants.variants.avif_1100.path + ' 1100w" sizes="(max-width: 768px) 100vw, 50vw">' +
+  '<source type="image/webp" srcset="' + heroVariants.variants.webp_640.path + ' 640w, ' + heroVariants.variants.webp_1100.path + ' 1100w" sizes="(max-width: 768px) 100vw, 50vw">' +
+  heroImg.replace('<img ', '<img width="1100" height="1100" fetchpriority="high" decoding="async" srcset="' + heroVariants.variants.jpeg_640.path + ' 640w, ' + heroFallback + ' 1100w" sizes="(max-width: 768px) 100vw, 50vw" ') +
+  '</picture>';
+design = trocaObrigatoria(design, heroImg, heroPicture, 'hero responsiva AVIF WebP e JPEG');
+
+const templateBytes = Buffer.from(design);
+const templateHash = createHash('sha256').update(templateBytes).digest('hex').slice(0, 20);
+const templatePath = '/assets/bundle/' + templateHash + '.html';
+embeddedAssets.set(templatePath.replace(/^\/+/, ''), templateBytes);
+
+let shell = trocaObrigatoria(
+  base,
+  '    const manifest = JSON.parse(manifestEl.textContent);\n    let template = JSON.parse(templateEl.textContent);',
+  `    const manifest = JSON.parse(manifestEl.textContent);\n    const templatePayload = JSON.parse(templateEl.textContent);\n    let template;\n    if (templatePayload && typeof templatePayload === 'object' && templatePayload.url) {\n      const templateResponse = await fetch(templatePayload.url, { cache: 'force-cache' });\n      if (!templateResponse.ok) throw new Error('template HTTP ' + templateResponse.status);\n      template = await templateResponse.text();\n    } else {\n      template = templatePayload;\n    }`,
+  'carregamento do template externo',
+);
+shell = trocaObrigatoria(
+  shell,
+  `      try {
+        const binaryStr = atob(entry.data);`,
+  `      try {
+        if (entry.url) {
+          if (pageSet.has(uuid)) {
+            const pageResponse = await fetch(entry.url, { cache: 'force-cache' });
+            if (!pageResponse.ok) throw new Error('asset HTTP ' + pageResponse.status);
+            pageTexts[uuid] = await pageResponse.text();
+          } else {
+            blobUrls[uuid] = entry.url;
+          }
+          return;
+        }
+        const binaryStr = atob(entry.data);`,
+  'carregamento dos assets externos',
+);
+const replacePayload = (html, type, payload) => {
+  const pattern = new RegExp('(<script type="__bundler/' + type + '">)\\s*[\\s\\S]*?\\s*(<\\/script>)');
+  if (!pattern.test(html)) throw new Error('bloco __bundler/' + type + ' ausente');
+  return html.replace(pattern, '$1\n' + JSON.stringify(payload).replace(/<\//g, '<\\u002F') + '\n  $2');
+};
+shell = replacePayload(shell, 'manifest', bundleManifest);
+shell = replacePayload(shell, 'template', { url: templatePath });
+let out = shell;
 
 out = trocaObrigatoria(out, '<html>', '<html lang="pt-BR">', 'idioma do documento');
 out = trocaObrigatoria(out, '<title>Bundled Page</title>', '<title>ApeCerto | Apartamentos em Moema</title><meta name="viewport" content="width=device-width, initial-scale=1">' + productionHead, 'SEO do head');
 
+await rm('dist', { recursive: true, force: true });
 await mkdir('dist', { recursive: true });
 await writeFile('dist/index.html', out);
 if (await existe('static')) await cp('static', 'dist', { recursive: true });
-console.log('dist/index.html gerado:', out.length, 'bytes');
+for (const [relative, bytes] of embeddedAssets) {
+  await mkdir('dist/' + relative.slice(0, relative.lastIndexOf('/')), { recursive: true });
+  await writeFile('dist/' + relative, bytes);
+}
+const directScriptUuids = [...design.matchAll(/<script\b[^>]*\bsrc="([0-9a-f-]{36})"/g)].map(match => match[1]);
+const initialResourceUuids = [
+  ...directScriptUuids,
+  'b886aa71-fb4e-41f7-ba33-960f77a5ca3c',
+  '7c0ea5e0-a948-412d-9180-9335416036e9',
+  '2c349e41-a90f-484e-b399-241f91354687',
+  'c228dd28-ee18-49a5-9d30-344b1a58f742',
+  'ef871dae-3c1c-42cd-9f58-a1d19995bb62',
+];
+const initialAssets = [...new Set([
+  templatePath,
+  heroVariants.variants.avif_640.path,
+  '/assets/analytics.js',
+  '/assets/production.css',
+  ...initialResourceUuids.map(uuid => bundleManifest[uuid]?.url).filter(Boolean),
+])];
+await writeFile('dist/build-input.json', JSON.stringify({ initialAssets, templatePath }, null, 2) + '\n');
+console.log('dist/index.html gerado:', out.length, 'bytes | assets externos:', embeddedAssets.size);

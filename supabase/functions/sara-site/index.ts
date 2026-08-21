@@ -28,18 +28,20 @@ type CatalogRow = {
   lazer: string[] | null;
   diferenciais: string[] | null;
   descricao: string | null;
+  unidades_site: UnitRow[] | null;
 };
 
 type UnitRow = {
-  empreendimento_id: string;
+  id: string;
+  slug: string | null;
   area_m2: number | null;
   tipologia: string | null;
   vagas: number | null;
-  valor_tabela: number | null;
-  valor_promo: number | null;
+  valor: number | null;
 };
 
 type Filters = {
+  finalidade: "venda" | "aluguel" | null;
   bairro: string | null;
   status: "pronto" | "em_obras" | "lancamento" | null;
   dormitorios_min: number | null;
@@ -51,6 +53,7 @@ type Filters = {
 };
 
 const blankFilters = (): Filters => ({
+  finalidade: null,
   bairro: null,
   status: null,
   dormitorios_min: null,
@@ -95,7 +98,7 @@ function priceOf(row: CatalogRow) {
 }
 
 function unitPrice(unit: UnitRow) {
-  return Number(unit.valor_promo ?? unit.valor_tabela ?? 0) || 0;
+  return Number(unit.valor ?? 0) || 0;
 }
 
 function unitBedrooms(unit: UnitRow) {
@@ -107,6 +110,8 @@ function unitBedrooms(unit: UnitRow) {
 
 function sanitizeFilters(value: Partial<Filters>, knownNeighborhoods: string[]): Filters {
   const out = blankFilters();
+  const finalidade = normalize(value.finalidade);
+  out.finalidade = finalidade === "aluguel" || finalidade === "venda" ? finalidade : null;
   const requestedNeighborhood = normalize(value.bairro);
   out.bairro = knownNeighborhoods.find((item) => normalize(item) === requestedNeighborhood) ?? null;
   out.status = ["pronto", "em_obras", "lancamento"].includes(String(value.status))
@@ -118,7 +123,9 @@ function sanitizeFilters(value: Partial<Filters>, knownNeighborhoods: string[]):
   };
   const money = (candidate: unknown) => {
     const parsed = Number(candidate);
-    return Number.isFinite(parsed) && parsed >= 100000 && parsed <= 100000000 ? Math.round(parsed) : null;
+    const minimum = out.finalidade === "aluguel" ? 500 : 100000;
+    const maximum = out.finalidade === "aluguel" ? 500000 : 100000000;
+    return Number.isFinite(parsed) && parsed >= minimum && parsed <= maximum ? Math.round(parsed) : null;
   };
   out.dormitorios_min = integer(value.dormitorios_min, 20);
   out.dormitorios_max = integer(value.dormitorios_max, 20);
@@ -136,6 +143,8 @@ function sanitizeFilters(value: Partial<Filters>, knownNeighborhoods: string[]):
 function parseWithRules(question: string, neighborhoods: string[]): Filters {
   const text = normalize(question);
   const out = blankFilters();
+  if (/alug|loca|mensal/.test(text)) out.finalidade = "aluguel";
+  else if (/compr|venda|adquir/.test(text)) out.finalidade = "venda";
   out.bairro = neighborhoods.find((item) => text.includes(normalize(item))) ?? null;
   if (/pronto|pronta|morar agora/.test(text)) out.status = "pronto";
   else if (/obra/.test(text)) out.status = "em_obras";
@@ -182,6 +191,7 @@ async function parseWithAI(question: string, neighborhoods: string[], model: str
             type: "object",
             additionalProperties: false,
             properties: {
+              finalidade: { type: ["string", "null"], enum: ["venda", "aluguel", null] },
               bairro: { type: ["string", "null"] },
               status: { type: ["string", "null"], enum: ["pronto", "em_obras", "lancamento", null] },
               dormitorios_min: { type: ["integer", "null"] },
@@ -191,14 +201,14 @@ async function parseWithAI(question: string, neighborhoods: string[], model: str
               area_min: { type: ["integer", "null"] },
               caracteristicas: { type: "array", items: { type: "string" }, maxItems: 5 },
             },
-            required: ["bairro", "status", "dormitorios_min", "dormitorios_max", "vagas_min", "preco_max", "area_min", "caracteristicas"],
+            required: ["finalidade", "bairro", "status", "dormitorios_min", "dormitorios_max", "vagas_min", "preco_max", "area_min", "caracteristicas"],
           },
         },
       },
       messages: [
         {
           role: "system",
-          content: `Você é a Sara da ApeCerto. Extraia somente filtros objetivos de uma busca de imóvel. Não invente bairro. Bairros disponíveis: ${neighborhoods.join(", ")}. Valores como 800 mil significam 800000. "2 quartos" significa exatamente 2; "2 ou mais" significa mínimo 2 e máximo nulo. Responda apenas no JSON exigido.`,
+          content: `Você é a Sara da ApeCerto. Extraia somente filtros objetivos de uma busca de imóvel. Finalidade deve ser venda, aluguel ou nula. Não invente bairro. Bairros disponíveis: ${neighborhoods.join(", ")}. Valores como 800 mil significam 800000. Aluguel de 5000 significa 5000, não 5 milhões. "2 quartos" significa exatamente 2; "2 ou mais" significa mínimo 2 e máximo nulo. Responda apenas no JSON exigido.`,
         },
         { role: "user", content: question },
       ],
@@ -211,15 +221,13 @@ async function parseWithAI(question: string, neighborhoods: string[], model: str
   return JSON.parse(content) as Partial<Filters>;
 }
 
-function matchCatalog(rows: CatalogRow[], units: UnitRow[], filters: Filters) {
-  const byProperty = new Map<string, UnitRow[]>();
-  units.forEach((unit) => {
-    const list = byProperty.get(unit.empreendimento_id) ?? [];
-    list.push(unit);
-    byProperty.set(unit.empreendimento_id, list);
-  });
-
+function matchCatalog(rows: CatalogRow[], filters: Filters) {
   return rows.flatMap((row) => {
+    const finalidade = normalize(row.finalidade);
+    const purposeMatches = !filters.finalidade
+      || (filters.finalidade === "aluguel"
+        ? ["aluguel", "alugar", "locacao", "ambos", "venda_e_aluguel", "venda e aluguel", "venda ou aluguel"].includes(finalidade)
+        : !["aluguel", "alugar", "locacao"].includes(finalidade));
     const haystack = normalize([
       row.nome,
       row.descricao,
@@ -227,12 +235,15 @@ function matchCatalog(rows: CatalogRow[], units: UnitRow[], filters: Filters) {
       ...(row.lazer ?? []),
       ...(row.diferenciais ?? []),
     ].join(" "));
-    const propertyMatches = (!filters.bairro || normalize(row.bairro) === normalize(filters.bairro))
+    const propertyMatches = purposeMatches
+      && (!filters.bairro || normalize(row.bairro) === normalize(filters.bairro))
       && (!filters.status || row.status === filters.status)
       && filters.caracteristicas.every((item) => haystack.includes(normalize(item)));
     if (!propertyMatches) return [];
 
-    const available = byProperty.get(row.id) ?? [];
+    // `unidades_site` vem da mesma view publica da vitrine. Assim a Sara nunca
+    // consulta ou recomenda unidade pendente, despublicada ou indisponivel.
+    const available = Array.isArray(row.unidades_site) ? row.unidades_site : [];
     const hasUnitFilters = filters.dormitorios_min != null || filters.dormitorios_max != null
       || filters.vagas_min != null || filters.preco_max != null || filters.area_min != null;
     if (!available.length) {
@@ -248,7 +259,7 @@ function matchCatalog(rows: CatalogRow[], units: UnitRow[], filters: Filters) {
     }
 
     const matchingUnits = available.filter((unit) => {
-      const bedrooms = unitBedrooms(unit);
+      const bedrooms = unitBedrooms(unit) ?? (row.dormitorios == null ? null : Number(row.dormitorios));
       const price = unitPrice(unit);
       return (filters.dormitorios_min == null || (bedrooms != null && bedrooms >= filters.dormitorios_min))
         && (filters.dormitorios_max == null || (bedrooms != null && bedrooms <= filters.dormitorios_max))
@@ -257,17 +268,18 @@ function matchCatalog(rows: CatalogRow[], units: UnitRow[], filters: Filters) {
         && (filters.area_min == null || Number(unit.area_m2 ?? -1) >= filters.area_min);
     });
     if (!matchingUnits.length) return [];
-    const matchedUnit = matchingUnits.slice().sort((a, b) => {
+    return matchingUnits.slice().sort((a, b) => {
       const priceA = unitPrice(a) || Number.MAX_SAFE_INTEGER;
       const priceB = unitPrice(b) || Number.MAX_SAFE_INTEGER;
       return priceA - priceB;
-    })[0];
-    return [{ row, price: unitPrice(matchedUnit) || priceOf(row), unit: matchedUnit }];
+    }).map((unit) => ({ row, price: unitPrice(unit) || priceOf(row), unit }));
   }).sort((a, b) => a.price - b.price);
 }
 
 function describe(filters: Filters) {
   const parts: string[] = [];
+  if (filters.finalidade === "aluguel") parts.push("para alugar");
+  if (filters.finalidade === "venda") parts.push("para comprar");
   if (filters.dormitorios_min != null) {
     parts.push(filters.dormitorios_min === 0 && filters.dormitorios_max === 0
       ? 'studio'
@@ -290,7 +302,7 @@ Deno.serve(async (request: Request) => {
   const origin = request.headers.get("origin");
   if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(origin) });
   if (request.method !== "POST") return json(origin, { ok: false, erro: "metodo_nao_permitido" }, 405);
-  if (origin && !ALLOWED_ORIGINS.has(origin)) return json(origin, { ok: false, erro: "origem_nao_permitida" }, 403);
+  if (!origin || !ALLOWED_ORIGINS.has(origin)) return json(origin, { ok: false, erro: "origem_nao_permitida" }, 403);
 
   try {
     const body = await request.json().catch(() => ({}));
@@ -304,35 +316,37 @@ Deno.serve(async (request: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       { auth: { persistSession: false } },
     );
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "sem-ip";
+    const ip = request.headers.get("cf-connecting-ip")
+      ?? request.headers.get("x-real-ip")
+      ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+      ?? "sem-ip";
     const clientId = String(body?.client_id ?? "").slice(0, 80);
-    const userAgent = request.headers.get("user-agent") ?? "sem-ua";
-    const clientHash = await sha256(`${ip}|${clientId}|${userAgent}`);
-    const { data: allowed, error: rateError } = await supabase.rpc("sara_site_rate_check", {
-      p_client_hash: clientHash,
-      p_limit: 20,
-    });
-    if (rateError) return json(origin, { ok: false, erro: "controle_indisponivel" }, 503);
-    if (!allowed) return json(origin, { ok: false, erro: "limite_atingido", mensagem: "Muitas buscas seguidas. Tenta de novo em alguns minutos." }, 429);
+    // O identificador do navegador é controlável pelo visitante, então ele só
+    // complementa o limite primário de infraestrutura. Trocar client_id nunca
+    // reinicia a cota principal do IP recebido do proxy da Edge.
+    const [infraHash, clientHash] = await Promise.all([
+      sha256(`sara-infra-v1|${ip}`),
+      sha256(`sara-client-v1|${ip}|${clientId || "sem-cliente"}`),
+    ]);
+    const [infraLimit, clientLimit] = await Promise.all([
+      supabase.rpc("sara_site_rate_check", { p_client_hash: infraHash, p_limit: 60 }),
+      supabase.rpc("sara_site_rate_check", { p_client_hash: clientHash, p_limit: 20 }),
+    ]);
+    if (infraLimit.error || clientLimit.error) return json(origin, { ok: false, erro: "controle_indisponivel" }, 503);
+    if (!infraLimit.data || !clientLimit.data) return json(origin, { ok: false, erro: "limite_atingido", mensagem: "Muitas buscas seguidas. Tenta de novo em alguns minutos." }, 429);
 
     const { data: rows, error: catalogError } = await supabase
       .from("site_produtos")
-      .select("id,nome,bairro,status,area_util,dormitorios,vagas,preco,preco_min,preco_max,area_min_disponivel,area_max_disponivel,dormitorios_min_disponiveis,dormitorios_max_disponiveis,vagas_min_disponiveis,vagas_max_disponiveis,tipologias_disponiveis,finalidade,lazer,diferenciais,descricao")
+      .select("id,nome,bairro,status,area_util,dormitorios,vagas,preco,preco_min,preco_max,area_min_disponivel,area_max_disponivel,dormitorios_min_disponiveis,dormitorios_max_disponiveis,vagas_min_disponiveis,vagas_max_disponiveis,tipologias_disponiveis,finalidade,lazer,diferenciais,descricao,unidades_site")
       .limit(500);
     if (catalogError) return json(origin, { ok: false, erro: "catalogo_indisponivel" }, 503);
 
     const catalog = (rows ?? []) as CatalogRow[];
-    const propertyIds = catalog.map((row) => row.id);
-    const { data: unitRows, error: unitsError } = propertyIds.length
-      ? await supabase
-        .from("unidades")
-        .select("empreendimento_id,area_m2,tipologia,vagas,valor_tabela,valor_promo")
-        .in("empreendimento_id", propertyIds)
-        .eq("publicado", true)
-        .eq("disponivel", true)
-      : { data: [], error: null };
-    if (unitsError) return json(origin, { ok: false, erro: "unidades_indisponiveis" }, 503);
     const neighborhoods = Array.from(new Set(catalog.map((row) => row.bairro).filter(Boolean) as string[])).sort();
+    const requestedPurpose = normalize(body?.finalidade);
+    const explicitPurpose = requestedPurpose === "aluguel" || requestedPurpose === "venda"
+      ? requestedPurpose as Filters["finalidade"]
+      : null;
     let apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
       const { data: secret } = await supabase.from("app_secrets").select("valor").eq("chave", "OPENAI_API_KEY").maybeSingle();
@@ -343,9 +357,11 @@ Deno.serve(async (request: Request) => {
 
     let source = "regras";
     let parsed: Partial<Filters> = parseWithRules(question, neighborhoods);
+    if (explicitPurpose) parsed.finalidade = explicitPurpose;
     if (apiKey && agent?.ativo !== false) {
       try {
         parsed = await parseWithAI(question, neighborhoods, model, apiKey);
+        if (explicitPurpose) parsed.finalidade = explicitPurpose;
         source = "ia";
       } catch {
         source = "regras";
@@ -365,7 +381,7 @@ Deno.serve(async (request: Request) => {
       });
     }
 
-    const matches = matchCatalog(catalog, (unitRows ?? []) as UnitRow[], filters);
+    const matches = matchCatalog(catalog, filters);
     const summary = parts.join(", ");
     const reply = matches.length
       ? `Encontrei ${matches.length} ${matches.length === 1 ? "apê" : "apês"} com ${summary}. Ordenei do menor preço para o maior. 🔑`
@@ -373,11 +389,14 @@ Deno.serve(async (request: Request) => {
     return json(origin, {
       ok: true,
       count: matches.length,
-      ids: matches.map((match) => match.row.id),
-      prices: Object.fromEntries(matches.map((match) => [match.row.id, match.price])),
-      units: Object.fromEntries(matches.map((match) => [match.row.id, {
+      ids: matches.map((match) => match.unit?.id ?? match.row.id),
+      prices: Object.fromEntries(matches.map((match) => [match.unit?.id ?? match.row.id, match.price])),
+      units: Object.fromEntries(matches.map((match) => [match.unit?.id ?? match.row.id, {
+        id: match.unit?.id ?? null,
+        slug: match.unit?.slug ?? null,
+        empreendimento_id: match.row.id,
         area: match.unit?.area_m2 ?? match.row.area_util,
-        dormitorios: match.unit ? unitBedrooms(match.unit) : match.row.dormitorios,
+        dormitorios: match.unit ? (unitBedrooms(match.unit) ?? match.row.dormitorios) : match.row.dormitorios,
         vagas: match.unit?.vagas ?? match.row.vagas,
         preco: match.price,
       }])),

@@ -1,9 +1,14 @@
-name: Validate site
+name: Site production gate
 
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: site-production-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -11,12 +16,13 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - name: Checkout versioned sources
+        uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 24
-      - name: Build editable design
-        run: npm run build
-      - name: Verify ERP feed and generated HTML bundle
-        run: npm test
+          node-version: 22
+      - name: Build, verify, test links and smoke routes
+        run: npm run ci

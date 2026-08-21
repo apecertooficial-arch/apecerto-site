@@ -15,7 +15,7 @@
       var head = document.head;
       var v = document.querySelector('meta[name="viewport"]');
       if (!v) { v = document.createElement('meta'); v.setAttribute('name', 'viewport'); head.appendChild(v); }
-      v.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover');
+      v.setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover');
       var ico = 'data:image/png;base64,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';
       ['icon', 'shortcut icon', 'apple-touch-icon'].forEach(function (rel) {
         var l = document.querySelector('link[rel="' + rel + '"]');
@@ -26,18 +26,15 @@
       if (!document.title || /\.dc|apecerto-site|index/i.test(document.title)) {
         document.title = 'apêcerto — apês prontos pra morar em Moema';
       }
-      document.addEventListener('gesturestart', function (e) { e.preventDefault(); }, { passive: false });
-      var ultimo = 0;
-      document.addEventListener('touchend', function (e) {
-        var agora = Date.now();
-        if (agora - ultimo < 320) e.preventDefault();
-        ultimo = agora;
-      }, { passive: false });
     })();
   </script>
   <style>
     html, body { overflow-x: hidden; max-width: 100%; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body { touch-action: manipulation; }
+    .rw-skip { position: fixed; left: 16px; top: 12px; z-index: 9999; transform: translateY(-160%); background: #1F1C1A; color: #fff; padding: 10px 16px; border-radius: 999px; font-weight: 700; }
+    .rw-skip:focus { transform: translateY(0); }
+    :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: 3px solid #8B00CC !important; outline-offset: 3px !important; }
+    button[aria-label="Favoritar"], button[aria-label="Foto anterior"], button[aria-label="Próxima foto"], button[aria-label="Mês anterior"], button[aria-label="Próximo mês"], button[aria-label="Ano anterior"], button[aria-label="Próximo ano"] { min-width: 44px !important; min-height: 44px !important; }
   </style>
   <style>/* ============================================
    ApêCerto Design System — Colors & Type
@@ -1795,6 +1792,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
     input[type="range"].ape-range::-webkit-slider-thumb:hover { transform: scale(1.12); }
     input[type="range"].ape-range::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(0.98); }
     input[type="range"].ape-range::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 3px solid #FF7000; box-shadow: 0 2px 6px rgba(31,28,26,0.18); cursor: grab; }
+    input[type="range"].ape-range-dual { position: absolute; left: 0; margin: 0; background: transparent; pointer-events: none; }
+    input[type="range"].ape-range-dual::-webkit-slider-thumb { pointer-events: auto; }
+    input[type="range"].ape-range-dual::-moz-range-thumb { pointer-events: auto; }
     @media (min-width: 768px) { .rw-m { display: none !important; } }
     @media (max-width: 767px) {
       .rw-desk { display: none !important; }
@@ -1826,6 +1826,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 </helmet>
 
 <div style="font-family: var(--font-body); color: var(--fg-1); background: var(--bg-page); min-height: 100vh">
+  <a class="rw-skip" href="#conteudo-principal">Pular para o conteúdo</a>
 
   <!-- ============ NAV ============ -->
   <header style="position: sticky; top: 0; z-index: 50; background: rgba(250, 248, 246, 0.78); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-soft)">
@@ -1869,29 +1870,31 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <button sc-camel-on-click="{{ tglMenuAlug }}" style="border: none; background: transparent; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: {{ menuAlugCor }}; display: flex; align-items: center; gap: 6px; padding: 8px 0" style-hover="color: var(--ape-orange)">Alugar <span style="font-size: 10px">{{ menuAlugSeta }}</span></button>
           <sc-if value="{{ menuAlugOn }}" hint-placeholder-val="{{ false }}">
             <div style="position: absolute; top: 100%; left: -24px; margin-top: 4px; background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 24px 28px; display: flex; flex-direction: column; gap: 10px; width: 280px; z-index: 60">
-              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--fg-1)">Aluguel chega em breve 🔑</div>
-              <p style="margin: 0; font-size: var(--text-sm); color: var(--fg-3)">Por enquanto trabalhamos só com venda. Tem um apê pra alugar em Moema? Deixa com a gente.</p>
-              <button sc-camel-on-click="{{ abrePortal }}" style="border: none; background: transparent; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--ape-orange); text-align: left; padding: 4px 0 0" style-hover="color: var(--ape-orange-600)">Anunciar meu apê →</button>
+              <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--fg-1)">Apês para alugar 🔑</div>
+              <p style="margin: 0; font-size: var(--text-sm); color: var(--fg-3)">Veja somente os imóveis cadastrados para locação.</p>
+              <button sc-camel-on-click="{{ menuAlugar }}" style="border: none; background: transparent; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--ape-orange); text-align: left; padding: 4px 0 0" style-hover="color: var(--ape-orange-600)">Ver imóveis para alugar →</button>
             </div>
           </sc-if>
         </div>
-        <a href="#" sc-camel-on-click="{{ abrePortal }}" style="color: var(--fg-2)" style-hover="color: var(--ape-orange)">Anunciar</a>
-        <a href="#" sc-camel-on-click="{{ abrePortal }}" style="color: var(--fg-2)" style-hover="color: var(--ape-orange)">Entrar</a>
+        <a href="/proprietario/cadastre-seu-imovel/" sc-camel-on-click="{{ abreCadastro }}" style="color: var(--fg-2)" style-hover="color: var(--ape-orange)">Anunciar</a>
+        <a href="/proprietario/" sc-camel-on-click="{{ abrePortal }}" style="color: var(--fg-2)" style-hover="color: var(--ape-orange)">Entrar</a>
       </nav>
-      <span class="rw-desk" style="display: contents"><x-import component-from-global-scope="ApCertoDesignSystem_019dda.Button" variant="primary" size="md" sc-camel-on-click="{{ buscar }}" hint-size="160px,40px">Agendar visita</x-import></span>
+      <span class="rw-desk" style="display: contents"><x-import component-from-global-scope="ApCertoDesignSystem_019dda.Button" variant="primary" size="md" sc-camel-on-click="{{ agendarVisita }}" hint-size="160px,40px">Agendar visita</x-import></span>
       <button class="rw-m" sc-camel-on-click="{{ mmTgl }}" aria-label="Menu" style="border: none; background: transparent; cursor: pointer; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; color: var(--fg-1)"><sc-if value="{{ mmFechado }}" hint-placeholder-val="{{ true }}"><svg width="26" height="26" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg></sc-if><sc-if value="{{ mmOn }}" hint-placeholder-val="{{ false }}"><svg width="26" height="26" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg></sc-if></button>
       <sc-if value="{{ mmOn }}" hint-placeholder-val="{{ false }}">
         <div class="rw-m" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-page); border-bottom: 1px solid var(--border-soft); box-shadow: var(--shadow-lg); padding: 4px 20px 24px; flex-direction: column">
           <a href="#apes" sc-camel-on-click="{{ mmFecha }}" style="font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 14px 4px; border-bottom: 1px solid var(--border-soft);">Ver os apês</a>
           <a href="#bairros" sc-camel-on-click="{{ mmFecha }}" style="font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 14px 4px; border-bottom: 1px solid var(--border-soft);">Bairros</a>
           <a href="#dicas" sc-camel-on-click="{{ mmFecha }}" style="font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 14px 4px; border-bottom: 1px solid var(--border-soft);">Dicas</a>
-          <a href="#" sc-camel-on-click="{{ mmPortal }}" style="font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 14px 4px; border-bottom: 1px solid var(--border-soft);">Anunciar meu apê</a>
-          <a href="#" sc-camel-on-click="{{ mmPortal }}" style="font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 14px 4px;">Entrar</a>
-          <div style="padding-top: 16px"><button sc-camel-on-click="{{ mmBuscar }}" style="width: 100%; height: 48px; border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-inverse); background: var(--ape-orange); border-radius: var(--radius-pill); box-shadow: var(--shadow-brand)">Agendar visita</button></div>
+          <a href="/proprietario/cadastre-seu-imovel/" sc-camel-on-click="{{ mmCadastro }}" style="font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 14px 4px; border-bottom: 1px solid var(--border-soft);">Anunciar meu apê</a>
+          <a href="/proprietario/" sc-camel-on-click="{{ mmPortal }}" style="font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 14px 4px;">Entrar</a>
+          <div style="padding-top: 16px"><button sc-camel-on-click="{{ mmAgendarVisita }}" style="width: 100%; height: 48px; border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-inverse); background: var(--ape-orange); border-radius: var(--radius-pill); box-shadow: var(--shadow-brand)">Agendar visita</button></div>
         </div>
       </sc-if>
     </div>
   </header>
+
+  <main id="conteudo-principal" tabindex="-1">
 
   <!-- ============ HERO ============ -->
   <section id="buscar" style="position: relative; overflow: hidden">
@@ -1909,15 +1912,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <div style="display: flex; gap: 8px">
             <button sc-camel-on-click="{{ setComprar }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-weight: var(--weight-semibold); font-size: var(--text-sm); padding: 8px 20px; border-radius: var(--radius-pill); background: {{ compBg }}; color: {{ compFg }}">Comprar</button>
             <button sc-camel-on-click="{{ setLanc }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-weight: var(--weight-semibold); font-size: var(--text-sm); padding: 8px 20px; border-radius: var(--radius-pill); background: {{ lancBg }}; color: {{ lancFg }}">Lançamentos</button>
+            <button sc-camel-on-click="{{ setAlugar }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-weight: var(--weight-semibold); font-size: var(--text-sm); padding: 8px 20px; border-radius: var(--radius-pill); background: {{ alugBg }}; color: {{ alugFg }}">Alugar</button>
           </div>
           <div style="display: flex; gap: 12px">
-            <sc-raw-select value="{{ fBairro }}" sc-camel-on-change="{{ setFBairro }}" style="flex: 1.2; border: 1px solid var(--border-default); border-radius: 12px; padding: 0 12px; height: 48px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+            <sc-raw-select aria-label="Filtrar por bairro" value="{{ fBairro }}" sc-camel-on-change="{{ setFBairro }}" style="flex: 1.2; border: 1px solid var(--border-default); border-radius: 12px; padding: 0 12px; height: 48px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
               <option value="">Todos os bairros</option>
               <sc-for list="{{ bairroOpts }}" as="b" hint-placeholder-count="0">
                 <option value="{{ b }}">{{ b }}</option>
               </sc-for>
             </sc-raw-select>
-            <sc-raw-select value="{{ fStatus }}" sc-camel-on-change="{{ setFStatus }}" style="flex: 1; border: 1px solid var(--border-default); border-radius: 12px; padding: 0 12px; height: 48px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+            <sc-raw-select aria-label="Filtrar por status do imóvel" value="{{ fStatus }}" sc-camel-on-change="{{ setFStatus }}" style="flex: 1; border: 1px solid var(--border-default); border-radius: 12px; padding: 0 12px; height: 48px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
               <option value="">Qualquer status</option>
               <option value="pronto">Pronto pra morar</option>
               <option value="em_obras">Em obras</option>
@@ -1955,7 +1959,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
                     </sc-for>
                   </div>
                 </sc-if>
-                <input sc-camel-on-key-down="{{ saraKey }}" placeholder="O que você procura?" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: var(--radius-pill); height: 42px; padding: 0 16px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                <input aria-label="Descreva o imóvel que procura" sc-camel-on-key-down="{{ saraKey }}" placeholder="O que você procura?" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: var(--radius-pill); height: 42px; padding: 0 16px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
               </div>
             </sc-if>
           </div>
@@ -1964,9 +1968,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
               <span style="font-size: var(--text-sm); color: var(--fg-3)">Preço</span>
               <span style="font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--ape-orange)">{{ precoLabel }}</span>
             </div>
-            <div style="position: relative; height: 20px"><div style="position: absolute; left: 0; right: 0; top: 8px; height: 4px; border-radius: 999px; background: {{ precoFillBg }}"></div><input type="range" class="ape-range ape-range-dual" min="0" max="100" step="1" value="{{ precoMinT }}" sc-camel-on-input="{{ setFPrecoMin }}" style="width: 100%; top: 8px"><input type="range" class="ape-range ape-range-dual" min="0" max="100" step="1" value="{{ precoMaxT }}" sc-camel-on-input="{{ setFPrecoMax }}" style="width: 100%; top: 8px"></div>
+            <div style="position: relative; height: 20px"><div style="position: absolute; left: 0; right: 0; top: 8px; height: 4px; border-radius: 999px; background: {{ precoFillBg }}"></div><input type="range" class="ape-range ape-range-dual" aria-label="Preço mínimo" aria-valuetext="{{ precoMinAria }}" min="0" max="100" step="1" value="{{ precoMinT }}" sc-camel-on-input="{{ setFPrecoMin }}" style="width: 100%; top: 8px"><input type="range" class="ape-range ape-range-dual" aria-label="Preço máximo" aria-valuetext="{{ precoMaxAria }}" min="0" max="100" step="1" value="{{ precoMaxT }}" sc-camel-on-input="{{ setFPrecoMax }}" style="width: 100%; top: 8px"></div>
             <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--fg-muted)">
-              <span>R$ 100 mil</span>
+              <span>{{ precoMinLabel }}</span>
               <span style="margin-left: auto; margin-right: auto; padding-left: 8px">{{ precoMeioLabel }}</span>
               <span>sem limite</span>
             </div>
@@ -2019,7 +2023,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </sc-if>
     </div>
     <sc-if value="{{ dbErro }}" hint-placeholder-val="{{ false }}">
-      <div style="background: var(--warning-bg); color: var(--fg-1); border-radius: var(--radius-md); padding: 16px 20px; font-size: var(--text-sm)">Não conseguimos carregar os apês agora. Tenta de novo em instantes.</div>
+      <div role="alert" style="background: var(--warning-bg); color: var(--fg-1); border-radius: var(--radius-md); padding: 16px 20px; font-size: var(--text-sm); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+        <span>Não conseguimos carregar os apês agora.</span>
+        <button sc-camel-on-click="{{ tentarProdutos }}" style="border: 1.5px solid var(--border-default); background: var(--bg-surface); cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 9px 18px; border-radius: var(--radius-pill)" style-hover="border-color: var(--ape-orange); color: var(--ape-orange)">Tentar novamente</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ rotaNaoEncontrada }}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="background: var(--bg-tint-orange); color: var(--fg-1); border-radius: var(--radius-md); padding: 18px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+        <span><strong>Esse apê não está mais disponível.</strong> Veja abaixo os imóveis publicados agora.</span>
+        <button sc-camel-on-click="{{ fecharAvisoRota }}" style="border: 1.5px solid var(--border-default); background: var(--bg-surface); cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 9px 18px; border-radius: var(--radius-pill)">Entendi</button>
+      </div>
     </sc-if>
     <sc-if value="{{ semApes }}" hint-placeholder-val="{{ false }}">
       <div style="background: var(--bg-surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); padding: 56px 32px; text-align: center; display: flex; flex-direction: column; gap: 10px; align-items: center">
@@ -2050,7 +2063,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <sc-for list="{{ produtos }}" as="p" hint-placeholder-count="6">
         <div sc-camel-on-click="{{ p.abrir }}" style="cursor: pointer; background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="box-shadow: var(--shadow-md); transform: translateY(-2px)">
           <div style="position: relative; height: 190px; background: var(--bg-sunken)">
-            <div style="width: 100%; height: 100%; background-image: url('{{ p.foto }}'); background-size: cover; background-position: center; transition: background-image 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" role="img" aria-label="{{ p.nome }}"></div>
+            <sc-if value="{{ p.fotoOn }}" hint-placeholder-val="{{ true }}"><img src="{{ p.foto }}" alt="{{ p.nome }}" loading="lazy" decoding="async" width="420" height="190" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block"></sc-if>
             <span style="position: absolute; top: 12px; left: 12px; background: {{ p.badgeBg }}; color: var(--fg-inverse); font-size: var(--text-xs); font-weight: var(--weight-semibold); padding: 4px 12px; border-radius: var(--radius-pill)">{{ p.badge }}</span>
             <button sc-camel-on-click="{{ p.favTgl }}" aria-label="Favoritar" style="position: absolute; top: 10px; right: 10px; border: none; cursor: pointer; width: 36px; height: 36px; border-radius: var(--radius-pill); background: rgba(250, 248, 246, 0.9); display: flex; align-items: center; justify-content: center; color: {{ p.favCor }}; transition: transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1)" style-hover="transform: scale(1.1)">
               <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="{{ p.favFill }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
@@ -2098,6 +2111,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <button sc-camel-on-click="{{ tglTodos }}" style="border: 1.5px solid var(--border-default); background: var(--bg-surface); cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 12px 32px; border-radius: var(--radius-pill)" style-hover="border-color: var(--ape-orange); color: var(--ape-orange)">{{ verMaisLabel }}</button>
       </div>
     </sc-if>
+    <sc-if value="{{ produtosTemMais }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 20px">
+        <button sc-camel-on-click="{{ carregarMaisProdutos }}" style="border: 1.5px solid var(--border-default); background: var(--bg-surface); cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 12px 32px; border-radius: var(--radius-pill)" style-hover="border-color: var(--ape-orange); color: var(--ape-orange)">{{ carregarMaisLabel }}</button>
+        <span class="caption">{{ produtosCarregadosLabel }}</span>
+      </div>
+    </sc-if>
   </section>
 
   <!-- ============ OPORTUNIDADES + RECOMENDADOS ============ -->
@@ -2112,7 +2131,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <sc-for list="{{ oport }}" as="p" hint-placeholder-count="0">
         <div sc-camel-on-click="{{ p.abrir }}" style="cursor: pointer; background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="box-shadow: var(--shadow-md); transform: translateY(-2px)">
           <div style="position: relative; height: 190px; background: var(--bg-sunken)">
-            <div style="width: 100%; height: 100%; background-image: url('{{ p.foto }}'); background-size: cover; background-position: center; transition: background-image 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" role="img" aria-label="{{ p.nome }}"></div>
+            <sc-if value="{{ p.fotoOn }}" hint-placeholder-val="{{ true }}"><img src="{{ p.foto }}" alt="{{ p.nome }}" loading="lazy" decoding="async" width="420" height="190" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block"></sc-if>
             <span style="position: absolute; top: 12px; left: 12px; background: {{ p.badgeBg }}; color: var(--fg-inverse); font-size: var(--text-xs); font-weight: var(--weight-semibold); padding: 4px 12px; border-radius: var(--radius-pill)">{{ p.badge }}</span>
             <button sc-camel-on-click="{{ p.favTgl }}" aria-label="Favoritar" style="position: absolute; top: 10px; right: 10px; border: none; cursor: pointer; width: 36px; height: 36px; border-radius: var(--radius-pill); background: rgba(250, 248, 246, 0.9); display: flex; align-items: center; justify-content: center; color: {{ p.favCor }}; transition: transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1)" style-hover="transform: scale(1.1)">
               <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="{{ p.favFill }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
@@ -2164,7 +2183,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <sc-for list="{{ recs }}" as="p" hint-placeholder-count="0">
         <div sc-camel-on-click="{{ p.abrir }}" style="cursor: pointer; background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="box-shadow: var(--shadow-md); transform: translateY(-2px)">
           <div style="position: relative; height: 190px; background: var(--bg-sunken)">
-            <div style="width: 100%; height: 100%; background-image: url('{{ p.foto }}'); background-size: cover; background-position: center; transition: background-image 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" role="img" aria-label="{{ p.nome }}"></div>
+            <sc-if value="{{ p.fotoOn }}" hint-placeholder-val="{{ true }}"><img src="{{ p.foto }}" alt="{{ p.nome }}" loading="lazy" decoding="async" width="420" height="190" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block"></sc-if>
             <span style="position: absolute; top: 12px; left: 12px; background: {{ p.badgeBg }}; color: var(--fg-inverse); font-size: var(--text-xs); font-weight: var(--weight-semibold); padding: 4px 12px; border-radius: var(--radius-pill)">{{ p.badge }}</span>
             <button sc-camel-on-click="{{ p.favTgl }}" aria-label="Favoritar" style="position: absolute; top: 10px; right: 10px; border: none; cursor: pointer; width: 36px; height: 36px; border-radius: var(--radius-pill); background: rgba(250, 248, 246, 0.9); display: flex; align-items: center; justify-content: center; color: {{ p.favCor }}; transition: transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1)" style-hover="transform: scale(1.1)">
               <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="{{ p.favFill }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
@@ -2325,6 +2344,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     </div>
   </section>
 
+  </main>
+
   <!-- ============ FOOTER ============ -->
   <footer style="background: var(--neutral-800); color: var(--neutral-300)">
     <div style="max-width: 1200px; margin: 0 auto; padding: 64px 24px 40px; display: flex; flex-direction: column; gap: 48px">
@@ -2333,14 +2354,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <img src="def66a7f-d979-47d8-9cc7-43bdfe714ea4" alt="apêcerto" style="height: 40px; width: fit-content">
           <p style="margin: 0; font-size: var(--text-sm); color: var(--neutral-400); max-width: 260px">Apartamentos prontos pra morar em Moema, São Paulo.</p>
           <div style="display: flex; gap: 12px">
-            <a href="https://www.instagram.com/apecerto.oficial/" target="_blank" aria-label="Instagram" style="width: 36px; height: 36px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: center; color: var(--neutral-0)" style-hover="background: var(--ape-orange)"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"></circle></svg></a>
+            <a href="https://www.instagram.com/apecerto.oficial/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" style="width: 36px; height: 36px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: center; color: var(--neutral-0)" style-hover="background: var(--ape-orange)"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"></circle></svg></a>
             
           </div>
         </div>
         <div style="display: flex; flex-direction: column; gap: 10px">
           <div style="font-size: var(--text-xs); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--neutral-500)">Sobre</div>
           <a href="#bairros" style="font-size: var(--text-sm); color: var(--neutral-300)" style-hover="color: var(--ape-orange-300)">Bairros</a>
-          <a href="#" sc-camel-on-click="{{ abrePortal }}" style="font-size: var(--text-sm); color: var(--neutral-300)" style-hover="color: var(--ape-orange-300)">Portal do proprietário</a>
+          <a href="/proprietario/" sc-camel-on-click="{{ abrePortal }}" style="font-size: var(--text-sm); color: var(--neutral-300)" style-hover="color: var(--ape-orange-300)">Portal do proprietário</a>
         </div>
         <div style="display: flex; flex-direction: column; gap: 10px">
           <div style="font-size: var(--text-xs); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--neutral-500)">Conteúdos</div>
@@ -2350,15 +2371,20 @@ svg.leaflet-image-layer.leaflet-interactive path {
         </div>
       </div>
       <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 24px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: var(--text-xs); color: var(--neutral-500)">
-        <span>© 2026 apêcerto imóveis ltda · CRECI-SP 00000-J · CNPJ 00.000.000/0001-00</span>
-        <span>Moema, São Paulo — SP</span>
+        <span>© 2026 apêcerto imóveis ltda</span>
+        <div style="display: flex; gap: 14px; flex-wrap: wrap">
+          <span>Av. Iraí, 79, cj. 95A · Moema, São Paulo — SP</span>
+          <a href="mailto:contato@apecerto.com" style="color: var(--neutral-300)">contato@apecerto.com</a>
+          <a href="https://wa.me/5511980154312" target="_blank" rel="noopener noreferrer" style="color: var(--neutral-300)">WhatsApp (11) 98015-4312</a>
+          <a href="/privacidade/" style="color: var(--neutral-300)">Política de privacidade</a>
+        </div>
       </div>
     </div>
   </footer>
 
   <!-- ============ DETALHE DO APÊ ============ -->
   <sc-if value="{{ detOn }}" hint-placeholder-val="{{ false }}">
-    <div style="position: fixed; inset: 0; z-index: 110; background: var(--bg-page); overflow-y: auto">
+    <div data-det-topo="" tabindex="-1" role="dialog" aria-modal="true" aria-label="Detalhes do imóvel" style="position: fixed; inset: 0; z-index: 110; background: var(--bg-page); overflow-y: auto">
       <div style="position: sticky; top: 0; z-index: 10; background: rgba(250, 248, 246, 0.78); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-soft)">
         <div class="rw-dethead" style="max-width: 1080px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px">
           <img src="b886aa71-fb4e-41f7-ba33-960f77a5ca3c" alt="apêcerto" style="height: 32px; display: block">
@@ -2469,17 +2495,17 @@ svg.leaflet-image-layer.leaflet-interactive path {
               </sc-for>
             </div>
             <sc-if value="{{ leadOk }}" hint-placeholder-val="{{ false }}">
-              <div style="background: var(--success-bg); color: var(--success); border-radius: var(--radius-md); padding: 14px 16px; font-size: var(--text-sm); font-weight: var(--weight-medium)">Visita pedida! A gente confirma o horário pelo seu WhatsApp.</div>
+              <div role="status" aria-live="polite" style="background: var(--success-bg); color: var(--success); border-radius: var(--radius-md); padding: 14px 16px; font-size: var(--text-sm); font-weight: var(--weight-medium)">Visita pedida! A gente confirma o horário pelo seu WhatsApp.</div>
             </sc-if>
             <sc-if value="{{ leadForm }}" hint-placeholder-val="{{ true }}">
-              <div sc-camel-on-input="{{ leadInput }}" style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border-soft); padding-top: 16px">
+              <div data-lead-form="" sc-camel-on-input="{{ leadInput }}" style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border-soft); padding-top: 16px">
                 <div style="display: flex; flex-direction: column; gap: 2px">
                   <div style="font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--fg-1)">Interessado nesse apê?</div>
                   <span style="font-size: var(--text-sm); color: var(--fg-3)">Agenda uma visita — a gente confirma pelo WhatsApp.</span>
                 </div>
-                <input name="nome" placeholder="Seu nome" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
-                <input name="telefone" placeholder="Seu WhatsApp" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
-                <input name="email" type="email" placeholder="Seu e-mail" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                <input name="nome" aria-label="Seu nome" autocomplete="name" required="" placeholder="Seu nome" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                <input name="telefone" aria-label="Seu WhatsApp" autocomplete="tel" inputmode="tel" required="" placeholder="Seu WhatsApp" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                <input name="email" aria-label="Seu e-mail" autocomplete="email" required="" type="email" placeholder="Seu e-mail" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative">
                   <button sc-camel-on-click="{{ calTgl }}" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; text-align: left; color: {{ calCampoFg }}">
                     <span>{{ calCampoLabel }}</span>
@@ -2515,13 +2541,13 @@ svg.leaflet-image-layer.leaflet-interactive path {
                   </sc-if>
                 </div>
                 <sc-if value="{{ leadErro }}" hint-placeholder-val="{{ false }}">
-                  <div style="background: var(--danger-bg); color: var(--danger); border-radius: var(--radius-md); padding: 10px 14px; font-size: var(--text-sm)">{{ leadErro }}</div>
+                  <div role="alert" aria-live="assertive" style="background: var(--danger-bg); color: var(--danger); border-radius: var(--radius-md); padding: 10px 14px; font-size: var(--text-sm)">{{ leadErro }}</div>
                 </sc-if>
                 <x-import component-from-global-scope="ApCertoDesignSystem_019dda.Button" variant="primary" size="lg" sc-camel-on-click="{{ leadEnviar }}" hint-size="100%,48px">{{ leadLabel }}</x-import>
               </div>
             </sc-if>
             <sc-if value="{{ zapOn }}" hint-placeholder-val="{{ false }}">
-              <a href="{{ zapUrl }}" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; border: 1.5px solid var(--border-default); border-radius: var(--radius-pill); padding: 12px 0; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--fg-1)" style-hover="border-color: var(--ape-orange); color: var(--ape-orange)"><i data-lucide="message-circle" style="width: 18px; height: 18px"></i> Chamar no WhatsApp</a>
+              <a href="{{ zapUrl }}" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: 8px; border: 1.5px solid var(--border-default); border-radius: var(--radius-pill); padding: 12px 0; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--fg-1)" style-hover="border-color: var(--ape-orange); color: var(--ape-orange)"><i data-lucide="message-circle" style="width: 18px; height: 18px"></i> Chamar no WhatsApp</a>
             </sc-if>
           </div>
           <sc-if value="{{ finOn }}" hint-placeholder-val="{{ false }}">
@@ -2536,7 +2562,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
                   <span style="font-size: var(--text-base); font-weight: var(--weight-bold); color: var(--ape-orange)">{{ finPctLabel }}</span>
                 </div>
                 <div sc-camel-on-input="{{ finInput }}" style="display: flex">
-                  <input class="fin-range" type="range" min="20" max="90" step="5" sc-camel-default-value="{{ finPct }}">
+                  <input class="fin-range" type="range" aria-label="Porcentagem a financiar" aria-valuetext="{{ finPctLabel }}" min="20" max="90" step="5" sc-camel-default-value="{{ finPct }}">
                 </div>
               </div>
               <div style="display: flex; gap: 4px; height: 4px">
@@ -2573,7 +2599,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
               <sc-for list="{{ similares }}" as="p" hint-placeholder-count="0">
         <div sc-camel-on-click="{{ p.abrir }}" style="cursor: pointer; background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="box-shadow: var(--shadow-md); transform: translateY(-2px)">
           <div style="position: relative; height: 190px; background: var(--bg-sunken)">
-            <div style="width: 100%; height: 100%; background-image: url('{{ p.foto }}'); background-size: cover; background-position: center; transition: background-image 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" role="img" aria-label="{{ p.nome }}"></div>
+            <sc-if value="{{ p.fotoOn }}" hint-placeholder-val="{{ true }}"><img src="{{ p.foto }}" alt="{{ p.nome }}" loading="lazy" decoding="async" width="420" height="190" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block"></sc-if>
             <span style="position: absolute; top: 12px; left: 12px; background: {{ p.badgeBg }}; color: var(--fg-inverse); font-size: var(--text-xs); font-weight: var(--weight-semibold); padding: 4px 12px; border-radius: var(--radius-pill)">{{ p.badge }}</span>
             <button sc-camel-on-click="{{ p.favTgl }}" aria-label="Favoritar" style="position: absolute; top: 10px; right: 10px; border: none; cursor: pointer; width: 36px; height: 36px; border-radius: var(--radius-pill); background: rgba(250, 248, 246, 0.9); display: flex; align-items: center; justify-content: center; color: {{ p.favCor }}; transition: transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1)" style-hover="transform: scale(1.1)">
               <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="{{ p.favFill }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
@@ -2620,7 +2646,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
               <sc-for list="{{ maisApes }}" as="p" hint-placeholder-count="0">
         <div sc-camel-on-click="{{ p.abrir }}" style="cursor: pointer; background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="box-shadow: var(--shadow-md); transform: translateY(-2px)">
           <div style="position: relative; height: 190px; background: var(--bg-sunken)">
-            <div style="width: 100%; height: 100%; background-image: url('{{ p.foto }}'); background-size: cover; background-position: center; transition: background-image 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" role="img" aria-label="{{ p.nome }}"></div>
+            <sc-if value="{{ p.fotoOn }}" hint-placeholder-val="{{ true }}"><img src="{{ p.foto }}" alt="{{ p.nome }}" loading="lazy" decoding="async" width="420" height="190" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block"></sc-if>
             <span style="position: absolute; top: 12px; left: 12px; background: {{ p.badgeBg }}; color: var(--fg-inverse); font-size: var(--text-xs); font-weight: var(--weight-semibold); padding: 4px 12px; border-radius: var(--radius-pill)">{{ p.badge }}</span>
             <button sc-camel-on-click="{{ p.favTgl }}" aria-label="Favoritar" style="position: absolute; top: 10px; right: 10px; border: none; cursor: pointer; width: 36px; height: 36px; border-radius: var(--radius-pill); background: rgba(250, 248, 246, 0.9); display: flex; align-items: center; justify-content: center; color: {{ p.favCor }}; transition: transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1)" style-hover="transform: scale(1.1)">
               <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="{{ p.favFill }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
@@ -2671,12 +2697,17 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <div style="display: flex; gap: 24px; align-items: center; font-size: var(--text-sm)">
               <a href="#buscar" sc-camel-on-click="{{ fecharDet }}" style="color: var(--neutral-300)" style-hover="color: var(--ape-orange-300)">Comprar apê</a>
               <a href="#bairros" sc-camel-on-click="{{ fecharDet }}" style="color: var(--neutral-300)" style-hover="color: var(--ape-orange-300)">Bairros</a>
-              <a href="https://www.instagram.com/apecerto.oficial/" target="_blank" aria-label="Instagram" style="width: 36px; height: 36px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: center; color: var(--neutral-0)" style-hover="background: var(--ape-orange)"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"></circle></svg></a>
+            <a href="https://www.instagram.com/apecerto.oficial/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" style="width: 36px; height: 36px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: center; color: var(--neutral-0)" style-hover="background: var(--ape-orange)"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"></circle></svg></a>
             </div>
           </div>
           <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 20px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: var(--text-xs); color: var(--neutral-500)">
-            <span>© 2026 apêcerto imóveis ltda · CRECI-SP 00000-J</span>
-            <span>Moema, São Paulo — SP</span>
+            <span>© 2026 apêcerto imóveis ltda</span>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap">
+              <span>Av. Iraí, 79, cj. 95A · Moema, São Paulo — SP</span>
+              <a href="mailto:contato@apecerto.com" style="color: var(--neutral-300)">contato@apecerto.com</a>
+              <a href="https://wa.me/5511980154312" target="_blank" rel="noopener noreferrer" style="color: var(--neutral-300)">WhatsApp (11) 98015-4312</a>
+              <a href="/privacidade/" style="color: var(--neutral-300)">Política de privacidade</a>
+            </div>
           </div>
         </div>
       </footer>
@@ -2685,7 +2716,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
   <!-- ============ WHATSAPP FLUTUANTE ============ -->
   <sc-if value="{{ zapFlutuanteOn }}" hint-placeholder-val="{{ false }}">
-    <a href="{{ zapFlutuanteUrl }}" target="_blank" aria-label="Chamar no WhatsApp" style="position: fixed; right: 24px; bottom: 24px; z-index: 195; width: 56px; height: 56px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)" style-hover="transform: scale(1.08)">
+    <a href="{{ zapFlutuanteUrl }}" target="_blank" rel="noopener noreferrer" aria-label="Chamar no WhatsApp" style="position: fixed; right: 24px; bottom: 24px; z-index: 195; width: 56px; height: 56px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-lg); transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)" style-hover="transform: scale(1.08)">
       <svg width="28" height="28" sc-camel-view-box="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.297-.497.1-.198.05-.371-.025-.52-.074-.149-.668-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"></path></svg>
     </a>
   </sc-if>
@@ -2693,16 +2724,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <!-- ============ FICHA DE FINANCIAMENTO ============ -->
   <sc-if value="{{ fichaOn }}" hint-placeholder-val="{{ false }}">
     <div sc-camel-on-click="{{ fichaFechar }}" style="position: fixed; inset: 0; z-index: 220; background: rgba(31, 28, 26, 0.55); display: flex; align-items: flex-start; justify-content: center; padding: 40px 24px; overflow-y: auto">
-      <div sc-camel-on-click="{{ pararClique }}" style="background: var(--bg-surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); width: 680px; max-width: 100%; padding: 28px; display: flex; flex-direction: column; gap: 18px">
+      <div data-ficha-modal="" role="dialog" aria-modal="true" aria-labelledby="ficha-titulo" sc-camel-on-click="{{ pararClique }}" style="background: var(--bg-surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); width: 680px; max-width: 100%; padding: 28px; display: flex; flex-direction: column; gap: 18px">
         <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px">
           <div style="display: flex; flex-direction: column; gap: 4px">
-            <h3 style="margin: 0">Ficha de simulação</h3>
+            <h3 id="ficha-titulo" style="margin: 0">Ficha de simulação</h3>
             <p style="margin: 0; font-size: var(--text-sm); color: var(--fg-3)">Preenche seus dados e a simulação do financiamento chega no seu e-mail.</p>
           </div>
-          <button sc-camel-on-click="{{ fichaFechar }}" aria-label="Fechar" style="border: none; cursor: pointer; flex-shrink: 0; width: 36px; height: 36px; border-radius: var(--radius-pill); background: var(--bg-sunken); color: var(--fg-2); font-size: 15px; font-family: var(--font-body)" style-hover="background: var(--neutral-200)">✕</button>
+          <button sc-camel-on-click="{{ fichaFechar }}" aria-label="Fechar" style="border: none; cursor: pointer; flex-shrink: 0; width: 44px; height: 44px; border-radius: var(--radius-pill); background: var(--bg-sunken); color: var(--fg-2); font-size: 15px; font-family: var(--font-body)" style-hover="background: var(--neutral-200)">✕</button>
         </div>
         <sc-if value="{{ fichaOk }}" hint-placeholder-val="{{ false }}">
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 0; text-align: center">
+          <div role="status" aria-live="polite" style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 0; text-align: center">
             <span style="width: 56px; height: 56px; border-radius: 50%; background: var(--success-bg); color: var(--success); display: flex; align-items: center; justify-content: center; font-size: 24px">✓</span>
             <div style="font-size: var(--text-md); font-weight: var(--weight-semibold)">Ficha enviada!</div>
             <p style="margin: 0; font-size: var(--text-sm); color: var(--fg-3); max-width: 380px">A equipe roda a simulação e manda o resultado no seu e-mail em até 1 dia útil.</p>
@@ -2717,16 +2748,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
               <div style="display: flex; flex-direction: column; gap: 6px; grid-column: 1 / -1">
-                <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Nome completo *</label>
-                <input name="nome" placeholder="Como no documento" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                <label for="ficha-nome" style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Nome completo *</label>
+                <input id="ficha-nome" data-ficha-autofocus="" name="nome" autocomplete="name" required="" placeholder="Como no documento" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
               </div>
               <div style="display: flex; flex-direction: column; gap: 6px">
-                <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Telefone / WhatsApp *</label>
-                <input name="telefone" placeholder="(11) 9…" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                <label for="ficha-telefone" style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Telefone / WhatsApp *</label>
+                <input id="ficha-telefone" name="telefone" autocomplete="tel" inputmode="tel" required="" placeholder="(11) 9…" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
               </div>
               <div style="display: flex; flex-direction: column; gap: 6px">
-                <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">E-mail *</label>
-                <input name="email" type="email" placeholder="voce@email.com" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                <label for="ficha-email" style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">E-mail *</label>
+                <input id="ficha-email" name="email" type="email" autocomplete="email" required="" placeholder="voce@email.com" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
               </div>
               <div style="display: flex; flex-direction: column; gap: 6px">
                 <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Data de nascimento</label>
@@ -2783,8 +2814,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
                 </div>
               </div>
               <div style="display: flex; flex-direction: column; gap: 6px">
-                <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Renda mensal *</label>
-                <input name="renda" placeholder="R$" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                <label for="ficha-renda" style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Renda mensal *</label>
+                <input id="ficha-renda" name="renda" inputmode="decimal" required="" placeholder="R$" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
               </div>
             </div>
             <button sc-camel-on-click="{{ fichaTglConj }}" style="align-self: flex-start; border: 1.5px solid {{ fichaConjBd }}; background: {{ fichaConjBg }}; color: {{ fichaConjFg }}; cursor: pointer; font-family: var(--font-body); font-size: var(--text-xs); font-weight: var(--weight-semibold); padding: 8px 14px; border-radius: var(--radius-pill)">{{ fichaConjLabel }}</button>
@@ -2809,7 +2840,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
               </div>
             </sc-if>
             <sc-if value="{{ fichaErro }}" hint-placeholder-val="{{ false }}">
-              <div style="background: var(--danger-bg); color: var(--danger); border-radius: var(--radius-md); padding: 10px 14px; font-size: var(--text-sm)">{{ fichaErro }}</div>
+              <div role="alert" aria-live="assertive" style="background: var(--danger-bg); color: var(--danger); border-radius: var(--radius-md); padding: 10px 14px; font-size: var(--text-sm)">{{ fichaErro }}</div>
             </sc-if>
             <x-import component-from-global-scope="ApCertoDesignSystem_019dda.Button" variant="primary" size="lg" sc-camel-on-click="{{ fichaEnviar }}" hint-size="100%,48px">{{ fichaLabel }}</x-import>
             <span style="font-size: var(--text-xs); color: var(--fg-3); text-align: center">Seus dados vão direto pra equipe apêcerto — nada de spam.</span>
@@ -2828,7 +2859,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </div>
       <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 16px; min-height: 0; padding: 12px 0">
         <button sc-camel-on-click="{{ galPrev }}" aria-label="Foto anterior" style="border: none; cursor: pointer; flex-shrink: 0; width: 48px; height: 48px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.12); color: var(--neutral-0); font-size: 20px; font-family: var(--font-body)" style-hover="background: var(--ape-orange)">‹</button>
-        <div sc-camel-on-click="{{ galNada }}" role="img" aria-label="Foto do apê" style="flex: 1; align-self: stretch; background-image: url('{{ galFotoAtual }}'); background-size: contain; background-position: center; background-repeat: no-repeat; border-radius: var(--radius-lg)"></div>
+        <img sc-camel-on-click="{{ galNada }}" src="{{ galFotoAtual }}" alt="Foto do apê" decoding="async" width="1200" height="800" style="flex: 1; align-self: stretch; width: 100%; min-width: 0; object-fit: contain; object-position: center; border-radius: var(--radius-lg)">
         <button sc-camel-on-click="{{ galNext }}" aria-label="Próxima foto" style="border: none; cursor: pointer; flex-shrink: 0; width: 48px; height: 48px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.12); color: var(--neutral-0); font-size: 20px; font-family: var(--font-body)" style-hover="background: var(--ape-orange)">›</button>
       </div>
       <div sc-camel-on-click="{{ galNada }}" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; max-height: 76px; overflow: hidden">
@@ -2868,7 +2899,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <div sc-camel-on-input="{{ authInput }}" sc-camel-on-change="{{ authInput }}" style="background: var(--bg-surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); padding: 24px; display: flex; flex-direction: column; gap: 14px">
               <div style="display: flex; gap: 8px">
                 <button sc-camel-on-click="{{ setEntrar }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-weight: var(--weight-semibold); font-size: var(--text-sm); padding: 8px 20px; border-radius: var(--radius-pill); background: {{ entBg }}; color: {{ entFg }}">Entrar</button>
-                <button sc-camel-on-click="{{ setCriar }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-weight: var(--weight-semibold); font-size: var(--text-sm); padding: 8px 20px; border-radius: var(--radius-pill); background: {{ criBg }}; color: {{ criFg }}">Criar conta</button>
+                <button sc-camel-on-click="{{ setCriar }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-weight: var(--weight-semibold); font-size: var(--text-sm); padding: 8px 20px; border-radius: var(--radius-pill); background: {{ criBg }}; color: {{ criFg }}">Crie seu acesso</button>
               </div>
               <sc-if value="{{ modoCriar }}" hint-placeholder-val="{{ false }}">
                 <div style="display: flex; flex-direction: column; gap: 6px">
@@ -2901,7 +2932,17 @@ svg.leaflet-image-layer.leaflet-interactive path {
           </div>
         </sc-if>
 
-        <!-- PAINEL DA EQUIPE -->
+        <!-- ACESSO DA EQUIPE: o backoffice fica isolado no ERP -->
+        <sc-if value="{{ telaEquipeLink }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width: 560px; margin: 48px auto 0; background: var(--bg-surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); padding: 40px; text-align: center; display: flex; flex-direction: column; gap: 16px; align-items: center">
+            <span style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-tint-purple); color: var(--ape-purple); display: flex; align-items: center; justify-content: center"><i data-lucide="shield-check" aria-hidden="true"></i></span>
+            <h2 style="margin: 0">Gestão de produtos no ERP</h2>
+            <p style="margin: 0; font-size: var(--text-sm)">Aprovação, publicação e edição de imóveis ficam no ambiente seguro da equipe.</p>
+            <a href="https://apecerto-erp.onrender.com/produtos" target="_blank" rel="noopener noreferrer" style="display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 0 24px; border-radius: var(--radius-pill); background: var(--ape-orange); color: var(--fg-inverse); font-weight: var(--weight-semibold); text-decoration: none">Abrir Produtos no ERP</a>
+          </div>
+        </sc-if>
+
+        <!-- PAINEL DA EQUIPE LEGADO (desativado; nenhuma ação administrativa é renderizada) -->
         <sc-if value="{{ telaEquipe }}" hint-placeholder-val="{{ false }}">
           <div style="display: flex; flex-direction: column; gap: 24px">
             <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap">
@@ -2919,7 +2960,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
                 </sc-if>
               </div>
               <sc-if value="{{ eqVerAnun }}" hint-placeholder-val="{{ false }}">
-                <x-import component-from-global-scope="ApCertoDesignSystem_019dda.Button" variant="primary" size="md" sc-camel-on-click="{{ anNovo }}" hint-size="190px,44px">Publicar anúncio</x-import>
+                <x-import component-from-global-scope="ApCertoDesignSystem_019dda.Button" variant="primary" size="md" sc-camel-on-click="{{ abrirErpProdutos }}" hint-size="190px,44px">Abrir Produtos no ERP</x-import>
               </sc-if>
             </div>
             <div style="background: var(--bg-tint-purple); border-radius: var(--radius-md); padding: 12px 16px; font-size: var(--text-sm); color: var(--fg-2)">O site mostra só os anúncios publicados aqui — remanescentes e unidades não comerciais ficam no ERP. Leads de visita são atendidos no CRM do ERP.</div>
@@ -2944,7 +2985,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
                         <button sc-camel-on-click="{{ c.aprovar }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-inverse); background: var(--success); padding: 8px 16px; border-radius: var(--radius-pill)">Aprovar</button>
                       </sc-if>
                       <sc-if value="{{ c.podePublicar }}" hint-placeholder-val="{{ false }}">
-                        <button sc-camel-on-click="{{ c.publicar }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-inverse); background: var(--ape-purple); padding: 8px 16px; border-radius: var(--radius-pill)">Publicar no site</button>
+                        <button sc-camel-on-click="{{ abrirErpProdutos }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-inverse); background: var(--ape-purple); padding: 8px 16px; border-radius: var(--radius-pill)">Abrir Produtos no ERP</button>
                       </sc-if>
                       <sc-if value="{{ c.podeReprovar }}" hint-placeholder-val="{{ false }}">
                         <button sc-camel-on-click="{{ c.reprovar }}" style="border: 1.5px solid var(--border-default); cursor: pointer; font-family: var(--font-body); font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3); background: var(--bg-surface); padding: 7px 16px; border-radius: var(--radius-pill)" style-hover="color: var(--danger); border-color: var(--danger)">Reprovar</button>
@@ -3026,12 +3067,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
                 </div>
                 <div class="rw-g2" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px">
                   <div style="display: flex; flex-direction: column; gap: 6px">
-                    <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Preço (R$) *</label>
-                    <input name="preco" sc-camel-default-value="{{ av.preco }}" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                    <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Preço (R$) * · 890 = R$ 890 mil</label>
+                    <input name="preco" inputmode="decimal" aria-label="Preço do imóvel; valores abaixo de cem mil são interpretados em milhares" sc-camel-default-value="{{ av.preco }}" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
                   </div>
                   <div style="display: flex; flex-direction: column; gap: 6px">
-                    <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Preço promo (R$)</label>
-                    <input name="preco_promo" sc-camel-default-value="{{ av.preco_promo }}" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                    <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Preço promo (R$) · 850 = R$ 850 mil</label>
+                    <input name="preco_promo" inputmode="decimal" aria-label="Preço promocional; valores abaixo de cem mil são interpretados em milhares" sc-camel-default-value="{{ av.preco_promo }}" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
                   </div>
                   <div style="display: flex; flex-direction: column; gap: 6px">
                     <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Condomínio (R$/mês)</label>
@@ -3096,12 +3137,32 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <div sc-camel-on-input="{{ authInput }}" style="max-width: 440px; margin: 24px auto 0; background: var(--bg-surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); padding: 24px; display: flex; flex-direction: column; gap: 14px">
             <h3 style="margin: 0">Recuperar senha</h3>
             <p style="margin: 0; font-size: var(--text-sm)">A gente manda um link de redefinição pro seu e-mail.</p>
-            <input name="email" type="email" placeholder="voce@email.com" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+            <label for="rec-email" style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">E-mail da conta</label>
+            <input id="rec-email" name="email" type="email" autocomplete="email" required="" placeholder="voce@email.com" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
             <sc-if value="{{ recMsg }}" hint-placeholder-val="{{ false }}">
-              <div style="background: var(--success-bg); color: var(--success); border-radius: var(--radius-md); padding: 10px 14px; font-size: var(--text-sm)">{{ recMsg }}</div>
+              <div role="status" aria-live="polite" style="background: var(--success-bg); color: var(--success); border-radius: var(--radius-md); padding: 10px 14px; font-size: var(--text-sm)">{{ recMsg }}</div>
+            </sc-if>
+            <sc-if value="{{ recErro }}" hint-placeholder-val="{{ false }}">
+              <div role="alert" aria-live="assertive" style="background: var(--danger-bg); color: var(--danger); border-radius: var(--radius-md); padding: 10px 14px; font-size: var(--text-sm)">{{ recErro }}</div>
             </sc-if>
             <x-import component-from-global-scope="ApCertoDesignSystem_019dda.Button" variant="primary" size="md" sc-camel-on-click="{{ recuperar }}" hint-size="100%,44px">Enviar link</x-import>
             <button sc-camel-on-click="{{ voltarAuth }}" style="border: none; background: transparent; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-3); text-align: center; padding: 4px" style-hover="color: var(--ape-orange)">← Voltar pro login</button>
+          </div>
+        </sc-if>
+
+        <!-- REDEFINIR SENHA -->
+        <sc-if value="{{ telaRedefinir }}" hint-placeholder-val="{{ false }}">
+          <div sc-camel-on-input="{{ resetInput }}" style="max-width: 440px; margin: 24px auto 0; background: var(--bg-surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); padding: 24px; display: flex; flex-direction: column; gap: 14px">
+            <h3 style="margin: 0">Criar nova senha</h3>
+            <p style="margin: 0; font-size: var(--text-sm)">Escolha uma senha segura com pelo menos 8 caracteres.</p>
+            <label for="reset-senha" style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Nova senha</label>
+            <input id="reset-senha" data-reset-autofocus="" name="senha" type="password" autocomplete="new-password" required="" minlength="8" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+            <label for="reset-confirmar" style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Confirmar nova senha</label>
+            <input id="reset-confirmar" name="confirmar" type="password" autocomplete="new-password" required="" minlength="8" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+            <sc-if value="{{ resetErro }}" hint-placeholder-val="{{ false }}">
+              <div role="alert" aria-live="assertive" style="background: var(--danger-bg); color: var(--danger); border-radius: var(--radius-md); padding: 10px 14px; font-size: var(--text-sm)">{{ resetErro }}</div>
+            </sc-if>
+            <x-import component-from-global-scope="ApCertoDesignSystem_019dda.Button" variant="primary" size="md" sc-camel-on-click="{{ redefinirSenha }}" hint-size="100%,44px">{{ resetLabel }}</x-import>
           </div>
         </sc-if>
 
@@ -3117,6 +3178,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
             </div>
             <sc-if value="{{ capsCarregando }}" hint-placeholder-val="{{ false }}">
               <p style="margin: 0; font-size: var(--text-sm)">Carregando seus imóveis…</p>
+            </sc-if>
+            <sc-if value="{{ capsErro }}" hint-placeholder-val="{{ false }}">
+              <div role="alert" aria-live="assertive" style="background: var(--danger-bg); color: var(--danger); border-radius: var(--radius-md); padding: 10px 14px; font-size: var(--text-sm)">{{ capsErro }}</div>
             </sc-if>
             <sc-if value="{{ capsVazio }}" hint-placeholder-val="{{ false }}">
               <div style="background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 48px 32px; text-align: center; display: flex; flex-direction: column; gap: 8px; align-items: center">
@@ -3246,8 +3310,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
               <sc-if value="{{ passo2 }}" hint-placeholder-val="{{ false }}">
                 <div class="rw-g2" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px">
                   <div style="display: flex; flex-direction: column; gap: 6px">
-                    <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Preço pretendido (R$) *</label>
-                    <input name="preco" sc-camel-default-value="{{ fv.preco }}" placeholder="850000" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                    <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Preço pretendido (R$) * · 850 = R$ 850 mil</label>
+                    <input name="preco" inputmode="decimal" aria-label="Preço pretendido; na venda, valores abaixo de cem mil são interpretados em milhares" sc-camel-default-value="{{ fv.preco }}" placeholder="850 ou 850000" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
                   </div>
                   <div style="display: flex; flex-direction: column; gap: 6px">
                     <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Condomínio (R$/mês)</label>
@@ -3323,32 +3387,119 @@ svg.leaflet-image-layer.leaflet-interactive path {
 </x-dc>
 <script type="text/x-dc" data-dc-script="" data-props="{&quot;abaInicial&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;comprar&quot;, &quot;lancamentos&quot;], &quot;default&quot;: &quot;comprar&quot;, &quot;tsType&quot;: &quot;'comprar' | 'lancamentos'&quot;, &quot;section&quot;: &quot;Busca&quot;}, &quot;grafismoHero&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Hero&quot;}, &quot;faixaAnuncie&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Seções&quot;}, &quot;verWizardSemLogin&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Portal do proprietário&quot;}, &quot;whatsappNumero&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Contato&quot;}}">
 class Component extends DCLogic {
-  state = { aba: null, mmOn: false, produtos: undefined, totalApes: null, dbErro: false,
-    portalOn: false, tela: 'auth', authModo: 'entrar', authErro: null, authMsg: null, recMsg: null,
-    sess: null, caps: undefined, passo: 1, wizErro: null, fotosNomes: [], enviando: false, editId: null,
-    fBairro: '', fStatus: '', fPreco: 890000, fPrecoMin: null, fPrecoMax: 890000, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, fVagas: '', det: null, galIdx: 0, galOn: false, cardGal: {}, favs: {}, vista: 'dividida', soFavs: false,
+  state = { aba: null, mmOn: false, produtos: undefined, totalApes: null, totalCatalogo: null, totalFiltrado: null, dbErro: false, rotaImovelNaoEncontrado: false, produtosEmpCarregados: 0, produtosTotalEmp: null, produtosTemMais: false, produtosCarregandoMais: false,
+    portalOn: false, tela: 'auth', rotaPendente: null, authModo: 'entrar', authErro: null, authMsg: null, recMsg: null, recErro: null, resetErro: null, recoveryToken: null, redefinindo: false,
+    sess: null, caps: undefined, capsErro: null, passo: 1, wizErro: null, fotosNomes: [], enviando: false, editId: null,
+    fBairro: '', fStatus: '', fFinalidade: 'venda', fPreco: 890000, fPrecoT: null, fPrecoMin: null, fPrecoMax: 890000, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, fVagas: '', det: null, galIdx: 0, galOn: false, cardGal: {}, favs: {}, vista: 'dividida', soFavs: false,
     eqAba: 'anun', eqAnun: undefined, eqAnunForm: null, anErro: null, anSalvando: false, anFotosNomes: [], anImportN: 0,
     leadOk: false, leadErro: null, leadEnviando: false, finPct: 80, shareOk: false,
     fichaOn: false, fichaOk: false, fichaErro: null, fichaEnviando: false, fichaConjOn: false, leadDia: null, leadHora: null, detDescExpId: null, calOn: false, calOff: 0, horaOn: false, ecOn: false, fichaEc: null, nascOn: false, nascAno: 1990, nascMes: 0, fichaNasc: null, saraOn: false, saraMsgs: [] };
-  lead = {}; ficha = {};
+  lead = {}; ficha = {}; reset = {}; produtosReq = 0;
   SB_URL = 'https://diaegvfveqezispcthwk.supabase.co';
   SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYWVndmZ2ZXFlemlzcGN0aHdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5OTU4MjIsImV4cCI6MjA5ODU3MTgyMn0.312n8BuI-loQrQ20x9j1hNjKZs2UO71ey9gvIo0eY0I';
   auth = {}; form = {}; fotosArq = []; fotosExist = [];
   anForm = {}; anArq = []; anFotosBase = [];
   componentDidMount() {
     this.iconTimer = setInterval(() => { if (window.lucide) { window.lucide.createIcons(); } }, 400); setTimeout(() => clearInterval(this.iconTimer), 4000);
-    this.carregarProdutos();
+    this.carregarTotalCatalogo();
+    const filtrosUrl = this.filtrosDaUrl();
+    if (Object.keys(filtrosUrl).length) this.setState(filtrosUrl, () => this.carregarProdutos());
+    else this.carregarProdutos();
     this.checkDemo();
     try { this.setState({ favs: JSON.parse(localStorage.getItem('apecerto_favs')) || {} }); } catch (e) {}
     try {
       const s = JSON.parse(localStorage.getItem('apecerto_portal_sess'));
       if (s && s.access_token && s.expires_at * 1000 > Date.now()) this.setState({ sess: s });
     } catch (e) {}
+    this.iniciarRecuperacaoSenha();
+    setTimeout(() => this.checkRota(), 0);
+    this.a11yKeys = e => this.tratarTeclaGlobal(e);
+    window.addEventListener('keydown', this.a11yKeys);
+    this.popState = () => {
+      const path = String(location.pathname || '/');
+      if (path.startsWith('/proprietario')) this.checkRota();
+      else if (this.state.portalOn) this.setState({ portalOn: false, rotaPendente: null });
+      this.sincronizarRotaImovel();
+    };
+    window.addEventListener('popstate', this.popState);
+    setTimeout(() => this.configurarImagens(), 0);
   }
   componentDidUpdate() {
     if (window.lucide) { window.lucide.createIcons(); }
-    this.checkDemo();
+    this.checkPainelDemo();
     this.syncListaMapa();
+    this.sincronizarFiltrosUrl();
+    this.configurarImagens();
+  }
+  configurarImagens() {
+    const hero = document.querySelector('.rw-heroimg img');
+    const srcsetSupabase = img => {
+      const src = img.getAttribute('src') || img.currentSrc || '';
+      const trecho = '/storage/v1/object/public/';
+      if (!src.includes(trecho) || img.dataset.responsiveSrc === src) return;
+      try {
+        const base = new URL(src, location.origin);
+        if (base.origin !== new URL(this.SB_URL).origin) return;
+        base.pathname = base.pathname.replace(trecho, '/storage/v1/render/image/public/');
+        const urlLargura = largura => {
+          const u = new URL(base.href);
+          u.searchParams.set('width', String(largura)); u.searchParams.set('quality', '75'); u.searchParams.set('resize', 'cover');
+          return u.href + ' ' + largura + 'w';
+        };
+        img.setAttribute('srcset', [480, 768, 1200, 1600].map(urlLargura).join(', '));
+        img.setAttribute('sizes', img === hero ? '(max-width: 880px) 100vw, 50vw' : (img.closest('[data-det-topo], [data-ficha-modal]') ? '(max-width: 880px) 100vw, 66vw' : '(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw'));
+        img.dataset.responsiveSrc = src;
+      } catch (e) {}
+    };
+    const dimensionar = img => {
+      if (img === hero) {
+        if (!img.hasAttribute('width')) img.setAttribute('width', '960');
+        if (!img.hasAttribute('height')) img.setAttribute('height', '720');
+      }
+      if (!img.hasAttribute('width') && img.naturalWidth) img.setAttribute('width', String(img.naturalWidth));
+      if (!img.hasAttribute('height') && img.naturalHeight) img.setAttribute('height', String(img.naturalHeight));
+    };
+    document.querySelectorAll('img').forEach(img => {
+      img.setAttribute('decoding', 'async');
+      if (img === hero) {
+        img.setAttribute('loading', 'eager');
+        img.setAttribute('fetchpriority', 'high');
+      } else if (!img.hasAttribute('loading') && !img.closest('header')) {
+        img.setAttribute('loading', 'lazy');
+      }
+      srcsetSupabase(img);
+      dimensionar(img);
+      if (!img.complete && !img.dataset.dimHook) {
+        img.dataset.dimHook = '1';
+        img.addEventListener('load', () => dimensionar(img), { once: true });
+      }
+    });
+  }
+  tratarTeclaGlobal(e) {
+    const modal = this.state.fichaOn ? document.querySelector('[data-ficha-modal]') : null;
+    if (e.key === 'Escape') {
+      if (this.state.fichaOn) { e.preventDefault(); this.fecharFicha(); return; }
+      if (this.state.galOn) { e.preventDefault(); this.setState({ galOn: false }); return; }
+      if (this.state.det) { e.preventDefault(); this.fecharDetalhe(); }
+      return;
+    }
+    if (e.key !== 'Tab' || !modal) return;
+    const focaveis = Array.from(modal.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(el => !el.disabled && el.offsetParent !== null);
+    if (!focaveis.length) return;
+    const primeiro = focaveis[0], ultimo = focaveis[focaveis.length - 1];
+    if (e.shiftKey && document.activeElement === primeiro) { e.preventDefault(); ultimo.focus(); }
+    else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primeiro.focus(); }
+  }
+  abrirFicha() {
+    this.fichaFocusOrigin = document.activeElement;
+    this.setState({ fichaOn: true, fichaOk: false, fichaErro: null }, () => {
+      setTimeout(() => { const el = document.querySelector('[data-ficha-modal] input, [data-ficha-modal] button'); if (el) el.focus(); }, 30);
+    });
+  }
+  fecharFicha() {
+    this.setState({ fichaOn: false }, () => {
+      if (this.fichaFocusOrigin && this.fichaFocusOrigin.focus) this.fichaFocusOrigin.focus();
+    });
   }
   PIN_LOGO = 'data:image/png;base64,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';
   pinIcon(s) {
@@ -3362,8 +3513,8 @@ class Component extends DCLogic {
   syncListaMapa() {
     const el = document.getElementById('lista-mapa');
     if (!el || !window.L) { if (this.listaMapa) { this.listaMapa.remove(); this.listaMapa = null; this.listaMapaSig = ''; } return; }
-    const pts = this.filtrar().out.filter(r => r.latitude && r.longitude);
-    const sig = this.state.vista + '|' + pts.map(r => r.id).join(',');
+    const pts = this.filtrar().out.map(r => ({ r, ll: this.coordenadas(r) })).filter(x => !!x.ll);
+    const sig = this.state.vista + '|' + pts.map(x => x.r.id).join(',');
     if (this.listaMapa && this.listaMapaSig === sig && el.childElementCount) return;
     if (this.listaMapa) { this.listaMapa.remove(); this.listaMapa = null; }
     this.listaMapaSig = sig;
@@ -3371,19 +3522,34 @@ class Component extends DCLogic {
     const m = window.L.map(el, { scrollWheelZoom: true });
     window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(m);
     const bounds = [];
-    pts.forEach(r => {
-      const ll = [Number(r.latitude), Number(r.longitude)];
+    pts.forEach(({ r, ll }) => {
       bounds.push(ll);
       const mk = window.L.marker(ll, { icon: this.pinIcon(30) }).addTo(m);
       const tFoto = this.fotoUrl(r.capa_path);
-      mk.bindTooltip('<div style="width:190px;font-family:Quicksand,sans-serif;padding:2px">' + (tFoto ? '<div style="height:96px;border-radius:10px;background:#EFEAE4 url(&quot;' + tFoto + '&quot;) center/cover no-repeat"></div>' : '') + '<div style="font-weight:600;font-size:13px;margin-top:6px;color:#1F1C1A">' + this.nomePublico(r) + '</div><div style="font-size:12.5px;color:#FF7000;font-weight:700">' + (this.fmtR$(this.precoDe(r)) || 'sob consulta') + '</div></div>', { direction: 'top', opacity: 1 });
+      const tooltip = document.createElement('div');
+      tooltip.style.cssText = 'width:190px;font-family:Quicksand,sans-serif;padding:2px';
+      if (tFoto) {
+        const foto = document.createElement('div');
+        foto.style.cssText = 'height:96px;border-radius:10px;background-color:#EFEAE4;background-position:center;background-size:cover;background-repeat:no-repeat';
+        foto.style.backgroundImage = 'url("' + tFoto.replace(/"/g, '%22') + '")';
+        tooltip.appendChild(foto);
+      }
+      const nome = document.createElement('div');
+      nome.style.cssText = 'font-weight:600;font-size:13px;margin-top:6px;color:#1F1C1A';
+      nome.textContent = this.nomePublico(r);
+      tooltip.appendChild(nome);
+      const preco = document.createElement('div');
+      preco.style.cssText = 'font-size:12.5px;color:#FF7000;font-weight:700';
+      preco.textContent = this.fmtR$(this.precoDe(r)) || 'sob consulta';
+      tooltip.appendChild(preco);
+      mk.bindTooltip(tooltip, { direction: 'top', opacity: 1 });
       mk.on('click', () => this.abrirDetalhe(r));
     });
     m.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
     this.listaMapa = m;
   }
   checkDemo() {
-    const quer = this.props.verWizardSemLogin || (typeof location !== 'undefined' && location.hash === '#cadastro-demo');
+    const quer = this.props.verWizardSemLogin;
     if (quer && !this.state.sess) {
       this.form = { cidade: 'São Paulo', uf: 'SP' };
       this.setState({ portalOn: true, tela: 'wizard', passo: 1, wizErro: null, editId: null, fotosNomes: [],
@@ -3391,43 +3557,80 @@ class Component extends DCLogic {
           user: { id: 'demo', email: 'voce@email.com', user_metadata: { nome: 'Você', telefone: '(11) 9…' } } } });
     }
   }
+  checkPainelDemo() { this.checkDemo(); }
+  checkRota() {
+    const path = String((typeof location !== 'undefined' && location.pathname) || '/').replace(/\/+$/, '') || '/';
+    const cadastro = path === '/proprietario/cadastre-seu-imovel';
+    const portal = path === '/proprietario';
+    if (!cadastro && !portal) return;
+    const titulo = cadastro ? 'Cadastre seu imóvel | apêcerto' : 'Portal do proprietário | apêcerto';
+    document.title = titulo;
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
+    canonical.href = 'https://apecerto.com' + (cadastro ? '/proprietario/cadastre-seu-imovel/' : '/proprietario/');
+    const s = this.state.sess;
+    if (!s) {
+      this.setState({ portalOn: true, tela: 'auth', rotaPendente: cadastro ? 'cadastre-seu-imovel' : 'painel', authModo: cadastro ? 'criar' : 'entrar', authErro: null, authMsg: cadastro ? 'Crie seu acesso para cadastrar e acompanhar o imóvel.' : null });
+      return;
+    }
+    this.setState({ portalOn: true, rotaPendente: null }, () => cadastro ? this.novoCad() : this.rotear());
+  }
+  abrirRotaProprietario(cadastro, e) {
+    if (e && e.preventDefault) e.preventDefault();
+    try { history.pushState({}, '', cadastro ? '/proprietario/cadastre-seu-imovel/' : '/proprietario/'); } catch (err) {}
+    this.setState({ mmOn: false }, () => this.checkRota());
+  }
+  fecharPortalRota() {
+    try {
+      if (String(location.pathname || '').startsWith('/proprietario')) history.pushState({}, '', '/');
+      if (this.mapa) { this.mapa.remove(); this.mapa = null; }
+      document.title = 'apêcerto — apês prontos pra morar em Moema';
+      const canonical = document.querySelector('link[rel="canonical"]'); if (canonical) canonical.href = 'https://apecerto.com/';
+    } catch (e) {}
+    this.restaurarMetaHome();
+    this.setState({ portalOn: false, rotaPendente: null, det: null, galOn: false });
+  }
   hSb(json) {
     const h = { apikey: this.SB_KEY, Authorization: 'Bearer ' + (this.state.sess ? this.state.sess.access_token : this.SB_KEY) };
     if (json) h['Content-Type'] = 'application/json';
     return h;
   }
+  registrarErro(fluxo, erro, status) {
+    try {
+      if (window.apecertoTrack) window.apecertoTrack('request_error', {
+        fluxo: String(fluxo || 'desconhecido').slice(0, 60),
+        status: Number(status || (erro && erro.status)) || 0
+      });
+    } catch (e) {}
+  }
   salvarSess(j) {
     const sess = { access_token: j.access_token, refresh_token: j.refresh_token, expires_at: Math.floor(Date.now() / 1000) + (j.expires_in || 3600), user: j.user };
     try { localStorage.setItem('apecerto_portal_sess', JSON.stringify(sess)); } catch (e) {}
-    this.setState({ sess, authErro: null, authMsg: null, caps: undefined, papel: undefined }, () => this.rotear());
+    const pendente = this.state.rotaPendente;
+    this.setState({ sess, authErro: null, authMsg: null, caps: undefined, papel: undefined, rotaPendente: null }, () => pendente === 'cadastre-seu-imovel' ? this.novoCad() : this.rotear());
   }
   async rotear() {
     let papel = this.state.papel;
     if (papel === undefined) {
       try {
         const r = await fetch(this.SB_URL + '/rest/v1/rpc/papel_atual', { method: 'POST', headers: this.hSb(true), body: '{}' });
-        papel = r.ok ? await r.json() : null;
-      } catch (e) { papel = null; }
+        if (!r.ok) { this.registrarErro('papel_atual', null, r.status); papel = null; }
+        else papel = await r.json();
+      } catch (e) { this.registrarErro('papel_atual', e); papel = null; }
       this.setState({ papel });
     }
     if (papel && papel.role) {
-      const adminish = ['admin', 'gerente', 'diretor'].includes(papel.role);
-      this.setState({ tela: 'equipe', eqAba: 'anun', eqAnunForm: null });
-      this.carregarEquipe(adminish);
+      this.setState({ tela: 'equipe-link', eqAba: null, eqAnunForm: null });
     } else {
       this.setState({ tela: 'painel' });
       this.carregarCaps();
     }
   }
-  async carregarEquipe(adminish) {
-    if (adminish === undefined) adminish = this.ehAdminish();
-    try {
-      const [anR, capR] = await Promise.all([
-        fetch(this.SB_URL + '/rest/v1/anuncios_site?select=*&order=criado_em.desc', { headers: this.hSb() }),
-        adminish ? fetch(this.SB_URL + '/rest/v1/captacoes_portal?select=*&order=criado_em.desc', { headers: this.hSb() }) : Promise.resolve(null)
-      ]);
-      this.setState({ eqAnun: anR.ok ? await anR.json() : [], eqCaps: capR && capR.ok ? await capR.json() : [] });
-    } catch (e) { this.setState({ eqAnun: [], eqCaps: [] }); }
+  abrirErpProdutos() {
+    try { window.location.assign('https://apecerto-erp.onrender.com/produtos'); } catch (e) {}
+  }
+  carregarEquipe() {
+    this.setState({ tela: 'equipe-link', eqAnun: [], eqCaps: [], eqAnunForm: null });
   }
   anNovo() {
     this.anForm = { estagio: 'pronto', origem: 'terceiro' }; this.anArq = []; this.anFotosBase = [];
@@ -3438,42 +3641,11 @@ class Component extends DCLogic {
     this.anForm = Object.assign({}, a); this.anArq = []; this.anFotosBase = (a.fotos || []).slice();
     this.setState({ eqAnunForm: a.id, anErro: null, anFotosNomes: this.anFotosBase.map(u => decodeURIComponent(String(u).split('/').pop())) });
   }
-  async carregarErp() {
-    if (this.erpOpts) { this.setState({ anImportN: this.erpOpts.length }); return; }
-    try {
-      const [eR, uR] = await Promise.all([
-        fetch(this.SB_URL + '/rest/v1/empreendimentos?select=id,nome,bairro,endereco,latitude,longitude,condominio_valor,iptu', { headers: this.hSb() }),
-        fetch(this.SB_URL + '/rest/v1/unidades?select=id,empreendimento_id,numero,tipologia,area_m2,vagas,valor_tabela,valor_promo,de_terceiros&disponivel=eq.true', { headers: this.hSb() })
-      ]);
-      if (!eR.ok || !uR.ok) return;
-      const emps = {}; (await eR.json()).forEach(e => { emps[e.id] = e; });
-      this.erpOpts = (await uR.json()).filter(u => emps[u.empreendimento_id]).map(u => ({
-        u, e: emps[u.empreendimento_id],
-        label: emps[u.empreendimento_id].nome + ' · ' + [u.numero, u.tipologia].filter(Boolean).join(' ') + ' · ' + (this.fmtR$(u.valor_promo || u.valor_tabela) || 'sem valor')
-      }));
-      this.setState({ anImportN: this.erpOpts.length });
-    } catch (e) {}
+  carregarErp() {
+    this.setState({ tela: 'equipe-link', anImportN: 0, eqAnunForm: null });
   }
-  async anImporta(ev) {
-    const i = ev.target.value; if (i === '' || !this.erpOpts) return;
-    const { u, e } = this.erpOpts[Number(i)];
-    Object.assign(this.anForm, {
-      titulo: 'Apê ' + (u.area_m2 ? Math.round(Number(u.area_m2)) + ' m² ' : '') + (u.tipologia ? '· ' + u.tipologia + ' ' : '') + '— ' + (e.bairro || 'Moema'),
-      bairro: e.bairro, endereco: e.endereco, area_util: u.area_m2, vagas: u.vagas,
-      preco: u.valor_tabela, preco_promo: u.valor_promo, condominio_valor: e.condominio_valor, iptu: e.iptu,
-      origem: u.de_terceiros ? 'terceiro' : 'construtora',
-      latitude: e.latitude, longitude: e.longitude,
-      empreendimento_id: e.id, unidade_id: u.id
-    });
-    try {
-      const mR = await fetch(this.SB_URL + '/rest/v1/midias?select=storage_path&tipo=eq.foto&order=is_capa.desc,created_at.asc&empreendimento_id=eq.' + e.id, { headers: this.hSb() });
-      if (mR.ok) this.anFotosBase = (await mR.json()).map(m => this.SB_URL + '/storage/v1/object/public/empreendimentos/' + m.storage_path);
-    } catch (err) {}
-    const f = this.anForm, root = document.getElementById('an-form');
-    if (root) ['titulo', 'bairro', 'endereco', 'area_util', 'vagas', 'preco', 'preco_promo', 'condominio_valor', 'iptu', 'origem'].forEach(k => {
-      const el = root.querySelector('[name="' + k + '"]'); if (el && f[k] != null) el.value = f[k];
-    });
-    this.setState({ anFotosNomes: this.anFotosBase.map(x => decodeURIComponent(String(x).split('/').pop())) });
+  anImporta() {
+    this.setState({ tela: 'equipe-link', eqAnunForm: null });
   }
   anInput(e) {
     const t = e.target; if (!t || !t.name) return;
@@ -3483,50 +3655,17 @@ class Component extends DCLogic {
     } else if (t.type === 'checkbox') { this.anForm[t.name] = t.checked; }
     else { this.anForm[t.name] = t.value; }
   }
-  async anSalvar() {
-    if (this.state.anSalvando) return;
-    const f = this.anForm;
-    if (!f.titulo || !this.num(f.preco)) return this.setState({ anErro: 'Título e preço são obrigatórios.' });
-    this.setState({ anSalvando: true, anErro: null });
-    try {
-      const fotos = (this.anFotosBase || []).slice();
-      for (const arq of (this.anArq || [])) {
-        const ext = (arq.name.split('.').pop() || 'jpg').toLowerCase().slice(0, 5);
-        const p = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
-        const up = await fetch(this.SB_URL + '/storage/v1/object/anuncios-site/' + p, { method: 'POST', headers: this.hSb(), body: arq });
-        if (up.ok) fotos.push(this.SB_URL + '/storage/v1/object/public/anuncios-site/' + p);
-      }
-      const payload = {
-        titulo: f.titulo, bairro: f.bairro || null, endereco: f.endereco || null,
-        area_util: this.num(f.area_util), dormitorios: this.num(f.dormitorios, true), banheiros: this.num(f.banheiros, true), vagas: this.num(f.vagas, true),
-        preco: this.num(f.preco), preco_promo: this.num(f.preco_promo), condominio_valor: this.num(f.condominio_valor), iptu: this.num(f.iptu),
-        descricao: f.descricao || null, estagio: f.estagio || 'pronto', origem: f.origem || 'terceiro',
-        destaque: !!f.destaque, fotos,
-        latitude: f.latitude || null, longitude: f.longitude || null,
-        empreendimento_id: f.empreendimento_id || null, unidade_id: f.unidade_id || null
-      };
-      const edit = this.state.eqAnunForm !== 'novo';
-      const url = edit ? this.SB_URL + '/rest/v1/anuncios_site?id=eq.' + this.state.eqAnunForm : this.SB_URL + '/rest/v1/anuncios_site';
-      const r = await fetch(url, { method: edit ? 'PATCH' : 'POST', headers: this.hSb(true), body: JSON.stringify(payload) });
-      if (r.status === 401) return this.sair();
-      if (!r.ok) { const j = await r.json().catch(() => ({})); return this.setState({ anSalvando: false, anErro: this.traduzErro(j.message || j.msg || ('erro ' + r.status)) }); }
-      this.anForm = {}; this.anArq = []; this.anFotosBase = [];
-      this.setState({ anSalvando: false, eqAnunForm: null, anFotosNomes: [] });
-      this.carregarEquipe(); this.carregarProdutos();
-    } catch (e) { this.setState({ anSalvando: false, anErro: 'Sem conexão agora — tenta de novo.' }); }
+  anSalvar() {
+    this.setState({ anSalvando: false, tela: 'equipe-link', eqAnunForm: null });
   }
-  async anTglStatus(a) {
-    await fetch(this.SB_URL + '/rest/v1/anuncios_site?id=eq.' + a.id, { method: 'PATCH', headers: this.hSb(true), body: JSON.stringify({ status: a.status === 'ativo' ? 'pausado' : 'ativo' }) });
-    this.carregarEquipe(); this.carregarProdutos();
+  anTglStatus() {
+    this.setState({ tela: 'equipe-link', eqAnunForm: null });
   }
-  async anExcluir(a) {
-    if (!window.confirm('Excluir o anúncio "' + a.titulo + '"?')) return;
-    await fetch(this.SB_URL + '/rest/v1/anuncios_site?id=eq.' + a.id, { method: 'DELETE', headers: this.hSb() });
-    this.carregarEquipe(); this.carregarProdutos();
+  anExcluir() {
+    this.setState({ tela: 'equipe-link', eqAnunForm: null });
   }
-  async capStatus(c, status) {
-    await fetch(this.SB_URL + '/rest/v1/captacoes_portal?id=eq.' + c.id, { method: 'PATCH', headers: this.hSb(true), body: JSON.stringify({ status }) });
-    this.carregarEquipe();
+  capStatus() {
+    this.setState({ tela: 'equipe-link', eqAnunForm: null });
   }
   ehAdminish() { const p = this.state.papel; return !!(p && ['admin', 'gerente', 'diretor'].includes(p.role)); }
   bairrosUnicos() {
@@ -3552,6 +3691,33 @@ class Component extends DCLogic {
     if (m.includes('rate limit') || m.includes('Too many')) return 'Muitas tentativas — espera um minuto e tenta de novo.';
     return 'Não deu certo: ' + m;
   }
+  iniciarRecuperacaoSenha() {
+    try {
+      const antecipado = window.__APECERTO_RECOVERY__ || null;
+      try { delete window.__APECERTO_RECOVERY__; } catch (e) {}
+      const hash = new URLSearchParams(String(location.hash || '').replace(/^#/, ''));
+      const query = new URLSearchParams(location.search);
+      const tipo = (antecipado && antecipado.type) || hash.get('type') || query.get('type');
+      const token = (antecipado && antecipado.access_token) || hash.get('access_token');
+      const erro = (antecipado && antecipado.error_description) || hash.get('error_description') || query.get('error_description');
+      if (token || erro || location.hash) this.limparRecuperacaoUrl();
+      if (token && tipo === 'recovery') {
+        this.reset = {};
+        this.setState({ portalOn: true, tela: 'redefinir', recoveryToken: token, resetErro: null }, () => {
+          setTimeout(() => { const el = document.querySelector('[data-reset-autofocus]'); if (el) el.focus(); }, 50);
+        });
+      } else if (erro) {
+        this.setState({ portalOn: true, tela: 'rec', recMsg: null, recErro: 'Esse link expirou ou já foi usado. Peça um novo link.' });
+      }
+    } catch (e) {}
+  }
+  limparRecuperacaoUrl() {
+    try {
+      const u = new URL(location.href);
+      ['type', 'error', 'error_code', 'error_description', 'recuperar'].forEach(k => u.searchParams.delete(k));
+      history.replaceState({}, '', u.pathname + u.search);
+    } catch (e) {}
+  }
   async authGo() {
     const a = this.auth, criar = this.state.authModo === 'criar';
     if (!a.email || !a.senha) return this.setState({ authErro: 'Preenche e-mail e senha.' });
@@ -3561,25 +3727,63 @@ class Component extends DCLogic {
       const path = criar ? '/auth/v1/signup' : '/auth/v1/token?grant_type=password';
       const body = criar ? { email: a.email, password: a.senha, data: { nome: a.nome, telefone: a.telefone } } : { email: a.email, password: a.senha };
       const r = await fetch(this.SB_URL + path, { method: 'POST', headers: { apikey: this.SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      const j = await r.json();
-      if (!r.ok) return this.setState({ authErro: this.traduzErro(j.msg || j.message || j.error_description || j.error) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { this.registrarErro(criar ? 'auth_cadastro' : 'auth_login', null, r.status); return this.setState({ authErro: this.traduzErro(j.msg || j.message || j.error_description || j.error || ('erro ' + r.status)) }); }
       if (j.access_token) return this.salvarSess(j);
       this.setState({ authModo: 'entrar', authMsg: 'Conta criada! Confirma o link que mandamos no seu e-mail e depois entra aqui.' });
-    } catch (e) { this.setState({ authErro: 'Sem conexão agora. Tenta de novo.' }); }
+    } catch (e) { this.registrarErro(criar ? 'auth_cadastro' : 'auth_login', e); this.setState({ authErro: 'Sem conexão agora. Tenta de novo.' }); }
   }
   async recuperar() {
-    if (!this.auth.email) return this.setState({ recMsg: 'Escreve teu e-mail primeiro.' });
+    const email = String(this.auth.email || '').trim();
+    if (!email) return this.setState({ recMsg: null, recErro: 'Escreve teu e-mail primeiro.' });
+    this.setState({ recMsg: null, recErro: null });
     try {
-      await fetch(this.SB_URL + '/auth/v1/recover', { method: 'POST', headers: { apikey: this.SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ email: this.auth.email }) });
-    } catch (e) {}
-    this.setState({ recMsg: 'Se esse e-mail tiver conta, o link de redefinição chega em instantes.' });
+      const redirect = new URL(location.href); redirect.search = ''; redirect.hash = ''; redirect.searchParams.set('recuperar', '1');
+      const r = await fetch(this.SB_URL + '/auth/v1/recover', {
+        method: 'POST', headers: { apikey: this.SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, redirect_to: redirect.toString() })
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        const erro = new Error(j.msg || j.message || ('http ' + r.status)); erro.status = r.status; throw erro;
+      }
+      this.setState({ recMsg: 'Se esse e-mail tiver conta, o link de redefinição chega em instantes.', recErro: null });
+    } catch (e) {
+      this.registrarErro('auth_recuperar', e, e.status);
+      this.setState({ recMsg: null, recErro: this.traduzErro(e.message || 'Sem conexão agora. Tenta de novo.') });
+    }
+  }
+  async redefinirSenha() {
+    if (this.state.redefinindo) return;
+    const senha = String(this.reset.senha || ''), confirmar = String(this.reset.confirmar || '');
+    if (senha.length < 8) return this.setState({ resetErro: 'A nova senha precisa ter pelo menos 8 caracteres.' });
+    if (senha !== confirmar) return this.setState({ resetErro: 'As duas senhas precisam ser iguais.' });
+    if (!this.state.recoveryToken) return this.setState({ resetErro: 'Esse link expirou. Peça um novo link de redefinição.' });
+    this.setState({ redefinindo: true, resetErro: null });
+    try {
+      const r = await fetch(this.SB_URL + '/auth/v1/user', {
+        method: 'PUT',
+        headers: { apikey: this.SB_KEY, Authorization: 'Bearer ' + this.state.recoveryToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: senha })
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        const erro = new Error(j.msg || j.message || ('http ' + r.status)); erro.status = r.status; throw erro;
+      }
+      this.reset = {};
+      this.setState({ redefinindo: false, recoveryToken: null, resetErro: null, tela: 'auth', authMsg: 'Senha atualizada. Agora você já pode entrar.' });
+    } catch (e) {
+      this.registrarErro('auth_redefinir', e, e.status);
+      this.setState({ redefinindo: false, resetErro: /jwt|token|expir/i.test(e.message || '') ? 'Esse link expirou. Peça um novo link de redefinição.' : this.traduzErro(e.message || 'Sem conexão agora. Tenta de novo.') });
+    }
   }
   async carregarCaps() {
     try {
       const r = await fetch(this.SB_URL + '/rest/v1/captacoes_portal?select=*&order=criado_em.desc', { headers: this.hSb() });
       if (r.status === 401) return this.sair();
-      this.setState({ caps: r.ok ? await r.json() : [] });
-    } catch (e) { this.setState({ caps: [] }); }
+      if (!r.ok) { this.registrarErro('captacoes_listar', null, r.status); return this.setState({ caps: [], capsErro: 'Não conseguimos carregar seus imóveis agora. Tente novamente.' }); }
+      this.setState({ caps: await r.json(), capsErro: null });
+    } catch (e) { this.registrarErro('captacoes_listar', e); this.setState({ caps: [], capsErro: 'Não conseguimos carregar seus imóveis agora. Tente novamente.' }); }
   }
   novoCad() {
     const u = (this.state.sess && this.state.sess.user) || {}; const md = u.user_metadata || {};
@@ -3594,8 +3798,11 @@ class Component extends DCLogic {
   }
   async excluirCap(c) {
     if (!window.confirm('Excluir este cadastro?')) return;
-    await fetch(this.SB_URL + '/rest/v1/captacoes_portal?id=eq.' + c.id, { method: 'DELETE', headers: this.hSb() });
-    this.carregarCaps();
+    try {
+      const r = await fetch(this.SB_URL + '/rest/v1/captacoes_portal?id=eq.' + c.id, { method: 'DELETE', headers: this.hSb() });
+      if (!r.ok) { this.registrarErro('captacao_excluir', null, r.status); return this.setState({ capsErro: 'Não foi possível excluir agora. O cadastro continua salvo.' }); }
+      this.setState({ capsErro: null }); this.carregarCaps();
+    } catch (e) { this.registrarErro('captacao_excluir', e); this.setState({ capsErro: 'Não foi possível excluir agora. O cadastro continua salvo.' }); }
   }
   formInput(e) {
     const t = e.target; if (!t || !t.name) return;
@@ -3612,6 +3819,27 @@ class Component extends DCLogic {
     const n = Number(String(v).replace(/[R$\s.]/g, '').replace(',', '.'));
     if (isNaN(n)) return null;
     return int ? Math.round(n) : n;
+  }
+  valorNumerico(v) {
+    if (v === undefined || v === null || String(v).trim() === '') return 0;
+    if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+    let s = String(v).trim().replace(/R\$/gi, '').replace(/\s/g, '');
+    if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, '').replace(',', '.');
+    else if (s.includes(',')) s = s.replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+  finalidadeDe(r) {
+    const f = String((r && r.finalidade) || 'venda').trim().toLowerCase();
+    if (['aluguel', 'alugar', 'locacao', 'locação'].includes(f)) return 'aluguel';
+    if (['ambos', 'venda_e_aluguel', 'venda ou aluguel'].includes(f)) return 'ambos';
+    return 'venda';
+  }
+  normalizarPrecoImovel(v, finalidade) {
+    const n = this.valorNumerico(v);
+    const aluguel = ['aluguel', 'alugar', 'locacao', 'locação'].includes(String(finalidade || '').trim().toLowerCase());
+    return !aluguel && n > 0 && n < 100000 ? n * 1000 : n;
   }
   avancar() {
     const f = this.form, p = this.state.passo;
@@ -3638,78 +3866,280 @@ class Component extends DCLogic {
         const ext = (arq.name.split('.').pop() || 'jpg').toLowerCase().slice(0, 5);
         const p = uid + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
         const up = await fetch(this.SB_URL + '/storage/v1/object/captacoes-portal/' + p, { method: 'POST', headers: this.hSb(), body: arq });
-        if (up.ok) paths.push(p);
+        if (!up.ok) { const erro = new Error('upload ' + up.status); erro.status = up.status; throw erro; }
+        paths.push(p);
       }
       const payload = {
         proprietario_uid: uid, finalidade: f.finalidade || null,
         cep: f.cep || null, logradouro: f.logradouro, numero: f.numero, complemento: f.complemento || null,
         bairro: f.bairro, cidade: f.cidade || 'São Paulo', uf: f.uf || 'SP',
         area_util: this.num(f.area_util), dormitorios: this.num(f.dormitorios, true), banheiros: this.num(f.banheiros, true), vagas: this.num(f.vagas, true),
-        descricao: f.descricao || null, preco: this.num(f.preco), condominio_valor: this.num(f.condominio_valor), iptu: this.num(f.iptu),
+        descricao: f.descricao || null, preco: this.normalizarPrecoImovel(f.preco, f.finalidade), condominio_valor: this.num(f.condominio_valor), iptu: this.num(f.iptu),
         contato_nome: f.contato_nome || null, contato_telefone: f.contato_telefone, contato_email: f.contato_email || null,
         acesso_instrucoes: f.acesso_instrucoes || null, fotos: paths, termo_aceite: true
       };
       const url = this.state.editId ? this.SB_URL + '/rest/v1/captacoes_portal?id=eq.' + this.state.editId : this.SB_URL + '/rest/v1/captacoes_portal';
       const r = await fetch(url, { method: this.state.editId ? 'PATCH' : 'POST', headers: this.hSb(true), body: JSON.stringify(payload) });
       if (r.status === 401) return this.sair();
-      if (!r.ok) { const j = await r.json().catch(() => ({})); return this.setState({ enviando: false, wizErro: this.traduzErro(j.message || j.msg || ('erro ' + r.status)) }); }
+      if (!r.ok) { const j = await r.json().catch(() => ({})); this.registrarErro(this.state.editId ? 'captacao_editar' : 'captacao_criar', null, r.status); return this.setState({ enviando: false, wizErro: this.traduzErro(j.message || j.msg || ('erro ' + r.status)) }); }
       this.fotosArq = []; this.fotosExist = []; this.form = {};
       this.setState({ enviando: false, tela: 'sucesso', editId: null, fotosNomes: [], caps: undefined });
       this.carregarCaps();
-    } catch (e) { this.setState({ enviando: false, wizErro: 'Sem conexão agora. Suas respostas seguem aqui — tenta de novo.' }); }
+    } catch (e) { this.registrarErro((e.message || '').startsWith('upload ') ? 'captacao_upload' : (this.state.editId ? 'captacao_editar' : 'captacao_criar'), e, e.status); this.setState({ enviando: false, wizErro: 'Sem conexão agora. Suas respostas seguem aqui — tenta de novo.' }); }
   }
   badges = { pronto: { label: 'Pronto pra morar', bg: 'var(--ape-orange)' }, em_obras: { label: 'Em obras', bg: 'var(--ape-purple)' }, lancamento: { label: 'Lançamento', bg: 'var(--ape-purple)' } };
-  fmtR$(n) { return n ? 'R$ ' + Math.round(Number(n)).toLocaleString('pt-BR') : null; }
+  fmtR$(n) { const v = this.valorNumerico(n); return v ? 'R$ ' + Math.round(v).toLocaleString('pt-BR') : null; }
   fmtMi(n) {
     if (n >= 1000000) { const mi = n / 1000000; return 'R$ ' + (mi % 1 === 0 ? mi : mi.toFixed(mi < 10 ? 2 : 1).replace('.', ',')) + ' mi'; }
     return 'R$ ' + Math.round(n / 1000) + ' mil';
   }
-  carregarProdutos() {
-    fetch(this.SB_URL + '/rest/v1/site_produtos?select=*&order=destaque.desc,ordem.asc.nullslast,nome.asc&limit=500', {
-      headers: { apikey: this.SB_KEY, Authorization: 'Bearer ' + this.SB_KEY, Prefer: 'count=exact' }
+  filtrosDaUrl() {
+    const out = {};
+    try {
+      const q = new URLSearchParams(location.search);
+      const finalidade = q.get('finalidade');
+      if (finalidade === 'venda' || finalidade === 'aluguel') { out.fFinalidade = finalidade; out.aba = finalidade === 'aluguel' ? 'alugar' : 'comprar'; }
+      const modo = q.get('modo'); if (modo === 'lancamentos') { out.aba = 'lancamentos'; out.fFinalidade = 'venda'; }
+      const bairro = q.get('bairro'); if (bairro) out.fBairro = bairro.slice(0, 80);
+      const status = q.get('status'); if (['pronto', 'em_obras', 'lancamento'].includes(status)) out.fStatus = status;
+      const dorms = q.get('dormitorios'); if (['d1', 'd2', 'd3'].includes(dorms)) out.fDorms = dorms;
+      const vagas = q.get('vagas'); if (['v1', 'v2'].includes(vagas)) out.fVagas = vagas;
+      const precoMin = Number(q.get('preco_min'));
+      const precoMax = Number(q.get('preco_max') || q.get('preco'));
+      const precoMinimo = out.fFinalidade === 'aluguel' ? 500 : 100000;
+      if (Number.isFinite(precoMin) && precoMin > precoMinimo) { out.fPrecoMin = precoMin; out.fPrecoMinT = null; out.precoTocado = true; }
+      if (Number.isFinite(precoMax) && precoMax >= precoMinimo) { out.fPreco = precoMax; out.fPrecoMax = precoMax; out.fPrecoT = null; out.fPrecoMaxT = null; out.precoTocado = true; }
+    } catch (e) {}
+    return out;
+  }
+  sincronizarFiltrosUrl() {
+    try {
+      const st = this.state, u = new URL(location.href);
+      const set = (k, v) => { if (v) u.searchParams.set(k, String(v)); else u.searchParams.delete(k); };
+      set('finalidade', st.fFinalidade && st.fFinalidade !== 'venda' ? st.fFinalidade : null);
+      set('modo', (st.aba || this.props.abaInicial) === 'lancamentos' ? 'lancamentos' : null);
+      set('bairro', st.fBairro || null); set('status', st.fStatus || null);
+      set('dormitorios', st.fDorms || null); set('vagas', st.fVagas || null);
+      const piso = this.precoMinimo();
+      const maximo = st.fPrecoMax != null ? st.fPrecoMax : st.fPreco;
+      set('preco_min', st.precoTocado && st.fPrecoMin > piso ? Math.round(st.fPrecoMin) : null);
+      set('preco_max', st.precoTocado && maximo ? Math.round(maximo) : null);
+      u.searchParams.delete('preco');
+      const proxima = u.pathname + u.search + u.hash;
+      if (this.urlFiltrosSig !== proxima) { this.urlFiltrosSig = proxima; history.replaceState({}, '', proxima); }
+    } catch (e) {}
+  }
+  assinaturaFiltros(st) {
+    st = st || this.state;
+    return JSON.stringify({
+      finalidade: st.fFinalidade || ((st.aba || this.props.abaInicial) === 'alugar' ? 'aluguel' : 'venda'),
+      modo: (st.aba || this.props.abaInicial) === 'lancamentos' ? 'lancamentos' : '',
+      bairro: st.fBairro || '', status: st.fStatus || '', dorms: st.fDorms || '', vagas: st.fVagas || '',
+      precoMin: st.precoTocado && st.fPrecoMin ? Math.round(st.fPrecoMin) : null,
+      precoMax: st.precoTocado && (st.fPrecoMax != null ? st.fPrecoMax : st.fPreco) ? Math.round(st.fPrecoMax != null ? st.fPrecoMax : st.fPreco) : null,
+      sara: Array.isArray(st.saraEmpreendimentoIds) ? st.saraEmpreendimentoIds.slice().map(String).sort().join(',') : null
+    });
+  }
+  aplicarFiltros(patch, depois) {
+    if (patch && Array.isArray(patch.saraIds) && !Object.prototype.hasOwnProperty.call(patch, 'fPrecoMin')) patch = Object.assign({}, patch, { fPrecoMin: null, fPrecoMinT: null });
+    if (patch && Object.prototype.hasOwnProperty.call(patch, 'fPreco') && !Object.prototype.hasOwnProperty.call(patch, 'fPrecoMax')) patch = Object.assign({}, patch, { fPrecoMax: patch.fPreco });
+    if (patch && Object.prototype.hasOwnProperty.call(patch, 'fPrecoMax') && !Object.prototype.hasOwnProperty.call(patch, 'fPreco')) patch = Object.assign({}, patch, { fPreco: patch.fPrecoMax });
+    if (patch && Object.prototype.hasOwnProperty.call(patch, 'fPrecoT') && !Object.prototype.hasOwnProperty.call(patch, 'fPrecoMaxT')) patch = Object.assign({}, patch, { fPrecoMaxT: patch.fPrecoT });
+    if (patch && Object.prototype.hasOwnProperty.call(patch, 'fPrecoMaxT') && !Object.prototype.hasOwnProperty.call(patch, 'fPrecoT')) patch = Object.assign({}, patch, { fPrecoT: patch.fPrecoMaxT });
+    if (patch && patch.saraIds === null && !Object.prototype.hasOwnProperty.call(patch, 'saraEmpreendimentoIds')) {
+      patch = Object.assign({}, patch, { saraEmpreendimentoIds: null, saraPrecos: null, saraUnidades: null });
+    }
+    const anterior = this.assinaturaFiltros(this.state);
+    this.setState(Object.assign({ mostrarTodos: false }, patch), () => {
+      const atual = this.assinaturaFiltros(this.state);
+      if (anterior !== atual) {
+        clearTimeout(this.filtroTimer);
+        this.filtroTimer = setTimeout(() => this.carregarProdutos(false), 180);
+      }
+      if (depois) depois();
+    });
+  }
+  urlProdutos(procurar) {
+    const params = new URLSearchParams();
+    params.set('select', '*');
+    params.set('order', 'destaque.desc,ordem.asc.nullslast,nome.asc');
+    const idsDiretos = procurar && Array.isArray(procurar.ids) ? procurar.ids.filter(id => this.uuidValido(id)).slice(0, 40) : [];
+    const direta = idsDiretos.length > 0 || !!(procurar && (procurar.key || procurar.cod)) || !!this.slugImovelDaRota();
+    this.catalogoIgnoraFiltros = direta;
+    if (idsDiretos.length) params.set('id', 'in.(' + idsDiretos.join(',') + ')');
+    if (!direta) {
+      const st = this.state;
+      const finalidade = st.fFinalidade || ((st.aba || this.props.abaInicial) === 'alugar' ? 'aluguel' : 'venda');
+      if (finalidade === 'aluguel') params.append('or', '(finalidade.in.(aluguel,alugar,locacao,locação),finalidade.in.(ambos,venda_e_aluguel))');
+      else params.append('or', '(finalidade.is.null,finalidade.in.(venda,vender,lancamento,lançamento,ambos,venda_e_aluguel))');
+      if (st.fBairro) params.set('bairro', 'eq.' + st.fBairro);
+      if (st.fStatus) params.set('status', 'eq.' + st.fStatus);
+      else if ((st.aba || this.props.abaInicial) === 'lancamentos') params.append('or', '(status.eq.em_obras,status.eq.lancamento)');
+      const precoMaximo = st.fPrecoMax != null ? st.fPrecoMax : st.fPreco;
+      if (st.precoTocado && st.fPrecoMin > this.precoMinimo()) params.append('or', '(preco_max.gte.' + Math.round(st.fPrecoMin) + ',and(preco_max.is.null,preco.gte.' + Math.round(st.fPrecoMin) + '))');
+      if (st.precoTocado && precoMaximo) params.append('or', '(preco_min.lte.' + Math.round(precoMaximo) + ',and(preco_min.is.null,preco.lte.' + Math.round(precoMaximo) + '))');
+      if (st.fDorms === 'd1') params.append('or', '(dormitorios_min_disponiveis.lte.1,and(dormitorios_min_disponiveis.is.null,dormitorios.lte.1))');
+      if (st.fDorms === 'd2') params.append('or', '(and(dormitorios_min_disponiveis.lte.2,dormitorios_max_disponiveis.gte.2),and(dormitorios_min_disponiveis.is.null,dormitorios.eq.2))');
+      if (st.fDorms === 'd3') params.append('or', '(dormitorios_max_disponiveis.gte.3,and(dormitorios_max_disponiveis.is.null,dormitorios.gte.3))');
+      if (st.fVagas === 'v1') params.append('or', '(vagas_max_disponiveis.gte.1,and(vagas_max_disponiveis.is.null,vagas.gte.1))');
+      if (st.fVagas === 'v2') params.append('or', '(vagas_max_disponiveis.gte.2,and(vagas_max_disponiveis.is.null,vagas.gte.2))');
+    }
+    return this.SB_URL + '/rest/v1/site_produtos?' + params.toString();
+  }
+  carregarTotalCatalogo(tentativa) {
+    tentativa = Number(tentativa || 0);
+    fetch(this.SB_URL + '/rest/v1/site_produtos?select=unidades_disponiveis', {
+      headers: { apikey: this.SB_KEY, Authorization: 'Bearer ' + this.SB_KEY }
+    }).then(r => {
+      if (!r.ok) { this.registrarErro('total_catalogo', null, r.status); throw new Error('http ' + r.status); }
+      return r.json();
+    }).then(rows => {
+      const total = rows.reduce((soma, r) => soma + Math.max(1, Number(r.unidades_disponiveis) || 0), 0);
+      this.setState({ totalCatalogo: total, totalApes: total });
+    }).catch(e => {
+      const status = Number((String(e.message || '').match(/^http (\d+)/) || [])[1] || 0);
+      this.registrarErro('total_catalogo', e, status);
+      if (tentativa < 1 && (!status || status === 408 || status === 429 || status >= 500)) {
+        setTimeout(() => this.carregarTotalCatalogo(tentativa + 1), 600);
+      }
+    });
+  }
+  carregarProdutos(mais, procurar, tentativa) {
+    tentativa = Number(tentativa || 0);
+    if (!mais && !procurar && Array.isArray(this.state.saraEmpreendimentoIds)) {
+      return this.carregarProdutosSara(this.state.saraEmpreendimentoIds, tentativa);
+    }
+    if (mais && tentativa === 0 && (this.state.produtosCarregandoMais || !this.state.produtosTemMais)) return;
+    const tamanho = 24;
+    const inicio = mais ? (this.state.produtosEmpCarregados || 0) : 0;
+    if (mais && tentativa === 0) this.setState({ produtosCarregandoMais: true });
+    const requisicao = ++this.produtosReq;
+    fetch(this.urlProdutos(procurar), {
+      headers: { apikey: this.SB_KEY, Authorization: 'Bearer ' + this.SB_KEY, Prefer: 'count=exact', Range: inicio + '-' + (inicio + tamanho - 1) }
     }).then(r => {
       if (!r.ok) throw new Error('http ' + r.status);
       const range = r.headers.get('content-range');
       const total = range && range.includes('/') ? parseInt(range.split('/')[1], 10) : null;
       return r.json().then(rows => ({ rows, total }));
     }).then(({ rows, total }) => {
+      if (requisicao !== this.produtosReq) return;
+      const brutosRecebidos = rows.length;
       rows = this.expandirUnidades(rows);
-      this.setState({ produtos: rows, totalApes: rows.length || total, dbErro: false }, () => {
+      const atuais = mais && Array.isArray(this.state.produtos) ? this.state.produtos : [];
+      const produtos = atuais.concat(rows);
+      const carregados = inicio + brutosRecebidos;
+      const temMais = total != null ? carregados < total : brutosRecebidos === tamanho;
+      this.setState({ produtos, totalFiltrado: total != null ? total : carregados, produtosEmpCarregados: carregados, produtosTotalEmp: total, produtosTemMais: temMais, produtosCarregandoMais: false, dbErro: false }, () => {
         try {
-          const key = new URLSearchParams(location.search).get('imovel');
-          const cod = new URLSearchParams(location.search).get('cod');
-          const target = (cod && rows.find(item => item.codigo === cod)) || (key && rows.find(item => String(item.slug || item.id) === key));
+          const q = new URLSearchParams(location.search);
+          const key = procurar && procurar.key != null ? procurar.key : (this.slugImovelDaRota() || q.get('imovel'));
+          const cod = procurar && procurar.cod != null ? procurar.cod : q.get('cod');
+          const alvoSlug = this.slugParte(key);
+          const target = (cod && produtos.find(item => String(item.codigo || '') === String(cod))) || (key && produtos.find(item => [item.slug, item.id, item.empreendimento_id, item.empreendimento_slug].some(valor => this.slugParte(valor) === alvoSlug)));
           if (target) this.abrirDetalhe(target);
+          else if ((key || cod) && temMais) this.carregarProdutos(true, { key, cod });
+          else if (key || cod) this.marcarImovelNaoEncontrado();
         } catch (e) {}
       });
     })
-      .catch(() => this.setState({ dbErro: true, produtos: [] }));
+      .catch(e => {
+        if (requisicao !== this.produtosReq) return;
+        const status = Number((String(e.message || '').match(/^http (\d+)/) || [])[1] || 0);
+        this.registrarErro('catalogo', e, status);
+        if (tentativa < 1 && (!status || status === 408 || status === 429 || status >= 500)) {
+          setTimeout(() => this.carregarProdutos(mais, procurar, tentativa + 1), 600);
+          return;
+        }
+        this.setState({ dbErro: true, produtos: mais ? this.state.produtos : [], produtosCarregandoMais: false });
+      });
+  }
+  carregarProdutosSara(ids, tentativa) {
+    tentativa = Number(tentativa || 0);
+    const pais = Array.from(new Set((ids || []).map(String).filter(id => this.uuidValido(id))));
+    const requisicao = ++this.produtosReq;
+    if (!pais.length) {
+      this.setState({ produtos: [], totalFiltrado: 0, produtosEmpCarregados: 0, produtosTotalEmp: 0, produtosTemMais: false, produtosCarregandoMais: false, dbErro: false });
+      return;
+    }
+    this.setState({ produtosCarregandoMais: true });
+    const lotes = [];
+    for (let i = 0; i < pais.length; i += 40) lotes.push(pais.slice(i, i + 40));
+    Promise.all(lotes.map(lote => fetch(this.urlProdutos({ ids: lote }), {
+      headers: { apikey: this.SB_KEY, Authorization: 'Bearer ' + this.SB_KEY }
+    }).then(r => {
+      if (!r.ok) { const erro = new Error('http ' + r.status); erro.status = r.status; throw erro; }
+      return r.json();
+    }))).then(grupos => {
+      if (requisicao !== this.produtosReq) return;
+      const vistos = new Set();
+      const brutos = grupos.flat().filter(row => row && !vistos.has(String(row.id)) && vistos.add(String(row.id)));
+      const produtos = this.expandirUnidades(brutos);
+      this.setState({ produtos, totalFiltrado: pais.length, produtosEmpCarregados: brutos.length, produtosTotalEmp: pais.length, produtosTemMais: false, produtosCarregandoMais: false, dbErro: false });
+    }).catch(e => {
+      if (requisicao !== this.produtosReq) return;
+      const status = Number(e.status || (String(e.message || '').match(/^http (\d+)/) || [])[1] || 0);
+      this.registrarErro('catalogo_sara', e, status);
+      if (tentativa < 1 && (!status || status === 408 || status === 429 || status >= 500)) {
+        setTimeout(() => this.carregarProdutosSara(pais, tentativa + 1), 600);
+        return;
+      }
+      this.setState({ dbErro: true, produtos: [], produtosCarregandoMais: false });
+    });
+  }
+  uuidValido(v) { return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(v || '')); }
+  slugParte(v) {
+    return String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+  empreendimentoId(r) {
+    if (!r) return null;
+    const id = r.empreendimento_id || r._empreendimento_id;
+    return this.uuidValido(id) ? String(id) : null;
+  }
+  unidadeId(r) {
+    if (!r) return null;
+    const id = r.unidade_id || r._unidade_id;
+    return this.uuidValido(id) ? String(id) : null;
   }
   expandirUnidades(rows) {
-    // Produto pronto: cada unidade aprovada e disponível vira um imóvel próprio no site.
+    // Cada unidade publicada vira um imóvel próprio, mantendo os IDs relacionais do ERP separados do ID visual.
     const out = [];
-    for (const r of rows || []) {
-      const uns = r && r.status === 'pronto' && Array.isArray(r.unidades_site) ? r.unidades_site : [];
-      // Imóvel pronto só existe no site como unidade individual aprovada.
-      // Sem estoque aprovado, o prédio não vira um card genérico "sob consulta".
+    for (const original of rows || []) {
+      const r = Object.assign({}, original, {
+        empreendimento_id: this.uuidValido(original && original.id) ? original.id : null,
+        unidade_id: null,
+        empreendimento_nome: original && original.nome,
+        empreendimento_slug: original && original.slug
+      });
+      const uns = r && Array.isArray(r.unidades_site) ? r.unidades_site : [];
       if (!uns.length) { if (r && r.status !== 'pronto') out.push(r); continue; }
       for (const u of uns) {
         const unNum = u.numero == null ? 's/n' : String(u.numero).replace(/\.0+$/, '');
         const dm = String(u.tipologia || '').match(/^\s*(\d+)/);
         const dorm = /studio/i.test(u.tipologia || '') ? 0 : dm ? Number(dm[1]) : r.dormitorios;
+        const unidadeId = this.uuidValido(u.id || u.unidade_id) ? (u.id || u.unidade_id) : null;
+        const unidadeRef = u.codigo || u.numero || String(out.length + 1);
+        const fotosUnidade = Array.isArray(u.fotos) && u.fotos.length ? u.fotos.slice() : (Array.isArray(r.fotos) ? r.fotos.slice() : []);
+        const capaUnidade = u.capa_path || fotosUnidade[0] || r.capa_path || null;
+        const precoUnidade = this.normalizarPrecoImovel(u.valor, this.finalidadeDe(r)) || this.precoDe(r);
         out.push(Object.assign({}, r, {
-          id: r.id + ':' + (u.codigo || u.numero || out.length),
+          id: unidadeId || r.id + ':' + unidadeRef,
+          slug: u.slug ? String(u.slug) : [r.slug || r.id, this.slugParte(unidadeRef)].filter(Boolean).join('-'),
+          empreendimento_id: r.id,
+          unidade_id: unidadeId,
+          unidade_codigo: u.codigo || null,
+          unidade_numero: unNum,
           titulo: (r.titulo || r.nome) + ' · Un. ' + unNum,
           nome: r.nome + ' · Un. ' + unNum,
           codigo: u.codigo || r.codigo || null,
-          preco_min: u.valor || r.preco_min,
-          preco_max: u.valor || r.preco_max,
+          preco: precoUnidade,
+          preco_min: precoUnidade,
+          preco_max: precoUnidade,
+          capa_path: capaUnidade,
+          fotos: fotosUnidade,
           area_util: u.area_m2 || r.area_util,
           vagas: u.vagas != null ? u.vagas : r.vagas,
           dormitorios: dorm,
-          unidades_disponiveis: 1,
-          capa_path: u.capa_path || r.capa_path,
-          fotos: Array.isArray(u.fotos) && u.fotos.length ? u.fotos : r.fotos
+          unidades_disponiveis: 1
         }));
       }
     }
@@ -3725,6 +4155,7 @@ class Component extends DCLogic {
     const fav = !!this.state.favs[r.id];
     return {
       foto: n ? this.fotoUrl(fotos[idx]) : false,
+      fotoOn: n > 0,
       galOn: n > 1,
       fPrev: e => setIdx(e, (idx - 1 + n) % n),
       fNext: e => setIdx(e, (idx + 1) % n),
@@ -3761,22 +4192,46 @@ class Component extends DCLogic {
   }
   nomePublico(r) { return (r && (r.titulo || r.nome)) || ''; }
   precoDe(r) {
-    const valor = Number(r.preco_promo || r.preco_min || r.preco) || 0;
-    const finalidade = String(r.finalidade || 'venda').trim().toLowerCase();
-    return finalidade !== 'aluguel' && valor > 0 && valor < 100000 ? valor * 1000 : valor;
+    if (!r) return 0;
+    const bruto = r.preco_promo != null && this.valorNumerico(r.preco_promo) > 0 ? r.preco_promo : (r.preco_min != null ? r.preco_min : r.preco);
+    return this.normalizarPrecoImovel(bruto, this.finalidadeDe(r));
   }
-  fotoUrl(p) { return p ? (String(p).indexOf('http') === 0 ? p : this.SB_URL + '/storage/v1/object/public/empreendimentos/' + p) : ''; }
+  fotoUrl(p) {
+    const raw = String(p || '').trim();
+    if (!raw || /[\u0000-\u001f"'\\()]/.test(raw)) return '';
+    if (/^https:\/\//i.test(raw)) {
+      try { const u = new URL(raw); return u.protocol === 'https:' ? u.href : ''; } catch (e) { return ''; }
+    }
+    if (/^[a-z][a-z0-9+.-]*:/i.test(raw) || raw.startsWith('//')) return '';
+    const path = raw.replace(/^\/+/, '').split('/').map(s => encodeURIComponent(decodeURIComponent(s))).join('/');
+    return this.SB_URL + '/storage/v1/object/public/empreendimentos/' + path;
+  }
+  tourUrl(v) {
+    if (!v) return '';
+    try {
+      const u = new URL(String(v).trim());
+      const hosts = ['my.matterport.com', 'kuula.co', 'momento360.com', 'tour.panoee.com', 'www.youtube.com', 'youtu.be', 'apecerto.com', 'www.apecerto.com'];
+      const permitido = hosts.some(h => u.hostname === h || u.hostname.endsWith('.' + h));
+      return u.protocol === 'https:' && permitido ? u.href : '';
+    } catch (e) { return ''; }
+  }
+  coordenadas(r) {
+    const lat = Number(r && r.latitude), lng = Number(r && r.longitude);
+    return Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 ? [lat, lng] : null;
+  }
   saraBuscar(txt) {
     const t = txt.toLowerCase();
-    const patch = { fBairro: '', fStatus: '', fDorms: '', fVagas: '', fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, aba: 'comprar' };
+    const querAlugar = /alug|loca[cç][aã]o/.test(t);
+    const patch = { fBairro: '', fStatus: '', fDorms: '', fVagas: '', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, aba: querAlugar ? 'alugar' : 'comprar', fFinalidade: querAlugar ? 'aluguel' : 'venda' };
     const partes = [];
+    if (querAlugar) partes.push('para alugar');
     if (/studio|st[uú]dio|kitnet|1\s*dorm|1\s*quarto|um\s*(dorm|quarto)/.test(t)) { patch.fDorms = 'd1'; partes.push('1 dorm'); }
     else { const md = t.match(/(\d+)\s*\+?\s*(dorm|quarto)/); if (md) { const n = Number(md[1]); patch.fDorms = n <= 1 ? 'd1' : n === 2 ? 'd2' : 'd3'; partes.push(n >= 3 ? '3+ dorms' : n + ' dorm' + (n > 1 ? 's' : '')); } }
     const mv = t.match(/(\d+)\s*\+?\s*vaga/);
     if (mv) { patch.fVagas = Number(mv[1]) >= 2 ? 'v2' : 'v1'; partes.push(Number(mv[1]) >= 2 ? '2+ vagas' : 'vaga na garagem'); }
     else if (/vaga|garagem/.test(t)) { patch.fVagas = 'v1'; partes.push('vaga na garagem'); }
     const mp = t.match(/([\d]+(?:[.,]\d+)?)\s*(mil|k|mi(?:lh(?:ao|ão|oes|ões))?|m)\b/);
-    const mFaixa = t.match(/(?:de|entre)\s*([\d]+(?:[.,]\d+)?)\s*(mil|k|mi(?:lh(?:ao|ão|oes|ões))?|m)?\b\s*(?:a|e|at[eé])\s*([\d]+(?:[.,]\d+)?)\s*(mil|k|mi(?:lh(?:ao|ão|oes|ões))?|m)\b/); const toValor = (n, u) => { const v = parseFloat(n.replace(',', '.')); return /mil|k/.test(u) ? v * 1000 : v * 1000000; }; if (mFaixa) { const vMin = toValor(mFaixa[1], mFaixa[2] || mFaixa[4]), vMax = toValor(mFaixa[3], mFaixa[4]); if (vMax >= 50000) { patch.fPrecoMin = vMin >= 50000 ? vMin : null; patch.fPrecoMax = vMax; patch.fPrecoMinT = this.tDePreco(patch.fPrecoMin || 100000); patch.fPrecoMaxT = this.tDePreco(vMax); patch.precoTocado = true; partes.push('de ' + this.fmtMi(vMin) + ' até ' + this.fmtMi(vMax)); } } else if (mp) { const v = toValor(mp[1], mp[2]); if (v >= 50000) { if (/a partir de|acima de|m[ií]nimo/.test(t)) { patch.fPrecoMin = v; patch.fPrecoMinT = this.tDePreco(v); partes.push('a partir de ' + this.fmtMi(v)); } else { patch.fPrecoMax = v; patch.fPrecoMaxT = this.tDePreco(v); partes.push('até ' + this.fmtMi(v)); } patch.precoTocado = true; } }
+    const mFaixa = t.match(/(?:de|entre)\s*([\d]+(?:[.,]\d+)?)\s*(mil|k|mi(?:lh(?:ao|ão|oes|ões))?|m)?\b\s*(?:a|e|at[eé])\s*([\d]+(?:[.,]\d+)?)\s*(mil|k|mi(?:lh(?:ao|ão|oes|ões))?|m)\b/); const toValor = (n, u) => { const v = parseFloat(n.replace(',', '.')); return /mil|k/.test(u) ? v * 1000 : /mi|m/.test(u) ? v * 1000000 : v; }; const pisoBusca = querAlugar ? 500 : 100000; if (mFaixa) { const vMin = toValor(mFaixa[1], mFaixa[2] || mFaixa[4]), vMax = toValor(mFaixa[3], mFaixa[4]); if (vMax >= pisoBusca) { patch.fPrecoMin = vMin > pisoBusca ? vMin : null; patch.fPrecoMax = vMax; patch.fPreco = vMax; patch.fPrecoMinT = this.tDePreco(patch.fPrecoMin || pisoBusca); patch.fPrecoMaxT = this.tDePreco(vMax); patch.fPrecoT = patch.fPrecoMaxT; patch.precoTocado = true; partes.push('de ' + this.fmtFaixaPreco(vMin) + ' até ' + this.fmtFaixaPreco(vMax)); } } else if (mp) { const v = toValor(mp[1], mp[2]); if (v >= pisoBusca) { if (/a partir de|acima de|m[ií]nimo/.test(t)) { patch.fPrecoMin = v; patch.fPrecoMinT = this.tDePreco(v); partes.push('a partir de ' + this.fmtFaixaPreco(v)); } else { patch.fPrecoMax = v; patch.fPreco = v; patch.fPrecoMaxT = this.tDePreco(v); patch.fPrecoT = patch.fPrecoMaxT; partes.push('até ' + this.fmtFaixaPreco(v)); } patch.precoTocado = true; } }
     const b = this.bairrosUnicos().find(bn => t.includes(bn.toLowerCase()));
     if (b) { patch.fBairro = b; partes.push('em ' + b); }
     if (/pronto/.test(t)) { patch.fStatus = 'pronto'; partes.push('pronto pra morar'); }
@@ -3787,7 +4242,7 @@ class Component extends DCLogic {
       this.setState({ saraMsgs: msgs.concat([{ eu: false, txt: 'Hmm, não peguei. Tenta algo como "2 dorms com vaga até 800 mil" que eu acho pra você.' }]) });
       return;
     }
-    this.setState(Object.assign({ saraMsgs: msgs }, patch), () => {
+    this.aplicarFiltros(Object.assign({ saraMsgs: msgs }, patch), () => {
       const n = this.filtrar().out.length;
       const resp = n ? 'Fechou! Busquei ' + partes.join(', ') + ' — achei ' + n + (n > 1 ? ' apês' : ' apê') + ' pra você. Dá uma olhada 🔑' : 'Busquei ' + partes.join(', ') + ', mas não achei nenhum apê assim agora. Afrouxa um filtro que eu tento de novo?';
       this.setState({ saraMsgs: this.state.saraMsgs.concat([{ eu: false, txt: resp }]) });
@@ -3795,69 +4250,174 @@ class Component extends DCLogic {
     });
   }
   menuFiltra(patch) {
-    this.setState(Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar' }, patch), () => {
+    this.aplicarFiltros(Object.assign({ menuOn: null, fBairro: '', fStatus: '', fDorms: '', fVagas: '', aba: 'comprar', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null }, patch), () => {
       const el = document.getElementById('apes');
       if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' });
     });
   }
   filtrar() {
     const rows = this.state.produtos || [];
-    const { fBairro, fStatus, fPreco, fDorms, fVagas } = this.state; const { fPrecoMin, fPrecoMax } = this.state;
+    const { fBairro, fStatus, fPreco, fDorms, fVagas, fFinalidade } = this.state;
+    const { fPrecoMin } = this.state;
     const teto = this.tetoPreco();
+    const piso = this.precoMinimo();
     const aba = this.state.aba || this.props.abaInicial || 'comprar';
     const dormOk = r => !fDorms || (fDorms === 'd1' ? (r.dormitorios || 0) <= 1 : fDorms === 'd2' ? r.dormitorios === 2 : (r.dormitorios || 0) >= 3);
     const vagasOk = r => !fVagas || (fVagas === 'v1' ? (r.vagas || 0) >= 1 : (r.vagas || 0) >= 2);
-    let out = rows.filter(r =>
+    const finalidade = fFinalidade || (aba === 'alugar' ? 'aluguel' : 'venda');
+    const finalidadeOk = r => this.finalidadeDe(r) === 'ambos' || this.finalidadeDe(r) === finalidade;
+    const baseFinalidade = rows.filter(finalidadeOk);
+    let out = baseFinalidade.filter(r =>
       (!this.state.soFavs || this.state.favs[r.id]) &&
       (aba !== 'lancamentos' || r.status === 'em_obras' || r.status === 'lancamento') &&
       (!fBairro || this.mesmoBairro(r.bairro, fBairro)) &&
       (!fStatus || r.status === fStatus) &&
       dormOk(r) &&
       vagasOk(r) &&
-      (fPrecoMin == null || fPrecoMin <= 100000 || !this.precoDe(r) || this.precoDe(r) >= fPrecoMin) &&      (fPreco == null || fPreco >= teto || !this.precoDe(r) || this.precoDe(r) <= fPreco));
+      (fPrecoMin == null || fPrecoMin <= piso || !this.precoDe(r) || this.precoDe(r) >= fPrecoMin) &&
+      (fPreco == null || fPreco >= teto || !this.precoDe(r) || this.precoDe(r) <= fPreco));
     let nota = null;
-    const ativos = fBairro || fStatus || fDorms || fVagas || (this.state.precoTocado && ((fPrecoMax != null && fPrecoMax < teto) || (fPrecoMin != null && fPrecoMin > 100000)));
+    const ativos = fBairro || fStatus || fDorms || fVagas || aba === 'lancamentos' || (this.state.precoTocado && ((fPreco != null && fPreco < teto) || (fPrecoMin != null && fPrecoMin > piso)));
     if (this.state.soFavs && !out.length) {
       return { out: [], nota: Object.keys(this.state.favs).length ? 'Nenhum favorito bate com os filtros.' : 'Você ainda não favoritou nenhum apê — toca no coração dos cards. 🔑' };
     }
-    if (!out.length && rows.length) {
-      const alvo = ((fPrecoMin != null ? fPrecoMin : 100000) + (fPrecoMax != null ? fPrecoMax : teto)) / 2;
-      out = rows.slice().sort((a, b) => Math.abs(this.precoDe(a) - alvo) - Math.abs(this.precoDe(b) - alvo)).slice(0, 3);
+    if (!out.length && baseFinalidade.length) {
+      const alvo = ((fPrecoMin != null ? fPrecoMin : piso) + (fPreco != null ? fPreco : teto)) / 2;
+      out = baseFinalidade.slice().sort((a, b) => Math.abs(this.precoDe(a) - alvo) - Math.abs(this.precoDe(b) - alvo)).slice(0, 3);
       nota = 'Nenhum apê bate exatamente com esses filtros — estes são os mais parecidos:';
+    } else if (!out.length && rows.length) {
+      nota = finalidade === 'aluguel' ? 'Ainda não há imóveis para alugar entre os anúncios carregados.' : 'Ainda não há imóveis à venda entre os anúncios carregados.';
     } else if (ativos && out.length) {
-      nota = out.length + (out.length > 1 ? ' apês encontrados' : ' apê encontrado');
+      nota = out.length + (out.length > 1 ? ' apês encontrados' : ' apê encontrado') + (this.state.produtosTemMais ? ' entre os anúncios carregados' : '');
     }
     return { out, nota };
   }
+  precoMinimo() { return this.finalidadeDe({ finalidade: this.state.fFinalidade }) === 'aluguel' ? 500 : 100000; }
+  fmtFaixaPreco(n) {
+    if (n < 1000) return 'R$ ' + Math.round(n).toLocaleString('pt-BR');
+    return this.fmtMi(n);
+  }
   tetoPreco() {
     const rows = this.state.produtos || [];
-    const max = Math.max(500000, ...rows.map(r => this.precoDe(r)));
-    return Math.ceil(max / 100000) * 100000;
+    const aluguel = this.precoMinimo() < 100000;
+    const base = aluguel ? 10000 : 500000;
+    const passo = aluguel ? 500 : 100000;
+    const max = Math.max(base, ...rows.map(r => this.precoDe(r)));
+    return Math.ceil(max / passo) * passo;
   }
-  // escala logarítmica contínua: proporção suave de 100k até o teto
+  // escala logarítmica contínua, adequada tanto para venda quanto para aluguel
   precoDeT(t) {
     const teto = this.tetoPreco();
-    const p = 100000 * Math.pow(teto / 100000, t / 100);
-    const passo = p < 1000000 ? 10000 : 50000;
+    const minimo = this.precoMinimo();
+    const p = minimo * Math.pow(teto / minimo, t / 100);
+    const passo = minimo < 100000 ? (p < 10000 ? 100 : 500) : (p < 1000000 ? 10000 : 50000);
     return Math.round(p / passo) * passo;
   }
   tDePreco(p) {
     const teto = this.tetoPreco();
+    const minimo = this.precoMinimo();
     if (p >= teto) return 100;
-    if (p <= 100000) return 0;
-    return Math.log(p / 100000) / Math.log(teto / 100000) * 100;
+    if (p <= minimo) return 0;
+    return Math.log(p / minimo) / Math.log(teto / minimo) * 100;
+  }
+  slugImovelDaRota() {
+    try {
+      const m = String(location.pathname || '').match(/^\/imovel\/([^/]+)\/?$/);
+      return m ? decodeURIComponent(m[1]) : null;
+    } catch (e) { return null; }
+  }
+  sincronizarRotaImovel() {
+    const key = this.slugImovelDaRota();
+    if (!key) {
+      if (this.state.det) {
+        if (this.mapa) { this.mapa.remove(); this.mapa = null; }
+        this.restaurarMetaHome();
+        this.setState({ det: null, galOn: false });
+      }
+      return;
+    }
+    const alvo = this.slugParte(key);
+    const target = (this.state.produtos || []).find(item => [item.slug, item.id, item.empreendimento_id, item.empreendimento_slug].some(valor => this.slugParte(valor) === alvo));
+    if (target) {
+      if (!this.state.det || String(this.state.det.id) !== String(target.id)) this.abrirDetalhe(target);
+      else this.atualizarMetaImovel(target);
+    } else if (this.state.produtosTemMais && !this.state.produtosCarregandoMais) {
+      this.carregarProdutos(true, { key, cod: null });
+    } else if (Array.isArray(this.state.produtos) && !this.state.produtosCarregandoMais) {
+      this.marcarImovelNaoEncontrado();
+    }
+  }
+  marcarImovelNaoEncontrado() {
+    if (this.state.rotaImovelNaoEncontrado) return;
+    try {
+      const u = new URL(location.href); u.pathname = '/'; u.searchParams.delete('imovel'); u.searchParams.delete('cod'); u.hash = '';
+      history.replaceState({}, '', u.pathname + u.search);
+    } catch (e) {}
+    this.catalogoIgnoraFiltros = false;
+    this.restaurarMetaHome();
+    this.setState({ det: null, galOn: false, rotaImovelNaoEncontrado: true }, () => this.carregarProdutos(false));
+  }
+  definirMeta(seletor, atributo, valor) {
+    let el = document.querySelector(seletor);
+    if (!el) {
+      el = document.createElement('meta');
+      const m = seletor.match(/meta\[(name|property)="([^"]+)"\]/);
+      if (m) el.setAttribute(m[1], m[2]);
+      document.head.appendChild(el);
+    }
+    el.setAttribute(atributo, valor);
+  }
+  atualizarMetaImovel(r) {
+    const slug = this.slugParte(r.slug || r.codigo || r.id);
+    const url = 'https://apecerto.com/imovel/' + encodeURIComponent(slug) + '/';
+    const titulo = this.nomePublico(r) + ' | apêcerto';
+    const descricao = String(r.descricao || [this.nomePublico(r), r.bairro, r.area_util ? Math.round(Number(r.area_util)) + ' m²' : null].filter(Boolean).join(' · ')).replace(/\s+/g, ' ').trim().slice(0, 240);
+    const foto = this.fotoUrl((r.fotos || [])[0] || r.capa_path);
+    document.title = titulo;
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
+    canonical.href = url;
+    this.definirMeta('meta[name="description"]', 'content', descricao);
+    this.definirMeta('meta[property="og:title"]', 'content', titulo);
+    this.definirMeta('meta[property="og:description"]', 'content', descricao);
+    this.definirMeta('meta[property="og:url"]', 'content', url);
+    this.definirMeta('meta[property="og:type"]', 'content', 'product');
+    if (foto) this.definirMeta('meta[property="og:image"]', 'content', foto);
+    let ld = document.getElementById('apecerto-imovel-jsonld');
+    if (!ld) { ld = document.createElement('script'); ld.id = 'apecerto-imovel-jsonld'; ld.type = 'application/ld+json'; document.head.appendChild(ld); }
+    ld.textContent = JSON.stringify({
+      '@context': 'https://schema.org', '@type': 'Apartment', name: this.nomePublico(r), description: descricao, url,
+      image: foto ? [foto] : undefined,
+      address: { '@type': 'PostalAddress', streetAddress: r.endereco || undefined, addressLocality: r.cidade || 'São Paulo', addressRegion: r.uf || 'SP', addressCountry: 'BR' },
+      floorSize: r.area_util ? { '@type': 'QuantitativeValue', value: Number(r.area_util), unitCode: 'MTK' } : undefined,
+      numberOfRooms: r.dormitorios || undefined,
+      offers: this.precoDe(r) ? { '@type': 'Offer', priceCurrency: 'BRL', price: this.precoDe(r), availability: 'https://schema.org/InStock', url } : undefined
+    });
+  }
+  restaurarMetaHome() {
+    document.title = 'ApeCerto | Apartamentos em Moema';
+    const canonical = document.querySelector('link[rel="canonical"]'); if (canonical) canonical.href = 'https://apecerto.com/';
+    this.definirMeta('meta[property="og:url"]', 'content', 'https://apecerto.com/');
+    this.definirMeta('meta[property="og:type"]', 'content', 'website');
+    const ld = document.getElementById('apecerto-imovel-jsonld'); if (ld) ld.remove();
   }
   abrirDetalhe(r) {
     this.lead = {};
+    if (!this.state.det && document.activeElement) this.detFocusOrigin = document.activeElement;
     try {
       const u = new URL(location.href);
-      u.searchParams.delete('imovel');
-      u.searchParams.delete('cod');
-      if (r.codigo) u.searchParams.set('cod', String(r.codigo));
-      else u.searchParams.set('imovel', String(r.id));
-      history.replaceState({}, '', u.pathname + u.search + u.hash);
+      u.pathname = '/imovel/' + encodeURIComponent(this.slugParte(r.slug || r.codigo || r.id)) + '/';
+      u.searchParams.delete('imovel'); u.searchParams.delete('cod'); u.hash = '';
+      const destino = u.pathname + u.search;
+      if (location.pathname + location.search !== destino) history.pushState({}, '', destino);
     } catch (e) {}
-    this.setState({ det: r, galIdx: 0, galOn: false, leadOk: false, leadErro: null }, () => this.initMapa(r));
+    this.setState({ det: r, galIdx: 0, galOn: false, leadOk: false, leadErro: null, rotaImovelNaoEncontrado: false }, () => {
+      this.initMapa(r); this.atualizarMetaImovel(r);
+      setTimeout(() => {
+        const el = this.focarLeadAoAbrir ? document.querySelector('[data-lead-form] input[name="nome"]') : document.querySelector('[data-det-topo]');
+        this.focarLeadAoAbrir = false; if (el) el.focus();
+      }, 50);
+    });
     if (!this.galKeys) {
       this.galKeys = ev => {
         if (!this.state.galOn) return;
@@ -3868,6 +4428,30 @@ class Component extends DCLogic {
       };
       window.addEventListener('keydown', this.galKeys);
     }
+  }
+  fecharDetalhe() {
+    if (this.mapa) { this.mapa.remove(); this.mapa = null; }
+    const recarregarFiltros = !!this.catalogoIgnoraFiltros;
+    this.catalogoIgnoraFiltros = false;
+    try {
+      const u = new URL(location.href); u.pathname = '/'; u.searchParams.delete('imovel'); u.searchParams.delete('cod'); u.hash = '';
+      history.pushState({}, '', u.pathname + u.search);
+    } catch (e) {}
+    this.restaurarMetaHome();
+    this.setState({ det: null, galOn: false }, () => {
+      if (recarregarFiltros) this.carregarProdutos(false);
+      if (this.detFocusOrigin && this.detFocusOrigin.focus) this.detFocusOrigin.focus();
+    });
+  }
+  focarFormularioVisita() {
+    const el = document.querySelector('[data-lead-form] input[name="nome"]');
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => el.focus(), 250); }
+  }
+  agendarVisita() {
+    if (this.state.det) return this.focarFormularioVisita();
+    const primeiro = this.filtrar().out[0];
+    if (!primeiro) { const buscar = document.getElementById('buscar'); if (buscar) buscar.scrollIntoView({ behavior: 'smooth' }); return; }
+    this.focarLeadAoAbrir = true; this.abrirDetalhe(primeiro);
   }
   async leadEnviar() {
     if (this.state.leadEnviando) return;
@@ -3981,22 +4565,33 @@ class Component extends DCLogic {
     return rows.map(r => [score(r), r]).sort((a, b) => b[0] - a[0]).slice(0, 3).map(x => x[1]);
   }
   initMapa(r) {
-    if (!window.L || !r.latitude || !r.longitude) return;
+    const ll = this.coordenadas(r);
+    if (!window.L || !ll) return;
     setTimeout(() => {
       const el = document.getElementById('det-mapa');
       if (!el) return;
       if (this.mapa) { this.mapa.remove(); this.mapa = null; }
-      this.mapa = window.L.map(el, { scrollWheelZoom: true }).setView([r.latitude, r.longitude], 16);
+      this.mapa = window.L.map(el, { scrollWheelZoom: true }).setView(ll, 16);
       window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(this.mapa);
-      window.L.marker([r.latitude, r.longitude], { icon: this.pinIcon(36) }).addTo(this.mapa);
+      window.L.marker(ll, { icon: this.pinIcon(36) }).addTo(this.mapa);
     }, 250);
   }
-  componentWillUnmount() { clearInterval(this.iconTimer); }
+  componentWillUnmount() {
+    clearInterval(this.iconTimer);
+    clearTimeout(this.filtroTimer);
+    if (this.a11yKeys) window.removeEventListener('keydown', this.a11yKeys);
+    if (this.galKeys) window.removeEventListener('keydown', this.galKeys);
+    if (this.popState) window.removeEventListener('popstate', this.popState);
+    if (this.mapa) this.mapa.remove();
+    if (this.listaMapa) this.listaMapa.remove();
+  }
   renderVals() {
     const aba = this.state.aba || this.props.abaInicial || 'comprar';
     const on = { bg: 'var(--ape-orange)', fg: '#fff' };
     const off = { bg: 'var(--bg-sunken)', fg: 'var(--fg-2)' };
-    const comprar = aba !== 'lancamentos';
+    const comprar = aba === 'comprar';
+    const lancamentos = aba === 'lancamentos';
+    const alugar = aba === 'alugar';
     const st = this.state, criar = st.authModo === 'criar', passo = st.passo;
     const dot = n => passo >= n ? 'var(--ape-orange)' : 'var(--neutral-300)';
     const lbl = n => passo >= n ? 'var(--fg-1)' : 'var(--fg-muted)';
@@ -4015,25 +4610,34 @@ class Component extends DCLogic {
     }));
     const { out: filtradosAll, nota: buscaNota } = this.filtrar();
     const dest = (st.produtos || []).find(r => r.destaque && r.capa_path) || (st.produtos || [])[0];
-    const filtrosAtivos = !!(st.fBairro || st.fStatus || st.fDorms || st.fVagas || (st.precoTocado && ((st.fPrecoMax != null && st.fPrecoMax < this.tetoPreco()) || (st.fPrecoMin != null && st.fPrecoMin > 100000))));
+    const piso = this.precoMinimo();
+    const filtrosAtivos = !!(st.fBairro || st.fStatus || st.fDorms || st.fVagas || (st.precoTocado && ((st.fPrecoMax != null && st.fPrecoMax < this.tetoPreco()) || (st.fPrecoMin != null && st.fPrecoMin > piso))));
     const mostrarTodos = st.mostrarTodos || filtrosAtivos;
     const filtrados = mostrarTodos ? filtradosAll : filtradosAll.slice(0, 6);
     const escondidos = filtradosAll.length - filtrados.length;
     const teto = this.tetoPreco();
-    const fPrecoMin = st.fPrecoMin != null ? st.fPrecoMin : 100000; const fPrecoMax = st.fPrecoMax != null ? st.fPrecoMax : teto;
+    const fPrecoMin = st.fPrecoMin != null ? st.fPrecoMin : piso; const fPrecoMax = st.fPrecoMax != null ? st.fPrecoMax : (st.fPreco != null ? st.fPreco : teto);
     const det = st.det;
+    const detTourUrl = det ? this.tourUrl(det.tour_url) : '';
     const fotosDet = det ? (det.fotos || []).map(p => this.fotoUrl(p)) : [];
     const gi = Math.min(st.galIdx || 0, Math.max(0, fotosDet.length - 1));
     const detBadge = det ? (this.badges[det.status] || this.badges.pronto) : null;
     return {
       produtos: this.state.produtos === undefined ? undefined : filtrados.map(r => this.mapProduto(r)),
       dbErro: this.state.dbErro,
+      rotaNaoEncontrada: !!st.rotaImovelNaoEncontrado,
+      fecharAvisoRota: () => this.setState({ rotaImovelNaoEncontrado: false }),
+      tentarProdutos: () => this.carregarProdutos(false),
+      produtosTemMais: !!st.produtosTemMais,
+      carregarMaisProdutos: () => this.carregarProdutos(true),
+      carregarMaisLabel: st.produtosCarregandoMais ? 'Carregando…' : 'Carregar mais imóveis',
+      produtosCarregadosLabel: st.totalFiltrado != null ? st.produtosEmpCarregados + ' de ' + st.totalFiltrado + ' empreendimentos encontrados' : st.produtosEmpCarregados + ' empreendimentos carregados',
       buscaNota,
       tglTodos: () => this.setState({ mostrarTodos: !st.mostrarTodos }),
       tglTodosLabel: mostrarTodos ? 'Mostrar menos' : 'Ver todos os ' + filtradosAll.length + ' apês →',
       verMaisOn: escondidos > 0,
       verMaisLabel: 'Ver mais ' + escondidos + (escondidos > 1 ? ' apês' : ' apê'),
-      limparFiltros: () => this.setState({ fBairro: '', fStatus: '', fDorms: '', fVagas: '', fPrecoMin: null, fPrecoMax: 890000, fPrecoMinT: null, fPrecoMaxT: null, fPreco: 890000, fPrecoT: null, precoTocado: false }),
+      limparFiltros: () => this.aplicarFiltros({ fBairro: '', fStatus: '', fDorms: '', fVagas: '', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null }),
       ...(() => {
         const rows = Array.isArray(st.produtos) ? st.produtos : [];
         const mini = r => ({
@@ -4072,9 +4676,9 @@ class Component extends DCLogic {
       favsChipBorda: st.soFavs ? 'var(--ape-orange)' : 'var(--border-default)',
       favsChipFill: st.soFavs ? 'var(--ape-orange)' : 'none',
       bairroOpts: this.bairrosUnicos(),
-      fBairro: st.fBairro || '', fStatus: st.fStatus || '',
-      setFBairro: e => this.setState({ fBairro: e.target.value }),
-      setFStatus: e => this.setState({ fStatus: e.target.value }),
+      fBairro: st.fBairro || '', fStatus: st.fStatus || '', fFinalidade: st.fFinalidade || 'venda',
+      setFBairro: e => this.aplicarFiltros({ fBairro: e.target.value, saraIds: null }),
+      setFStatus: e => this.aplicarFiltros({ fStatus: e.target.value, saraIds: null }),
       saraTgl: () => this.setState({ saraOn: !this.state.saraOn }),
       saraOn: st.saraOn,
       saraBtnBg: st.saraOn ? 'var(--ape-purple)' : 'var(--bg-surface)',
@@ -4083,16 +4687,21 @@ class Component extends DCLogic {
       saraMsgsOn: (st.saraMsgs || []).length > 0,
       saraMsgs: (st.saraMsgs || []).map(m => ({ txt: m.txt, al: m.eu ? 'flex-end' : 'flex-start', bg: m.eu ? 'var(--bg-tint-orange)' : 'var(--bg-sunken)' })),
       saraKey: e => { if (e.key === 'Enter' && e.target.value.trim()) { this.saraBuscar(e.target.value.trim()); e.target.value = ''; } },
-      dormChips: [{ v: 'd1', l: '1' }, { v: 'd2', l: '2' }, { v: 'd3', l: '3+' }].map(o => { const on = (st.fDorms || '') === o.v; return { label: o.l, sel: () => this.setState({ fDorms: on ? '' : o.v }), bg: on ? 'var(--bg-tint-orange)' : 'var(--bg-surface)', fg: on ? 'var(--ape-orange-700)' : 'var(--fg-2)', bd: on ? 'var(--ape-orange)' : 'var(--border-soft)' }; }),
-      vagaChips: [{ v: 'v1', l: '1+' }, { v: 'v2', l: '2+' }].map(o => { const on = (st.fVagas || '') === o.v; return { label: o.l, sel: () => this.setState({ fVagas: on ? '' : o.v }), bg: on ? 'var(--bg-tint-orange)' : 'var(--bg-surface)', fg: on ? 'var(--ape-orange-700)' : 'var(--fg-2)', bd: on ? 'var(--ape-orange)' : 'var(--border-soft)' }; }),
-      precoMinT: st.fPrecoMinT != null ? st.fPrecoMinT : this.tDePreco(fPrecoMin), precoMaxT: st.fPrecoMaxT != null ? st.fPrecoMaxT : this.tDePreco(fPrecoMax),
-      precoMeioLabel: this.fmtMi(this.precoDeT(50)),
-      precoLabel: (() => { const minOn = fPrecoMin > 100000, maxOn = fPrecoMax < teto; if (!minOn && !maxOn) return 'sem limite'; if (minOn && maxOn) return this.fmtMi(fPrecoMin) + ' – ' + this.fmtMi(fPrecoMax); return minOn ? ('a partir de ' + this.fmtMi(fPrecoMin)) : ('até ' + this.fmtMi(fPrecoMax)); })(),
+      dormChips: [{ v: 'd1', l: '1' }, { v: 'd2', l: '2' }, { v: 'd3', l: '3+' }].map(o => { const on = (st.fDorms || '') === o.v; return { label: o.l, sel: () => this.aplicarFiltros({ fDorms: on ? '' : o.v, saraIds: null }), bg: on ? 'var(--bg-tint-orange)' : 'var(--bg-surface)', fg: on ? 'var(--ape-orange-700)' : 'var(--fg-2)', bd: on ? 'var(--ape-orange)' : 'var(--border-soft)' }; }),
+      vagaChips: [{ v: 'v1', l: '1+' }, { v: 'v2', l: '2+' }].map(o => { const on = (st.fVagas || '') === o.v; return { label: o.l, sel: () => this.aplicarFiltros({ fVagas: on ? '' : o.v, saraIds: null }), bg: on ? 'var(--bg-tint-orange)' : 'var(--bg-surface)', fg: on ? 'var(--ape-orange-700)' : 'var(--fg-2)', bd: on ? 'var(--ape-orange)' : 'var(--border-soft)' }; }),
+      precoMinT: st.fPrecoMinT != null ? st.fPrecoMinT : this.tDePreco(fPrecoMin),
+      precoMaxT: st.fPrecoMaxT != null ? st.fPrecoMaxT : this.tDePreco(fPrecoMax),
+      precoMinLabel: this.fmtFaixaPreco(this.precoMinimo()),
+      precoMeioLabel: this.fmtFaixaPreco(this.precoDeT(50)),
+      precoLabel: (() => { const minOn = fPrecoMin > this.precoMinimo(), maxOn = fPrecoMax < teto; if (!minOn && !maxOn) return 'sem limite'; if (minOn && maxOn) return this.fmtFaixaPreco(fPrecoMin) + ' – ' + this.fmtFaixaPreco(fPrecoMax); return minOn ? ('a partir de ' + this.fmtFaixaPreco(fPrecoMin)) : ('até ' + this.fmtFaixaPreco(fPrecoMax)); })(),
+      precoMinAria: fPrecoMin > this.precoMinimo() ? this.fmtFaixaPreco(fPrecoMin) : 'sem preço mínimo',
+      precoMaxAria: fPrecoMax < teto ? this.fmtFaixaPreco(fPrecoMax) : 'sem preço máximo',
       precoFillBg: (() => { const pctMin = st.fPrecoMinT != null ? st.fPrecoMinT : this.tDePreco(fPrecoMin); const pctMax = st.fPrecoMaxT != null ? st.fPrecoMaxT : this.tDePreco(fPrecoMax); return 'linear-gradient(to right, #EFE9E3 0%, #EFE9E3 ' + pctMin + '%, #FF7000 ' + pctMin + '%, #FF7000 ' + pctMax + '%, #EFE9E3 ' + pctMax + '%, #EFE9E3 100%)'; })(),
-      setFPrecoMin: e => { const maxT = st.fPrecoMaxT != null ? st.fPrecoMaxT : this.tDePreco(fPrecoMax); const t = Math.min(Number(e.target.value), maxT); this.setState({ fPrecoMinT: t, fPrecoMin: t <= 0 ? null : this.precoDeT(t), precoTocado: true }); }, setFPrecoMax: e => { const minT = st.fPrecoMinT != null ? st.fPrecoMinT : this.tDePreco(fPrecoMin); const t = Math.max(Number(e.target.value), minT); const v = t >= 100 ? null : this.precoDeT(t); this.setState({ fPrecoMaxT: t, fPrecoMax: v, fPreco: v, precoTocado: true }); },
+      setFPrecoMin: e => { const maxT = st.fPrecoMaxT != null ? st.fPrecoMaxT : this.tDePreco(fPrecoMax); const t = Math.min(Number(e.target.value), maxT); this.aplicarFiltros({ fPrecoMinT: t, fPrecoMin: t <= 0 ? null : this.precoDeT(t), precoTocado: true, saraIds: null }); },
+      setFPrecoMax: e => { const minT = st.fPrecoMinT != null ? st.fPrecoMinT : this.tDePreco(fPrecoMin); const t = Math.max(Number(e.target.value), minT); const v = t >= 100 ? null : this.precoDeT(t); this.aplicarFiltros({ fPrecoMaxT: t, fPrecoMax: v, fPreco: v, fPrecoT: t, precoTocado: true, saraIds: null }); },
       buscar: () => { const el = document.getElementById('apes'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' }); },
       detOn: !!det,
-      fecharDet: () => { if (this.mapa) { this.mapa.remove(); this.mapa = null; } try { const u = new URL(location.href); u.searchParams.delete('imovel'); u.searchParams.delete('cod'); history.replaceState({}, '', u.pathname + u.search + u.hash); } catch (e) {} this.setState({ det: null }); },
+      fecharDet: () => this.fecharDetalhe(),
       detNome: det ? this.nomePublico(det) : '',
       detBadge: detBadge ? detBadge.label : '', detBadgeBg: detBadge ? detBadge.bg : '',
       detEndereco: det ? [det.endereco, det.bairro, det.cidade || 'São Paulo', det.uf].filter(Boolean).join(' · ') : '',
@@ -4133,7 +4742,7 @@ class Component extends DCLogic {
       galNext: e => { e.stopPropagation(); this.setState({ galIdx: (gi + 1) % fotosDet.length }); },
       galThumbs: fotosDet.map((u, i) => ({ url: u, sel: e => { e.stopPropagation(); this.setState({ galIdx: i }); }, borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' })),
       detDescricao: det && det.descricao,
-      detTourOn: !!(det && det.tour_url), detTourUrl: det && det.tour_url,
+      detTourOn: !!detTourUrl, detTourUrl,
       detTemDif: !!(det && det.diferenciais && det.diferenciais.length), detDif: (det && det.diferenciais) || [],
       detTemLazer: !!(det && det.lazer && det.lazer.length), detLazer: (det && det.lazer) || [],
       detPreco: det ? (this.fmtR$(this.precoDe(det)) || 'sob consulta') : '',
@@ -4154,8 +4763,8 @@ class Component extends DCLogic {
       finFinanciar: det ? (this.fmtR$(this.precoDe(det) * st.finPct / 100) || '—') : '',
       finBarEntrada: (100 - st.finPct) + '%',
       finBarFin: st.finPct + '%',
-      fichaAbrir: () => this.setState({ fichaOn: true, fichaOk: false, fichaErro: null }),
-      fichaFechar: () => this.setState({ fichaOn: false }),
+      fichaAbrir: () => this.abrirFicha(),
+      fichaFechar: () => this.fecharFicha(),
       pararClique: e => e.stopPropagation(),
       fichaOn: st.fichaOn, fichaOk: st.fichaOk, fichaForm: !st.fichaOk, fichaErro: st.fichaErro,
       fichaInput: e => {
@@ -4227,7 +4836,7 @@ class Component extends DCLogic {
         det.iptu ? { k: 'IPTU', v: this.fmtR$(det.iptu) + '/ano' } : null,
         det.entrega ? { k: 'Entrega', v: det.entrega } : null
       ].filter(Boolean) : [],
-      detMapaOn: !!(det && det.latitude && det.longitude),
+      detMapaOn: !!(det && this.coordenadas(det)),
       simOn: !!(det && this.similares(det).length),
       similares: det ? this.similares(det).map(r => Object.assign(this.mapProduto(r), {
         abrir: () => { this.abrirDetalhe(r); const el = document.querySelector('[data-det-topo]'); if (el) window.scrollTo(0, 0); }
@@ -4240,19 +4849,25 @@ class Component extends DCLogic {
       zapFlutuanteUrl: (this.props.whatsappNumero ? 'https://wa.me/55' + String(this.props.whatsappNumero).replace(/\D/g, '') : 'https://wa.me/') + '?text=' + encodeURIComponent('Oi! Vim pelo site da apêcerto 🔑'),
       zapOn: !!(this.props.whatsappNumero && det),
       zapUrl: det ? 'https://wa.me/55' + String(this.props.whatsappNumero || '').replace(/\D/g, '') + '?text=' + encodeURIComponent('Oi! Vi o ' + this.nomePublico(det) + (det.codigo ? ' (cód. ' + det.codigo + ')' : '') + ' no site e quero saber mais') : '#',
+      agendarVisita: () => this.agendarVisita(),
       mmOn: !!st.mmOn, mmFechado: !st.mmOn,
       mmTgl: () => this.setState({ mmOn: !this.state.mmOn }),
       mmFecha: () => this.setState({ mmOn: false }),
-      mmPortal: (e) => { if (e && e.preventDefault) e.preventDefault(); const s = this.state.sess; this.setState({ mmOn: false, portalOn: true, tela: s ? 'roteando' : 'auth', authErro: null, authMsg: null }); if (s) this.rotear(); },
+      mmPortal: e => this.abrirRotaProprietario(false, e),
+      mmCadastro: e => this.abrirRotaProprietario(true, e),
+      mmAgendarVisita: () => this.setState({ mmOn: false }, () => this.agendarVisita()),
       mmBuscar: () => { this.setState({ mmOn: false }); const el = document.getElementById('apes'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' }); },
       portalOn: st.portalOn,
       logado: !!st.sess,
-      abrePortal: (e) => { if (e && e.preventDefault) e.preventDefault(); const s = this.state.sess; this.setState({ portalOn: true, tela: s ? 'roteando' : 'auth', authErro: null, authMsg: null }); if (s) this.rotear(); },
-      fecharPortal: () => this.setState({ portalOn: false }),
+      abrePortal: e => this.abrirRotaProprietario(false, e),
+      abreCadastro: e => this.abrirRotaProprietario(true, e),
+      fecharPortal: () => this.fecharPortalRota(),
       sair: () => this.sair(),
-      telaAuth: st.tela === 'auth', telaRec: st.tela === 'rec', telaPainel: st.tela === 'painel',
+      telaAuth: st.tela === 'auth', telaRec: st.tela === 'rec', telaRedefinir: st.tela === 'redefinir', telaPainel: st.tela === 'painel',
       telaWizard: st.tela === 'wizard', telaSucesso: st.tela === 'sucesso',
-      telaEquipe: st.tela === 'equipe',
+      telaEquipeLink: st.tela === 'equipe-link',
+      telaEquipe: false,
+      abrirErpProdutos: () => this.abrirErpProdutos(),
       eqSetAnun: () => this.setState({ eqAba: 'anun', eqAnunForm: null }),
       eqSetCaps: () => this.setState({ eqAba: 'caps', eqAnunForm: null }),
       abAnunBg: st.eqAba === 'anun' ? 'var(--ape-orange)' : 'var(--bg-sunken)', abAnunFg: st.eqAba === 'anun' ? '#fff' : 'var(--fg-2)',
@@ -4320,11 +4935,16 @@ class Component extends DCLogic {
       authErro: st.authErro, authMsg: st.authMsg,
       irRec: () => this.setState({ tela: 'rec', recMsg: null }),
       voltarAuth: () => this.setState({ tela: 'auth' }),
-      recuperar: () => this.recuperar(), recMsg: st.recMsg,
+      recuperar: () => this.recuperar(), recMsg: st.recMsg, recErro: st.recErro,
+      resetInput: e => { const t = e.target; if (t && t.name) this.reset[t.name] = t.value; },
+      resetErro: st.resetErro,
+      redefinirSenha: () => this.redefinirSenha(),
+      resetLabel: st.redefinindo ? 'Atualizando…' : 'Atualizar senha',
       novoCad: () => this.novoCad(),
       caps: capsMap,
       capsCarregando: st.tela === 'painel' && st.caps === undefined,
       capsVazio: Array.isArray(st.caps) && !st.caps.length,
+      capsErro: st.capsErro,
       tituloWizard: st.editId ? 'Editar apê' : 'Cadastrar meu apê',
       passo1: passo === 1, passo2: passo === 2, passo3: passo === 3,
       d1: dot(1), d2: dot(2), d3: dot(3), l1: lbl(1), l2: lbl(2), l3: lbl(3),
@@ -4337,23 +4957,26 @@ class Component extends DCLogic {
       avancar: () => this.avancar(),
       avancarLabel: passo < 3 ? 'Continuar →' : (st.enviando ? 'Enviando…' : 'Enviar pra análise'),
       irPainel: () => { this.setState({ tela: 'painel' }); this.carregarCaps(); },
-      statApes: this.state.totalApes ? '+' + this.state.totalApes : false,
+      statApes: this.state.totalCatalogo ? '+' + this.state.totalCatalogo : false,
       temApes: !!(st.produtos && st.produtos.length),
       semApes: Array.isArray(st.produtos) && !st.produtos.length && !st.dbErro,
       menuTemBairros: this.bairrosUnicos().length > 0,
       grafismoOn: this.props.grafismoHero ?? true,
       faixaOn: this.props.faixaAnuncie ?? true,
       compBg: (comprar ? on : off).bg, compFg: (comprar ? on : off).fg,
-      lancBg: (comprar ? off : on).bg, lancFg: (comprar ? off : on).fg,
-      setComprar: () => this.setState({ aba: 'comprar' }),
-      setLanc: () => this.setState({ aba: 'lancamentos' }),
-      searchLabel: comprar ? 'Buscar apê pra comprar →' : 'Ver lançamentos →',
+      lancBg: (lancamentos ? on : off).bg, lancFg: (lancamentos ? on : off).fg,
+      alugBg: (alugar ? on : off).bg, alugFg: (alugar ? on : off).fg,
+      setComprar: () => this.aplicarFiltros({ aba: 'comprar', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null }),
+      setLanc: () => this.aplicarFiltros({ aba: 'lancamentos', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null }),
+      setAlugar: () => this.aplicarFiltros({ aba: 'alugar', fFinalidade: 'aluguel', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null }),
+      searchLabel: alugar ? 'Buscar apê para alugar →' : (lancamentos ? 'Ver lançamentos →' : 'Buscar apê pra comprar →'),
       menuCompOn: st.menuOn === 'comprar', menuCompSeta: st.menuOn === 'comprar' ? '▲' : '▼',
       menuCompCor: st.menuOn === 'comprar' ? 'var(--ape-orange)' : 'var(--fg-2)',
       tglMenuComp: () => this.setState({ menuOn: st.menuOn === 'comprar' ? null : 'comprar' }),
       menuAlugOn: st.menuOn === 'alugar', menuAlugSeta: st.menuOn === 'alugar' ? '▲' : '▼',
       menuAlugCor: st.menuOn === 'alugar' ? 'var(--ape-orange)' : 'var(--fg-2)',
       tglMenuAlug: () => this.setState({ menuOn: st.menuOn === 'alugar' ? null : 'alugar' }),
+      menuAlugar: () => this.menuFiltra({ aba: 'alugar', fFinalidade: 'aluguel' }),
       menuBairros: this.bairrosUnicos().map(nome => ({ nome, ir: () => this.menuFiltra({ fBairro: nome }) })),
       menuD1: () => this.menuFiltra({ fDorms: 'd1' }),
       menuD2: () => this.menuFiltra({ fDorms: 'd2' }),
@@ -4374,7 +4997,7 @@ class Component extends DCLogic {
       ].map(b => Object.assign(b, { filtrar: () => {
         const opts = this.bairrosUnicos();
         const m = opts.find(o => this.mesmoBairro(o, b.nome) || b.nome.toLowerCase().includes(o.toLowerCase()) || o.toLowerCase().includes(b.nome.toLowerCase())) || '';
-        this.setState({ fBairro: m, fStatus: '', fPreco: null, fPrecoMin: null, fPrecoMax: null });
+        this.aplicarFiltros({ fBairro: m, fStatus: '', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null });
       } })),
 
       dicas: [
