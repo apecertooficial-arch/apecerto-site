@@ -43,14 +43,20 @@ const trocaTag = (html, pattern, replacement, label) => {
   return html.replace(pattern, replacement);
 };
 
+const trocaOuInsereNoHead = (html, pattern, replacement, label) => {
+  if (pattern.test(html)) return html.replace(pattern, replacement);
+  if (!html.includes('</head>')) throw new Error(label + ': </head> ausente');
+  return html.replace('</head>', '  ' + replacement + '\n</head>');
+};
+
 const aplicarHeadDaRota = (html, route) => {
   let out = html;
   out = trocaTag(out, /<title>[^<]*<\/title>/i, '<title>' + route.title + '</title>', route.path + ' title');
   out = trocaTag(out, /<link\s+rel="canonical"\s+href="[^"]*">/i, '<link rel="canonical" href="' + route.canonical + '">', route.path + ' canonical');
   out = trocaTag(out, /<meta\s+name="description"\s+content="[^"]*">/i, '<meta name="description" content="' + route.description + '">', route.path + ' description');
-  out = trocaTag(out, /<meta\s+property="og:url"\s+content="[^"]*">/i, '<meta property="og:url" content="' + route.canonical + '">', route.path + ' og:url');
-  out = trocaTag(out, /<meta\s+property="og:title"\s+content="[^"]*">/i, '<meta property="og:title" content="' + route.title + '">', route.path + ' og:title');
-  out = trocaTag(out, /<meta\s+property="og:description"\s+content="[^"]*">/i, '<meta property="og:description" content="' + route.description + '">', route.path + ' og:description');
+  out = trocaOuInsereNoHead(out, /<meta\s+property="og:url"\s+content="[^"]*">/i, '<meta property="og:url" content="' + route.canonical + '">', route.path + ' og:url');
+  out = trocaOuInsereNoHead(out, /<meta\s+property="og:title"\s+content="[^"]*">/i, '<meta property="og:title" content="' + route.title + '">', route.path + ' og:title');
+  out = trocaOuInsereNoHead(out, /<meta\s+property="og:description"\s+content="[^"]*">/i, '<meta property="og:description" content="' + route.description + '">', route.path + ' og:description');
   return out;
 };
 

@@ -278,8 +278,6 @@ test('build publica landings, privacidade e arquivos de busca', async () => {
 });
 
 test('rota de campanha abre a landing de captacao, nao a home', async () => {
-  execFileSync(process.execPath, ['scripts/build-site.mjs'], { stdio: 'inherit' });
-  execFileSync(process.execPath, ['scripts/rotas.mjs'], { stdio: 'inherit' });
   const out = await readFile('dist/proprietario/cadastre-seu-imovel/index.html', 'utf8');
   assert.ok(out.includes('id="owner-form"'), 'a rota de campanha deve mostrar o formulario de proprietario');
   assert.ok(out.includes('data-tracking-form="proprietario"'), 'a landing deve classificar o abandono como captacao de proprietario');
