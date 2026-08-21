@@ -1,24 +1,46 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import { readFile, access } from 'node:fs/promises';
-import { execFileSync } from 'node:child_process';
 
 const existe = p => access(p).then(() => true, () => false);
+const assetPublicado = async source => {
+  const version = JSON.parse(await readFile('dist/version.json', 'utf8'));
+  const publicPath = version.assetMap['/' + source.replace(/^\/+/, '')];
+  assert.ok(publicPath, source + ' deve ter nome versionado');
+  return publicPath.replace(/^\/+/, '');
+};
+
+const pacotePublicado = async (file = 'index.html') => {
+  const version = JSON.parse(await readFile('dist/version.json', 'utf8'));
+  const shell = await readFile('dist/' + file.replace(/^\/+/, ''), 'utf8');
+  const template = await readFile('dist/' + version.templatePath.replace(/^\/+/, ''), 'utf8');
+  return { shell, template, out: shell + '\n' + template, version };
+};
 
 test('catalogo publico consulta a view site_produtos', async () => {
   const d = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   assert.ok(d.includes('/rest/v1/site_produtos'), 'o catalogo deve ler a view site_produtos');
+  assert.ok(d.includes('this.carregarProdutos(mais, procurar, tentativa + 1)'), 'leitura do catalogo deve repetir uma vez em falha transitoria');
+  assert.ok(d.includes('status === 408 || status === 429 || status >= 500'), 'retry automatico deve ficar restrito a falhas transitorias');
+  assert.ok(!d.includes("location.hash === '#cadastro-demo'"), 'a producao nao pode liberar um portal ficticio por hash publico');
+  assert.ok(d.includes('carregarProdutosSara(ids, tentativa)'), 'resultados da Sara devem carregar todos os empreendimentos encontrados');
+  assert.ok(d.includes("params.set('id', 'in.(' + idsDiretos.join(',') + ')')"), 'a busca da Sara deve consultar os IDs exatos em lotes');
+  assert.ok(d.includes('saraEmpreendimentoIds'), 'os IDs de empreendimentos da Sara devem disparar nova consulta');
+  assert.ok(d.includes('lancamento,lançamento'), 'a finalidade cadastrada como lançamento deve aparecer na vitrine');
+  assert.ok(d.includes("out.fFinalidade === 'aluguel' ? 500 : 100000"), 'a URL de aluguel deve aceitar preço mensal');
+  assert.ok(d.includes('precoMinimo()'), 'o slider deve usar escala própria para aluguel');
+  assert.ok(d.includes('item.empreendimento_id'), 'a URL gerada pelo ERP deve localizar também o UUID do empreendimento');
+  assert.ok(d.includes('marcarImovelNaoEncontrado()'), 'uma rota inválida deve voltar ao catálogo com aviso claro');
 });
 
 test('cards de bairro nao abrem o seletor de arquivos no site publico', async () => {
-  execFileSync(process.execPath, ['scripts/build-site.mjs'], { stdio: 'inherit' });
-  const out = await readFile('dist/index.html', 'utf8');
+  const { out } = await pacotePublicado();
   assert.ok(
-    out.includes('data-bairro-image-link=\\"true\\"'),
+    out.includes('data-bairro-image-link="true"'),
     'a imagem do bairro deve ser um link normal para o catalogo',
   );
   assert.ok(
-    out.includes('image-slot id=\\"{{ b.slot }}\\" shape=\\"rect\\" placeholder=\\"{{ b.foto }}\\" style=\\"pointer-events: none\\"'),
+    out.includes('image-slot id="{{ b.slot }}" shape="rect" placeholder="{{ b.foto }}" style="pointer-events: none"'),
     'o componente visual nao pode capturar o clique e abrir upload',
   );
 });
@@ -30,16 +52,16 @@ test('Sara ignora unidades retiradas do ar mesmo usando cliente de serviço', as
 
 test('build injeta o design no pacote-base', async t => {
   if (!(await existe('index.html'))) return t.skip('index.html (pacote-base) ainda nao esta no repo');
-  execFileSync(process.execPath, ['scripts/build-site.mjs'], { stdio: 'inherit' });
-  const out = await readFile('dist/index.html', 'utf8');
+  const { shell, out } = await pacotePublicado();
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
-  assert.ok(out.startsWith('<!DOCTYPE html>'), 'dist/index.html deve ser um documento HTML');
-  assert.ok(out.includes('__bundler/template'), 'bloco de template deve existir no dist');
+  assert.ok(shell.startsWith('<!DOCTYPE html>'), 'dist/index.html deve ser um documento HTML');
+  assert.ok(shell.includes('__bundler/template'), 'bloco de template deve existir no dist');
   assert.ok(out.includes('site_produtos'), 'design injetado deve consultar site_produtos');
-  assert.ok(design.includes("URLSearchParams(location.search).get('imovel')"), 'o site deve abrir o imóvel específico enviado pelo ERP');
+  assert.ok(design.includes('slugImovelDaRota') && design.includes("q.get('imovel')"), 'o site deve abrir o imóvel específico por URL limpa e manter o fallback do ERP');
+  assert.ok(design.includes('item.empreendimento_slug'), 'a URL limpa do empreendimento deve abrir uma unidade publicada quando nenhuma unidade foi escolhida');
   assert.ok(design.includes("r.titulo || r.nome"), 'o título comercial do ERP deve ser priorizado na vitrine');
   assert.ok(design.includes('detTourUrl'), 'o tour virtual cadastrado no ERP deve aparecer na ficha pública');
-  assert.ok(design.includes("valor < 100000 ? valor * 1000"), 'preços legados em milhares não podem aparecer como centenas de reais');
+  assert.ok(design.includes('normalizarPrecoImovel'), 'preços legados em milhares não podem aparecer como centenas de reais');
   assert.match(
     out,
     /#__bundler_loading,\s*#__bundler_thumbnail\s*\{\s*display:\s*none;/,
@@ -52,10 +74,10 @@ test('build injeta o design no pacote-base', async t => {
 });
 
 test('build aplica a camada de producao e tracking', async () => {
-  execFileSync(process.execPath, ['scripts/build-site.mjs'], { stdio: 'inherit' });
-  const out = await readFile('dist/index.html', 'utf8');
+  const { out } = await pacotePublicado();
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
-  const analytics = await readFile('dist/assets/analytics.js', 'utf8');
+  const analytics = await readFile('dist/' + await assetPublicado('assets/analytics.js'), 'utf8');
+  const productionCss = await readFile('dist/' + await assetPublicado('assets/production.css'), 'utf8');
   const siteTrack = await readFile('supabase/functions/site-track/index.ts', 'utf8');
   const crmCapi = await readFile('supabase/functions/crm-capi/index.ts', 'utf8');
   assert.ok(analytics.includes('G-P63KVXKJDH'), 'o Analytics deve estar ligado ao site');
@@ -70,6 +92,11 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes("attribution: { first: first, last: last, current: current }"), 'first, last e current touch devem acompanhar o lead');
   assert.ok(analytics.includes("window.gtag('get', MEASUREMENT_ID, 'client_id'"), 'o GA client_id consentido deve acompanhar o lead');
   assert.ok(analytics.includes("window.gtag('get', MEASUREMENT_ID, 'session_id'"), 'o GA session_id consentido deve acompanhar o lead');
+  assert.ok(analytics.includes('window.APECERTO_TRACKING_CONFIG'), 'labels de conversao do Google Ads devem ser configuraveis sem alterar o runtime');
+  assert.ok(analytics.includes('/^[A-Za-z0-9_-]+$/.test(label)'), 'labels de conversao invalidos nao podem ser enviados');
+  assert.ok(analytics.includes("schedule_complete: 'Schedule'"), 'visita concluida deve usar o evento deduplicado de agendamento');
+  assert.ok(analytics.includes("owner_cta_click: 'OwnerIntent'"), 'intencao do proprietario deve espelhar o contrato da CAPI');
+  assert.ok(!analytics.includes("cta_click: 'Schedule'"), 'mero clique no CTA nao pode virar conversao de agendamento');
   assert.ok(analytics.includes("sessionStorage.getItem(SESSION_KEY)"), 'a sessao propria deve durar somente a aba do navegador');
   assert.ok(analytics.includes("Math.floor(capturedAt / 1000)"), 'o fbc reconstruido deve manter o instante original do clique');
   assert.ok(analytics.includes("data-consent=\"analytics\""), 'Analytics deve ter consentimento separado');
@@ -83,12 +110,22 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes("['campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'placement']"), 'GA e o banco devem receber os identificadores da campanha');
   assert.doesNotMatch(analytics, /owner_(?:portal_open|cta_click):\s*'anMDCOmFieQcEI7398BE'/, 'clique ou abertura nao pode virar conversao do Google Ads');
   assert.ok(out.includes('GTM-524TZP8X'), 'o Tag Manager deve estar ligado ao site');
-  assert.ok(out.includes('/assets/analytics.js'), 'o runtime de tracking deve ser carregado');
-  assert.ok(out.indexOf('/assets/analytics.js') > out.indexOf('__bundler/template'), 'o tracking deve existir no documento visual definitivo');
-  assert.equal((out.match(/\/assets\/analytics\.js/g) || []).length, 1, 'o runtime de tracking deve carregar uma unica vez');
+  assert.ok(out.includes('id="apecerto-recovery-scrub"'), 'tokens de recuperacao devem ser retirados da URL antes do tracking');
+  assert.ok(
+    out.indexOf('id="apecerto-recovery-scrub"') < out.indexOf('googletagmanager.com/gtm.js'),
+    'a limpeza do token deve acontecer antes de qualquer tag externa',
+  );
+  assert.ok(analytics.includes('event_source_url: safePageUrl()'), 'a Meta nao pode receber fragmentos ou parametros de autenticacao');
+  assert.ok(analytics.includes('page_location: safePageUrl()'), 'o Analytics nao pode receber fragmentos ou parametros de autenticacao');
+  assert.ok(!analytics.includes('event_source_url: location.href'), 'a CAPI nao pode receber a URL bruta do navegador');
+  assert.ok(!analytics.includes('page_location: location.href'), 'o GA nao pode receber a URL bruta do navegador');
+  assert.match(out, /\/assets\/analytics\.[a-f0-9]{12}\.js/, 'o runtime de tracking deve ser carregado com nome imutavel');
+  assert.equal((out.match(/<script src="\/assets\/analytics\.[a-f0-9]{12}\.js" defer><\/script>/g) || []).length, 1, 'o runtime de tracking deve carregar uma unica vez');
   assert.equal((out.match(/googletagmanager\.com\/gtm\.js\?id=/g) || []).length, 1, 'o Tag Manager deve carregar uma unica vez');
   assert.ok(out.includes('11980154312'), 'o WhatsApp oficial deve estar no bundle');
   assert.ok(out.includes("apecertoTrack('generate_lead'"), 'leads devem disparar evento');
+  assert.ok(out.includes("apecertoTrack('schedule_complete'"), 'visita gravada deve disparar conclusao de agendamento');
+  assert.ok(out.includes("apecertoTrack('financing_open'"), 'abertura do financiamento deve ser medida');
   assert.ok(out.includes("lead_type: 'comprador'"), 'compradores devem ser tipificados');
   assert.ok(out.includes("lead_type: 'financiamento'"), 'pedidos de financiamento devem ser tipificados');
   assert.ok(!out.includes('/rest/v1/site_simulacoes'), 'o financiamento nao pode depender de tabela inexistente');
@@ -106,17 +143,22 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(crmCapi.includes('internal_delivery_required'), 'chamadas publicas nao podem fabricar visita, proposta ou venda');
   assert.ok(crmCapi.includes('meta_lead_id: attribution?.meta_lead_id'), 'o retorno comercial deve carregar o Meta Lead ID canônico');
   assert.ok(crmCapi.includes('adset_name: attribution?.adset_name'), 'o retorno comercial deve preservar o conjunto de anúncios');
-  assert.ok(out.includes('data-tracking-form=\\"agendamento\\"'), 'o abandono do agendamento deve ser classificado corretamente');
-  assert.ok(out.includes('data-tracking-form=\\"financiamento\\"'), 'o abandono do financiamento deve ser classificado corretamente');
-  assert.ok(out.includes('data-tracking-form=\\"proprietario\\"'), 'o abandono da captacao deve ser classificado corretamente');
+  assert.ok(out.includes('data-tracking-form="agendamento"'), 'o abandono do agendamento deve ser classificado corretamente');
+  assert.ok(out.includes('data-tracking-form="financiamento"'), 'o abandono do financiamento deve ser classificado corretamente');
+  assert.ok(out.includes('data-tracking-form="proprietario"'), 'o abandono da captacao deve ser classificado corretamente');
   assert.ok(out.includes("window.apecertoTrack('schedule_field_select'"), 'data e horario do agendamento devem gerar eventos');
   assert.ok(out.includes("window.apecertoTrack('gallery_interaction', { item_id:"), 'galeria deve carregar o imovel no evento');
   assert.ok(out.includes("window.apecertoTrack('favorite_toggle', { item_id:"), 'favorito deve carregar o imovel no evento');
   assert.ok(design.includes("if (r.codigo) u.searchParams.set('cod', String(r.codigo))"), 'cada unidade deve ter URL compartilhavel pelo codigo unico');
   assert.ok(analytics.includes("/^(gallery_interaction|favorite_toggle|whatsapp_click|phone_click|schedule_start"), 'WhatsApp e demais intencoes devem herdar o imovel aberto');
   assert.ok(!analytics.includes("/favorit/i.test(label)"), 'o filtro Favoritos nao pode virar falso AddToWishlist');
+  assert.ok(analytics.includes('unidade_id: uuidOrNull(source.unidade_id)'), 'o lead deve preservar a unidade real selecionada');
+  assert.ok(analytics.includes("classList.add('apecerto-consent-open')"), 'o aviso de privacidade deve sinalizar sua abertura');
+  assert.ok(productionCss.includes('html.apecerto-consent-open a[aria-label="Chamar no WhatsApp"]'), 'o WhatsApp flutuante nao pode cobrir o aviso de privacidade');
   assert.ok(out.includes('/functions/v1/sara-site'), 'a Sara deve consultar a Edge Function');
   assert.ok(out.includes('saraUnidades'), 'o card deve usar os dados da unidade encontrada pela Sara');
+  assert.ok(out.includes('saraEmpreendimentoIds: paisSara'), 'a resposta da Sara deve carregar todos os pais correspondentes');
+  assert.ok(out.includes('const ordemSara = new Map'), 'os cards devem preservar a ordem de preço devolvida pela Sara');
   assert.ok(out.includes('(saraAtiva || dormOk(r))'), 'a lista deve confiar nos dormitorios por unidade validados pela Sara');
   assert.ok(out.includes('(saraAtiva || vagasOk(r))'), 'a lista nao deve eliminar o resultado por dados agregados do empreendimento');
   assert.ok(out.includes('data-clarity-mask'), 'areas sensiveis devem estar mascaradas');
@@ -124,6 +166,37 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(out.includes('<link rel="canonical" href="https://apecerto.com/">'), 'a canonical deve existir');
   assert.ok(!out.includes('CRECI-SP 00000-J'), 'o placeholder de CRECI nao pode ir para producao');
   assert.ok(!out.includes('CNPJ 00.000.000/0001-00'), 'o placeholder de CNPJ nao pode ir para producao');
+});
+
+test('Sara recomenda todas as unidades publicadas e preserva tipologias comerciais', async () => {
+  const edge = await readFile('supabase/functions/sara-site/index.ts', 'utf8');
+  assert.ok(edge.includes('.map((unit) => ({ row, price:'), 'a busca não pode reduzir cada prédio à unidade mais barata');
+  assert.ok(edge.includes('unitBedrooms(unit) ?? (row.dormitorios'), 'tipologias como Garden e R2V devem usar dormitórios do empreendimento como fallback');
+  assert.ok(edge.includes("(unitBedrooms(match.unit) ?? match.row.dormitorios)"), 'a resposta deve devolver os dormitórios efetivamente usados no filtro');
+});
+
+test('leads de visita e financiamento preservam empreendimento e unidade sem retry de POST', async () => {
+  const version = JSON.parse(await readFile('dist/version.json', 'utf8'));
+  const html = await readFile('dist/' + version.templatePath.replace(/^\/+/, ''), 'utf8');
+  const trecho = (inicio, fim) => {
+    const a = html.indexOf(inicio);
+    const b = html.indexOf(fim, a + inicio.length);
+    assert.ok(a >= 0 && b > a, inicio + ' deve existir no template final');
+    return html.slice(a, b);
+  };
+  const visita = trecho('  async leadEnviar() {', '  async compartilhar() {');
+  const financiamento = trecho('  async fichaEnviar() {', '  similares(det) {');
+
+  for (const [nome, metodo] of [['visita', visita], ['financiamento', financiamento]]) {
+    assert.ok(metodo.includes('this.empreendimentoId(det)'), nome + ' deve resolver a FK do empreendimento');
+    assert.ok(metodo.includes('this.unidadeId(det)'), nome + ' deve resolver a unidade selecionada');
+    assert.equal((metodo.match(/empreendimento_id: empreendimentoId/g) || []).length, 2, nome + ' deve enviar empreendimento no topo e no contexto');
+    assert.equal((metodo.match(/unidade_id: unidadeId/g) || []).length, 2, nome + ' deve enviar unidade no topo e no contexto');
+    assert.doesNotMatch(metodo, /empreendimento_id:\s*det(?:\s*\?|\.)/, nome + ' não pode usar o ID visual como FK');
+    assert.equal((metodo.match(/apecertoSubmitSiteLead\s*\(/g) || []).length, 1, nome + ' deve fazer uma única tentativa explícita');
+    assert.doesNotMatch(metodo, /\/rest\/v1\/site_leads|fetch\s*\(/, nome + ' não pode manter POST alternativo ou retry automático');
+    assert.match(metodo, /registrarErro\('lead_(?:comprador|financiamento)', e\)/, nome + ' deve registrar a falha antes de liberar retry manual');
+  }
 });
 
 test('telemetria sem cookie minimiza dados e tem retencao', async () => {
@@ -175,6 +248,16 @@ test('Sara do site usa somente catalogo publico e protege a chave da IA', async 
   const fn = await readFile('supabase/functions/sara-site/index.ts', 'utf8');
   const migration = await readFile('supabase/migrations/20260817153000_sara_site_rate_limit.sql', 'utf8');
   assert.ok(fn.includes('.from("site_produtos")'), 'a Sara deve consultar a view publica aprovada');
+  assert.ok(fn.includes('descricao,unidades_site'), 'a Sara deve receber somente as unidades publicadas pela view canonica');
+  assert.ok(!fn.includes('.from("unidades")'), 'a Sara nao pode contornar a aprovacao consultando unidades internas');
+  assert.ok(fn.includes('match.unit?.id ?? match.row.id'), 'a Sara deve devolver o id real da unidade selecionada');
+  assert.ok(fn.includes('out.finalidade = "aluguel"'), 'a Sara deve distinguir aluguel de venda');
+  assert.ok(fn.includes('out.finalidade === "aluguel" ? 500 : 100000'), 'aluguel nao pode herdar o piso de preco de venda');
+  assert.ok(fn.includes('purposeMatches'), 'a Sara deve filtrar o catalogo pela finalidade solicitada');
+  assert.ok(fn.includes('explicitPurpose'), 'a finalidade da pagina deve prevalecer sobre inferencias da IA');
+  assert.ok(fn.includes('sara-infra-v1|${ip}'), 'o limite primario da Sara nao pode depender de client_id controlavel');
+  assert.ok(fn.includes('p_limit: 60'), 'a Sara deve limitar tambem o IP de infraestrutura');
+  assert.ok(fn.includes('!origin || !ALLOWED_ORIGINS.has(origin)'), 'a Edge da Sara deve rejeitar chamadas sem origem do site');
   assert.ok(fn.includes('units: Object.fromEntries'), 'a resposta deve incluir area, dormitorios e vagas da unidade encontrada');
   assert.ok(fn.includes('Deno.env.get("OPENAI_API_KEY")'), 'a chave deve existir somente no servidor');
   assert.ok(!fn.includes('service_role='), 'a service role nao pode estar hardcoded');
@@ -183,14 +266,14 @@ test('Sara do site usa somente catalogo publico e protege a chave da IA', async 
 });
 
 test('build publica landings, privacidade e arquivos de busca', async () => {
-  execFileSync(process.execPath, ['scripts/build-site.mjs'], { stdio: 'inherit' });
   for (const path of [
     'dist/avaliacao-imovel-moema/index.html',
     'dist/imoveis-moema/index.html',
     'dist/privacidade/index.html',
     'dist/robots.txt',
-    'dist/sitemap.xml',
+    'dist/sitemap-static.xml',
   ]) assert.ok(await existe(path), path + ' deve existir');
+  assert.equal(await existe('dist/sitemap.xml'), false, 'o arquivo fisico impediria o sitemap dinamico');
 });
 
 test('rota de campanha abre a landing de captacao, nao a home', async () => {
@@ -201,6 +284,6 @@ test('rota de campanha abre a landing de captacao, nao a home', async () => {
   assert.ok(out.includes('data-tracking-form="proprietario"'), 'a landing deve classificar o abandono como captacao de proprietario');
   assert.ok(out.includes("lead_type: 'proprietario'"), 'o formulario deve criar lead de proprietario');
   assert.ok(out.includes('apecertoSubmitSiteLead'), 'o formulario deve entrar pela porta canonica do CRM');
-  assert.ok(out.includes('https://apecerto.com/proprietario/cadastre-seu-imovel/'), 'a canonical deve apontar para a rota anunciada');
+  assert.ok(out.includes('<link rel="canonical" href="https://apecerto.com/proprietario/cadastre-seu-imovel/">'), 'a canonical deve apontar para a rota anunciada');
   assert.ok(!out.includes('Apês escolhidos um por um'), 'a rota de campanha nao pode cair na home de compradores');
 });

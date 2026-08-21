@@ -1,81 +1,154 @@
-// Publica a area do proprietario em caminhos proprios, servindo o MESMO bundle
-// gerado em dist/index.html, com head (title / canonical / og / description)
-// ajustado por rota. Roda depois de scripts/build-site.mjs.
-//
-//   /proprietario/                        -> area logada do proprietario
-//   /proprietario/cadastre-seu-imovel/    -> destino das campanhas de captacao
-//
-// O roteamento em si vive no design (checkRota le location.pathname).
-// Injeta <meta name="apecerto-design"> com o sha256 curto do design que entrou no
-// build e publica DIAGNOSTICO.txt em /diagnostico.txt, pra dar pra conferir de fora
-// qual versao esta no ar e, se nao for a nova, por que.
-import { readFile, writeFile, mkdir, copyFile, access } from 'node:fs/promises';
-import { createHash } from 'node:crypto';
+// Finaliza o pacote estatico: remove rotas desativadas, gera o sitemap de gate
+// local e sela cada HTML com a versao exata das fontes. O sitemap oficial e
+// dinamico na Edge e nunca pode existir fisicamente em dist/sitemap.xml.
+import { access, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { basename, dirname, extname, relative, resolve, sep } from 'node:path';
+import {
+  artifactManifest,
+  readDeployConfig,
+  safeDistPath,
+  sha256,
+  sourceVersion,
+} from './site-build-lib.mjs';
 
-const base = await readFile('dist/index.html', 'utf8');
-const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
-const selo = createHash('sha256').update(Buffer.from(design, 'utf8')).digest('hex').slice(0, 12);
+const root = process.cwd();
+const distDir = resolve(root, process.env.APECERTO_DIST_DIR || 'dist');
+const config = await readDeployConfig(root, process.env.APECERTO_DEPLOY_CONFIG || 'site.deploy.json');
+const source = await sourceVersion(root, config);
+const existe = path => access(path).then(() => true, () => false);
 
-const TITULO = '<title>ApeCerto | Apartamentos em Moema</title>';
-const CANONICAL = '<link rel="canonical" href="https://apecerto.com/">';
-const OG_URL = '<meta property="og:url" content="https://apecerto.com/">';
-const OG_TITULO = '<meta property="og:title" content="ApeCerto | Apartamentos em Moema">';
-const DESC = '<meta name="description" content="Apartamentos para comprar em Moema e região, com curadoria local, atendimento digital 24 horas e visitas agendadas pela ApeCerto.">';
-const OG_DESC = '<meta property="og:description" content="Curadoria local de apartamentos em Moema e região. Fale com a ApeCerto e agende sua visita.">';
+const escapeXml = value => String(value)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&apos;');
 
-const rotas = [
-  {
-    dir: 'dist/proprietario',
-    url: 'https://apecerto.com/proprietario/',
-    titulo: 'Área do proprietário | ApeCerto',
-    desc: 'Acompanhe seu imóvel na ApeCerto: status do anúncio, visitas, propostas e contato direto com o broker.',
-  },
-  {
-    dir: 'dist/proprietario/cadastre-seu-imovel',
-    url: 'https://apecerto.com/proprietario/cadastre-seu-imovel/',
-    titulo: 'Cadastre seu imóvel | ApeCerto',
-    desc: 'Cadastre seu apartamento em 3 minutos. A ApeCerto avalia, fotografa, anuncia e cuida das visitas e do contrato.',
-    source: 'dist/avaliacao-imovel-moema/index.html',
-  },
-];
+const meta = [
+  '<meta name="apecerto-version" content="' + source.version + '">',
+  '<meta name="apecerto-design-sha256" content="' + source.designSha256 + '">',
+].join('\n  ');
 
-const troca = (txt, de, para) => {
-  if (!txt.includes(de)) throw new Error('trecho ausente no dist/index.html: ' + de.slice(0, 48));
-  return txt.replace(de, para);
+const selar = (html, file) => {
+  let out = html
+    .replace(/\s*<meta name="apecerto-version"[^>]*>/g, '')
+    .replace(/\s*<meta name="apecerto-design(?:-sha256)?"[^>]*>/g, '');
+  if (!out.includes('</head>')) throw new Error(file + ': </head> ausente');
+  out = out.replace('</head>', '  ' + meta + '\n</head>');
+  return out;
 };
 
-const selar = txt => troca(txt, '<meta name="theme-color" content="#FF7000">', '<meta name="theme-color" content="#FF7000">\n  <meta name="apecerto-design" content="' + selo + '">');
+const trocaTag = (html, pattern, replacement, label) => {
+  if (!pattern.test(html)) throw new Error(label + ': tag obrigatoria ausente');
+  return html.replace(pattern, replacement);
+};
 
-await writeFile('dist/index.html', selar(base));
+const aplicarHeadDaRota = (html, route) => {
+  let out = html;
+  out = trocaTag(out, /<title>[^<]*<\/title>/i, '<title>' + route.title + '</title>', route.path + ' title');
+  out = trocaTag(out, /<link\s+rel="canonical"\s+href="[^"]*">/i, '<link rel="canonical" href="' + route.canonical + '">', route.path + ' canonical');
+  out = trocaTag(out, /<meta\s+name="description"\s+content="[^"]*">/i, '<meta name="description" content="' + route.description + '">', route.path + ' description');
+  out = trocaTag(out, /<meta\s+property="og:url"\s+content="[^"]*">/i, '<meta property="og:url" content="' + route.canonical + '">', route.path + ' og:url');
+  out = trocaTag(out, /<meta\s+property="og:title"\s+content="[^"]*">/i, '<meta property="og:title" content="' + route.title + '">', route.path + ' og:title');
+  out = trocaTag(out, /<meta\s+property="og:description"\s+content="[^"]*">/i, '<meta property="og:description" content="' + route.description + '">', route.path + ' og:description');
+  return out;
+};
 
-for (const r of rotas) {
-  if (r.source) {
-    let html = await readFile(r.source, 'utf8');
-    html = html
-      .replace(/<title>[^<]*<\/title>/, '<title>' + r.titulo + '</title>')
-      .replace(/<link rel="canonical" href="[^"]+">/, '<link rel="canonical" href="' + r.url + '">')
-      .replace(/<meta name="description" content="[^"]+">/, '<meta name="description" content="' + r.desc + '">');
-    await mkdir(r.dir, { recursive: true });
-    await writeFile(r.dir + '/index.html', html);
-    console.log('landing de campanha publicada:', r.dir + '/index.html', html.length, 'bytes');
-    continue;
+async function arquivosRecursivos(dir) {
+  const entries = await readdir(dir, { withFileTypes: true });
+  const nested = await Promise.all(entries.map(entry => {
+    const path = resolve(dir, entry.name);
+    return entry.isDirectory() ? arquivosRecursivos(path) : [path];
+  }));
+  return nested.flat().sort();
+}
+
+async function versionarAssets() {
+  const assetDir = safeDistPath(distDir, 'assets');
+  const replacements = new Map();
+  for (const file of await arquivosRecursivos(assetDir)) {
+    const relativePath = relative(assetDir, file).split(sep).join('/');
+    // Assets extraidos do bundle ja usam o SHA no proprio nome.
+    if (/^(?:media|bundle|bundle-optimized)\/[a-f0-9]{20}\.[a-z0-9]+$/i.test(relativePath)) continue;
+    const bytes = await readFile(file);
+    const extension = extname(relativePath);
+    const name = basename(relativePath, extension);
+    const hash = sha256(bytes).slice(0, 12);
+    const versionedRelative = (dirname(relativePath) === '.' ? '' : dirname(relativePath) + '/') + name + '.' + hash + extension;
+    const versionedFile = safeDistPath(assetDir, versionedRelative);
+    await mkdir(dirname(versionedFile), { recursive: true });
+    await writeFile(versionedFile, bytes);
+    await rm(file);
+    replacements.set('/assets/' + relativePath, '/assets/' + versionedRelative);
   }
-  let html = base;
-  html = troca(html, TITULO, '<title>' + r.titulo + '</title>');
-  html = troca(html, CANONICAL, '<link rel="canonical" href="' + r.url + '">');
-  html = troca(html, OG_URL, '<meta property="og:url" content="' + r.url + '">');
-  html = troca(html, OG_TITULO, '<meta property="og:title" content="' + r.titulo + '">');
-  html = troca(html, DESC, '<meta name="description" content="' + r.desc + '">');
-  html = troca(html, OG_DESC, '<meta property="og:description" content="' + r.desc + '">');
-  html = selar(html);
-  await mkdir(r.dir, { recursive: true });
-  await writeFile(r.dir + '/index.html', html);
-  console.log('rota publicada:', r.dir + '/index.html', html.length, 'bytes');
+  return replacements;
 }
 
-if (await access('DIAGNOSTICO.txt').then(() => true, () => false)) {
-  await copyFile('DIAGNOSTICO.txt', 'dist/diagnostico.txt');
-  console.log('diagnostico publicado em /diagnostico.txt');
+const aplicarAssetsVersionados = (text, replacements) => {
+  let out = text;
+  for (const [from, to] of replacements) out = out.replaceAll(from, to);
+  return out;
+};
+
+for (const route of config.disabledRoutes || []) {
+  const relative = route.replace(/^\/+|\/+$/g, '');
+  if (relative) await rm(safeDistPath(distDir, relative), { recursive: true, force: true });
+}
+await rm(safeDistPath(distDir, 'diagnostico.txt'), { force: true });
+await rm(safeDistPath(distDir, 'sitemap.xml'), { force: true });
+const assetMap = await versionarAssets();
+const buildInputPath = safeDistPath(distDir, 'build-input.json');
+const buildInput = JSON.parse(await readFile(buildInputPath, 'utf8'));
+await rm(buildInputPath);
+const deployedAsset = path => assetMap.get(path) || path;
+const initialAssets = [...new Set((buildInput.initialAssets || []).map(deployedAsset))];
+const templatePath = deployedAsset(buildInput.templatePath);
+
+for (const route of config.routes) {
+  const file = safeDistPath(distDir, route.file);
+  if (route.copyFrom) {
+    const sourceFile = safeDistPath(distDir, route.copyFrom);
+    if (!(await existe(sourceFile))) throw new Error('fonte da rota ausente: ' + route.path + ' -> ' + route.copyFrom);
+    if (!route.title || !route.description) throw new Error('rota copiada sem title/description: ' + route.path);
+    await mkdir(dirname(file), { recursive: true });
+    await writeFile(file, aplicarHeadDaRota(await readFile(sourceFile, 'utf8'), route));
+  } else if (await existe(file)) {
+    await writeFile(file, aplicarAssetsVersionados(await readFile(file, 'utf8'), assetMap));
+  }
+  if (!(await existe(file))) throw new Error('rota sem arquivo: ' + route.path + ' -> ' + route.file);
+  await writeFile(file, selar(await readFile(file, 'utf8'), route.file));
 }
 
-console.log('selo do design:', selo);
+const urls = config.routes.map(route => [
+  '  <url>',
+  '    <loc>' + escapeXml(route.canonical) + '</loc>',
+  '    <changefreq>' + escapeXml(route.changefreq) + '</changefreq>',
+  '    <priority>' + escapeXml(route.priority) + '</priority>',
+  '  </url>',
+].join('\n'));
+const sitemap = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  ...urls,
+  '</urlset>',
+  '',
+].join('\n');
+await writeFile(safeDistPath(distDir, config.seo?.sitemapStaticGateFile || 'sitemap-static.xml'), sitemap);
+
+const artifacts = await artifactManifest(distDir);
+const version = {
+  schemaVersion: 1,
+  version: source.version,
+  sourceFingerprint: source.fingerprint,
+  designSha256: source.designSha256,
+  artifactFingerprint: artifacts.fingerprint,
+  routes: config.routes.map(route => route.path),
+  assetMap: Object.fromEntries(assetMap),
+  templatePath,
+  initialAssets,
+  inputs: source.inputs,
+  artifacts: artifacts.files,
+};
+await writeFile(safeDistPath(distDir, 'version.json'), JSON.stringify(version, null, 2) + '\n');
+
+console.log('pacote selado:', source.version, '| design:', source.designSha256.slice(0, 12), '| rotas:', config.routes.length);

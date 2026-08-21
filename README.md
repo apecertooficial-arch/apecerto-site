@@ -16,15 +16,62 @@ em `dist/index.html`.
 ## Publicação
 
 ```sh
-npm run build
-npm test
+npm run ci
 ```
 
 O Render deve usar:
 
-- Build command: `npm run build`
+- Build command: `npm run ci`
 - Publish directory: `dist`
-- Auto-deploy: `On Commit`
+- Auto-deploy: somente depois dos checks aprovados (`checksPass`)
 
 Assim, cada alteração aprovada e enviada à branch `main` gera uma nova versão do
-site automaticamente, sem mudar o fluxo de produtos do ERP.
+site automaticamente, sem mudar o fluxo de produtos do ERP. O build é
+determinístico e usa somente fontes versionadas no repositório: não baixa nem
+aplica payload temporário durante a publicação.
+
+Antes de publicar, a CI valida conteúdo, links, rotas, fingerprints e limites de
+tamanho, além de executar um smoke HTTP local. Os arquivos estáticos recebem nome
+por conteúdo e cache imutável; `version.json` identifica exatamente as fontes e
+os artefatos de cada pacote.
+
+As rotas públicas incluem a área do proprietário e o cadastro do imóvel. Fichas
+de imóveis usam URLs limpas no formato `/imovel/<slug>/`; o Render reescreve essa
+rota para o shell da aplicação sem transformar a navegação em erro 404.
+
+## SEO dinâmico do catálogo
+
+A função pública `supabase/functions/site-seo/index.ts` lê somente a view
+aprovada `site_produtos`. `GET /sitemap.xml` é reescrito pelo Render para essa
+função e reúne as seis rotas fixas, os empreendimentos e cada unidade publicada.
+O build gera `dist/sitemap-static.xml` apenas como gate determinístico da CI;
+`dist/sitemap.xml` é proibido porque um arquivo físico teria precedência sobre o
+rewrite. O `robots.txt` continua apontando para o endereço público dinâmico.
+
+O handler também já sabe montar as páginas `/imovel/<slug>/` com title,
+canonical, descrição, Open Graph e JSON-LD, além de 404 com `noindex`. Esse
+rewrite HTML permanece deliberadamente desativado: a URL padrão de Edge
+Functions do Supabase transforma respostas HTML em `text/plain`. Ele só pode ser
+ativado depois de configurar um custom domain compatível; os testes e o
+verificador bloqueiam a ativação acidental pela URL `*.supabase.co`.
+
+Ordem de publicação: primeiro publicar `site-seo` com `verify_jwt = false`,
+confirmar que a URL direta de `/sitemap.xml` responde `200` e
+`Content-Type: application/xml`, e só então publicar o Blueprint do Render. O
+repositório não executa essas duas publicações durante o build.
+
+## Orçamento de desempenho
+
+O runtime exportado pelo Cloud Design precisa carregar o template completo. Para
+não manter esse conteúdo dentro do documento inicial, o build o publica como
+asset imutável e deixa no HTML apenas o carregador. Os limites bloqueantes são:
+
+- HTML inicial: até 150 KB bruto e 30 KB gzip;
+- template externo: até 500 KB bruto;
+- transferência inicial local estimada: até 500 KB, já considerando compressão;
+- imagens inline: no máximo 32 KB cada.
+
+Na validação de referência desta revisão, o HTML mediu 24.876 bytes bruto / 9.395
+bytes gzip, o template 368.295 bytes bruto / 69.870 bytes gzip e a transferência
+inicial 467.580 bytes. A foto principal também é publicada em AVIF, WebP e JPEG
+responsivos; JPEG permanece como fallback.

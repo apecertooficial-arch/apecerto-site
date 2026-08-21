@@ -50,6 +50,12 @@ button[data-act="replace"] {
   font-weight: 700;
 }
 
+/* O aviso de privacidade tem prioridade no mobile. O atalho reaparece assim
+   que a escolha é feita, sem cobrir botões ou texto do consentimento. */
+html.apecerto-consent-open a[aria-label="Chamar no WhatsApp"] {
+  display: none !important;
+}
+
 @media (max-width: 700px) {
   #apecerto-consent { align-items: stretch; flex-direction: column; gap: 14px; left: 12px; right: 12px; bottom: 12px; }
   .apecerto-consent-actions { flex-direction: column; }

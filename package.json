@@ -2,8 +2,15 @@
   "name": "apecerto-site",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "build": "node scripts/apply-payload.mjs && node scripts/patch-design.mjs && node scripts/build-site.mjs && node scripts/verifica-design.mjs && node scripts/rotas.mjs",
+    "build": "node scripts/build-site.mjs && node scripts/rotas.mjs && node scripts/verifica-design.mjs",
+    "verify": "node scripts/verifica-design.mjs",
+    "smoke": "node scripts/smoke-site.mjs",
+    "ci": "npm test && npm run smoke",
+    "pretest": "npm run build",
     "extract-design": "node scripts/extract-design.mjs",
     "test": "node --test tests/*.test.mjs"
   }

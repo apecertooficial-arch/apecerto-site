@@ -3,6 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 
 const html = fs.readFileSync(new URL("../dist/index.html", import.meta.url), "utf8");
+const version = JSON.parse(fs.readFileSync(new URL("../dist/version.json", import.meta.url), "utf8"));
 const design = fs.readFileSync(
   new URL("../design/Site ApeCerto.dc.html", import.meta.url),
   "utf8",
@@ -16,19 +17,23 @@ const templateMatch = html.match(
 );
 
 assert.ok(templateMatch, "o bundle precisa manter o template principal");
-const template = JSON.parse(templateMatch[1]);
+const templatePayload = JSON.parse(templateMatch[1]);
+const template = typeof templatePayload === "string"
+  ? templatePayload
+  : fs.readFileSync(new URL("../dist/" + version.templatePath.replace(/^\/+/, ""), import.meta.url), "utf8");
 
 const loaderMatch = template.match(
-  /  carregarProdutos\(\) \{[\s\S]*?\n  \}/,
+  /  carregarProdutos\([^)]*\) \{[\s\S]*?\n  uuidValido\(/,
 );
 
 assert.ok(loaderMatch, "o site precisa manter o carregador de produtos");
 const loader = loaderMatch[0];
 
 test("catálogo público vem da aprovação de Produtos do ERP", () => {
-  assert.match(loader, /\/rest\/v1\/site_produtos\?select=\*/);
+  assert.match(template, /\/rest\/v1\/site_produtos\?/);
+  assert.match(template, /params\.set\('select', '\*'\)/);
   assert.doesNotMatch(loader, /\/rest\/v1\/anuncios_site/);
-  assert.match(loader, /produtos: rows/);
+  assert.match(loader, /this\.setState\(\{ produtos,/);
 });
 
 test("produto pronto só aparece como unidade aprovada e usa a galeria da unidade", () => {

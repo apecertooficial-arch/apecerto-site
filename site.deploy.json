@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "origin": "https://apecerto.com",
+  "designSource": "design/Site ApeCerto.dc.html",
+  "sourceInputs": [
+    "index.html",
+    "design/Site ApeCerto.dc.html",
+    "build-assets",
+    "static",
+    "scripts/build-site.mjs",
+    "scripts/rotas.mjs",
+    "scripts/site-build-lib.mjs",
+    "supabase/config.toml",
+    "supabase/functions/site-seo",
+    "site.deploy.json",
+    "package.json",
+    "render.yaml"
+  ],
+  "requiredFiles": [
+    "robots.txt",
+    "sitemap-static.xml",
+    "version.json"
+  ],
+  "seo": {
+    "sitemapPath": "/sitemap.xml",
+    "sitemapStaticGateFile": "sitemap-static.xml",
+    "sitemapEdgeDestination": "https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/sitemap.xml",
+    "propertyPath": "/imovel/*",
+    "propertyLocalDestination": "/index.html",
+    "propertyEdgeDestinationPrepared": "https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/imovel/*",
+    "propertyEdgeEnabled": false,
+    "propertyEdgeRequiresCustomDomain": true
+  },
+  "versionedAssets": [
+    "assets/analytics.js",
+    "assets/landing.css",
+    "assets/production.css"
+  ],
+  "budgets": {
+    "maxHtmlBytes": 150000,
+    "maxHtmlGzipBytes": 30000,
+    "maxTemplateBytes": 500000,
+    "maxInitialTransferBytes": 500000,
+    "maxTotalBytes": 6000000,
+    "maxSingleAssetBytes": 2000000,
+    "maxInlineImageBytes": 32768,
+    "maxGzipRatio": 0.75
+  },
+  "routes": [
+    {
+      "path": "/",
+      "file": "index.html",
+      "canonical": "https://apecerto.com/",
+      "changefreq": "daily",
+      "priority": "1.0",
+      "requiredMarkers": [
+        "/rest/v1/site_produtos",
+        "apecertoSubmitSiteLead",
+        "/functions/v1/sara-site",
+        "checkRota",
+        "11980154312",
+        "#__bundler_loading,#__bundler_thumbnail{display:none!important}"
+      ]
+    },
+    {
+      "path": "/imoveis-moema/",
+      "file": "imoveis-moema/index.html",
+      "canonical": "https://apecerto.com/imoveis-moema/",
+      "changefreq": "daily",
+      "priority": "0.9",
+      "requiredMarkers": [
+        "Ver imóveis disponíveis",
+        "5511980154312"
+      ]
+    },
+    {
+      "path": "/avaliacao-imovel-moema/",
+      "file": "avaliacao-imovel-moema/index.html",
+      "canonical": "https://apecerto.com/avaliacao-imovel-moema/",
+      "changefreq": "weekly",
+      "priority": "0.9",
+      "requiredMarkers": [
+        "apecertoSubmitSiteLead",
+        "lead_type: 'proprietario'",
+        "/privacidade/"
+      ]
+    },
+    {
+      "path": "/privacidade/",
+      "file": "privacidade/index.html",
+      "canonical": "https://apecerto.com/privacidade/",
+      "changefreq": "yearly",
+      "priority": "0.3",
+      "requiredMarkers": [
+        "Política de privacidade",
+        "contato@apecerto.com"
+      ]
+    },
+    {
+      "path": "/proprietario/",
+      "file": "proprietario/index.html",
+      "copyFrom": "index.html",
+      "canonical": "https://apecerto.com/proprietario/",
+      "title": "Área do proprietário | ApeCerto",
+      "description": "Acompanhe seu imóvel na ApeCerto: cadastro, análise, anúncio, visitas e propostas.",
+      "changefreq": "monthly",
+      "priority": "0.5",
+      "requiredMarkers": [
+        "checkRota",
+        "cadastre-seu-imovel",
+        "Crie seu acesso",
+        "checkPainelDemo"
+      ]
+    },
+    {
+      "path": "/proprietario/cadastre-seu-imovel/",
+      "file": "proprietario/cadastre-seu-imovel/index.html",
+      "copyFrom": "index.html",
+      "canonical": "https://apecerto.com/proprietario/cadastre-seu-imovel/",
+      "title": "Cadastre seu imóvel | ApeCerto",
+      "description": "Cadastre seu apartamento para avaliação da ApeCerto e acompanhe cada etapa pelo portal.",
+      "changefreq": "weekly",
+      "priority": "0.9",
+      "requiredMarkers": [
+        "checkRota",
+        "cadastre-seu-imovel",
+        "Crie seu acesso",
+        "checkPainelDemo"
+      ]
+    }
+  ],
+  "dynamicRoutes": [
+    {
+      "pattern": "/imovel/*",
+      "destination": "/index.html",
+      "smokePath": "/imovel/ap-teste-smoke/",
+      "requiredMarkers": [
+        "location.pathname",
+        "/imovel/"
+      ]
+    }
+  ],
+  "disabledRoutes": [
+    "/diagnostico/"
+  ],
+  "forbiddenMarkers": [
+    "CRECI-SP 00000-J",
+    "CNPJ 00.000.000/0001-00"
+  ]
+}
