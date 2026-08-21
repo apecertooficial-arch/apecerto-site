@@ -3851,7 +3851,10 @@ class Component extends DCLogic {
     this.lead = {};
     try {
       const u = new URL(location.href);
-      u.searchParams.set('imovel', String(r.slug || r.id));
+      u.searchParams.delete('imovel');
+      u.searchParams.delete('cod');
+      if (r.codigo) u.searchParams.set('cod', String(r.codigo));
+      else u.searchParams.set('imovel', String(r.id));
       history.replaceState({}, '', u.pathname + u.search + u.hash);
     } catch (e) {}
     this.setState({ det: r, galIdx: 0, galOn: false, leadOk: false, leadErro: null }, () => this.initMapa(r));
@@ -4089,7 +4092,7 @@ class Component extends DCLogic {
       setFPrecoMin: e => { const maxT = st.fPrecoMaxT != null ? st.fPrecoMaxT : this.tDePreco(fPrecoMax); const t = Math.min(Number(e.target.value), maxT); this.setState({ fPrecoMinT: t, fPrecoMin: t <= 0 ? null : this.precoDeT(t), precoTocado: true }); }, setFPrecoMax: e => { const minT = st.fPrecoMinT != null ? st.fPrecoMinT : this.tDePreco(fPrecoMin); const t = Math.max(Number(e.target.value), minT); const v = t >= 100 ? null : this.precoDeT(t); this.setState({ fPrecoMaxT: t, fPrecoMax: v, fPreco: v, precoTocado: true }); },
       buscar: () => { const el = document.getElementById('apes'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' }); },
       detOn: !!det,
-      fecharDet: () => { if (this.mapa) { this.mapa.remove(); this.mapa = null; } try { const u = new URL(location.href); u.searchParams.delete('imovel'); history.replaceState({}, '', u.pathname + u.search + u.hash); } catch (e) {} this.setState({ det: null }); },
+      fecharDet: () => { if (this.mapa) { this.mapa.remove(); this.mapa = null; } try { const u = new URL(location.href); u.searchParams.delete('imovel'); u.searchParams.delete('cod'); history.replaceState({}, '', u.pathname + u.search + u.hash); } catch (e) {} this.setState({ det: null }); },
       detNome: det ? this.nomePublico(det) : '',
       detBadge: detBadge ? detBadge.label : '', detBadgeBg: detBadge ? detBadge.bg : '',
       detEndereco: det ? [det.endereco, det.bairro, det.cidade || 'São Paulo', det.uf].filter(Boolean).join(' · ') : '',

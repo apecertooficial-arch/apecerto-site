@@ -112,7 +112,7 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(out.includes("window.apecertoTrack('schedule_field_select'"), 'data e horario do agendamento devem gerar eventos');
   assert.ok(out.includes("window.apecertoTrack('gallery_interaction', { item_id:"), 'galeria deve carregar o imovel no evento');
   assert.ok(out.includes("window.apecertoTrack('favorite_toggle', { item_id:"), 'favorito deve carregar o imovel no evento');
-  assert.ok(design.includes("u.searchParams.set('imovel', String(r.slug || r.id))"), 'cada imovel deve ter URL compartilhavel e unica');
+  assert.ok(design.includes("if (r.codigo) u.searchParams.set('cod', String(r.codigo))"), 'cada unidade deve ter URL compartilhavel pelo codigo unico');
   assert.ok(analytics.includes("/^(gallery_interaction|favorite_toggle|whatsapp_click|phone_click|schedule_start"), 'WhatsApp e demais intencoes devem herdar o imovel aberto');
   assert.ok(!analytics.includes("/favorit/i.test(label)"), 'o filtro Favoritos nao pode virar falso AddToWishlist');
   assert.ok(out.includes('/functions/v1/sara-site'), 'a Sara deve consultar a Edge Function');
