@@ -55,10 +55,13 @@ Functions do Supabase transforma respostas HTML em `text/plain`. Ele só pode se
 ativado depois de configurar um custom domain compatível; os testes e o
 verificador bloqueiam a ativação acidental pela URL `*.supabase.co`.
 
-Ordem de publicação: primeiro publicar `site-seo` com `verify_jwt = false`,
-confirmar que a URL direta de `/sitemap.xml` responde `200` e
-`Content-Type: application/xml`, e só então publicar o Blueprint do Render. O
-repositório não executa essas duas publicações durante o build.
+Ordem de publicação: primeiro publicar `site-seo` com `verify_jwt = false` e
+confirmar que a URL direta de `/sitemap.xml` responde `200` com XML íntegro. O
+gateway hospedado do Supabase pode expor essa resposta como `text/plain`; por
+isso o Blueprint fixa `Content-Type: application/xml; charset=utf-8` no endereço
+público `https://apecerto.com/sitemap.xml`. Esse endereço público deve ser
+validado depois do deploy do Render. O repositório não executa essas duas
+publicações durante o build.
 
 ## Orçamento de desempenho
 
