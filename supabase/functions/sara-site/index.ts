@@ -384,7 +384,7 @@ Deno.serve(async (request: Request) => {
     const matches = matchCatalog(catalog, filters);
     const summary = parts.join(", ");
     const reply = matches.length
-      ? `Encontrei ${matches.length} ${matches.length === 1 ? "apê" : "apês"} com ${summary}. Ordenei do menor preço para o maior. 🔑`
+      ? `Encontrei ${matches.length} ${matches.length === 1 ? "apê" : "apês"}: ${summary}. Ordenei do menor preço para o maior. 🔑`
       : `Não encontrei nenhum apê que cumpra todos os filtros (${summary}). Posso tentar com um critério a menos.`;
     return json(origin, {
       ok: true,
