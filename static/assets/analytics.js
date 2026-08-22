@@ -158,7 +158,8 @@
     var keys = [
       'gclid', 'gbraid', 'wbraid', 'fbclid',
       'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
-      'campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'placement'
+      'utm_id', 'campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id',
+      'form_id', 'placement', 'tracking_ref'
     ];
     var data = { landing_path: pagePath(), captured_at: new Date().toISOString() };
     keys.forEach(function (key) {
@@ -191,7 +192,8 @@
       touch.gclid || touch.gbraid || touch.wbraid || touch.fbclid ||
       touch.utm_source || touch.utm_medium || touch.utm_campaign ||
       touch.utm_term || touch.utm_content || touch.campaign_id ||
-      touch.adset_id || touch.ad_group_id || touch.ad_id || touch.creative_id
+      touch.adset_id || touch.ad_group_id || touch.ad_id || touch.creative_id ||
+      touch.form_id || touch.tracking_ref
     );
   }
 
@@ -454,7 +456,7 @@
       ? attribution.last
       : currentTouch;
     if (campaignTouch) {
-      ['campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'placement'].forEach(function (key) {
+      ['utm_id', 'campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'form_id', 'placement', 'tracking_ref'].forEach(function (key) {
         if (campaignTouch[key]) properties[key] = campaignTouch[key];
       });
     }
@@ -513,7 +515,7 @@
       ? attribution.last
       : currentTouch;
     if (campaignTouch) {
-      ['campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'placement'].forEach(function (key) {
+      ['utm_id', 'campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'form_id', 'placement', 'tracking_ref'].forEach(function (key) {
         if (campaignTouch[key] && !payload[key]) payload[key] = campaignTouch[key];
       });
     }
@@ -729,7 +731,18 @@
       if (link) {
         var href = link.getAttribute('href') || '';
         if (/wa\.me|api\.whatsapp\.com/i.test(href)) {
-          window.apecertoTrack('whatsapp_click', { source: 'link', action_label: cleanLabel(link.innerText) });
+          var attribution = readStoredAttribution();
+          var touch = attribution.last && Object.keys(attribution.last).length ? attribution.last : currentTouch;
+          var trackingRef = clean(touch && touch.tracking_ref, 100) || ('site-' + pageViewId.slice(0, 8));
+          try {
+            var whatsappUrl = new URL(link.href, location.href);
+            var message = whatsappUrl.searchParams.get('text') || 'Olá! Vim pelo site da ApêCerto.';
+            if (message.indexOf('Ref: ' + trackingRef) === -1) {
+              whatsappUrl.searchParams.set('text', message.replace(/\s+$/, '') + '\nRef: ' + trackingRef);
+              link.href = whatsappUrl.toString();
+            }
+          } catch (e) {}
+          window.apecertoTrack('whatsapp_click', { source: 'link', action_label: cleanLabel(link.innerText), tracking_ref: trackingRef });
         } else if (/^tel:/i.test(href)) {
           window.apecertoTrack('phone_click', { source: 'link' });
         } else if (/instagram\.com/i.test(href)) {
@@ -799,19 +812,19 @@
     });
   }
 
-  // O site funciona como SPA. Mudancas reais de pathname/query precisam gerar
-  // uma nova visualizacao sem contar simples ancoras (#apes) como outra pagina.
+  // O site funciona como SPA. Somente mudancas reais de pathname representam
+  // outra pagina; filtros em query string ja possuem o evento filter_change.
   function trackSpaNavigation() {
-    var lastUrl = safePageUrl();
+    var lastPath = pagePath();
     var scheduled = false;
     function changed(source) {
       if (scheduled) return;
       scheduled = true;
       setTimeout(function () {
         scheduled = false;
-        var nextUrl = safePageUrl();
-        if (nextUrl === lastUrl) return;
-        lastUrl = nextUrl;
+        var nextPath = pagePath();
+        if (nextPath === lastPath) return;
+        lastPath = nextPath;
         window.apecertoTrack('page_view', {
           navigation_type: 'spa',
           navigation_source: source,
