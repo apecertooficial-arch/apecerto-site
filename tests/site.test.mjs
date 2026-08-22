@@ -272,9 +272,13 @@ test('build publica landings, privacidade e arquivos de busca', async () => {
     'dist/imoveis-moema/index.html',
     'dist/privacidade/index.html',
     'dist/robots.txt',
+    'dist/sitemap.xml',
     'dist/sitemap-static.xml',
   ]) assert.ok(await existe(path), path + ' deve existir');
-  assert.equal(await existe('dist/sitemap.xml'), false, 'o arquivo fisico impediria o sitemap dinamico');
+  const sitemapIndex = await readFile('dist/sitemap.xml', 'utf8');
+  assert.ok(sitemapIndex.includes('<sitemapindex'), 'o sitemap publico deve ser um indice fisico');
+  assert.ok(sitemapIndex.includes('<loc>https://apecerto.com/sitemap-catalogo.xml</loc>'), 'o indice deve apontar para o catalogo dinamico');
+  assert.equal(await existe('dist/sitemap-catalogo.xml'), false, 'o arquivo fisico impediria o rewrite do catalogo dinamico');
 });
 
 test('rota de campanha abre a landing de captacao, nao a home', async () => {

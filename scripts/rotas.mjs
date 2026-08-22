@@ -1,6 +1,6 @@
 // Finaliza o pacote estatico: remove rotas desativadas, gera o sitemap de gate
-// local e sela cada HTML com a versao exata das fontes. O sitemap oficial e
-// dinamico na Edge e nunca pode existir fisicamente em dist/sitemap.xml.
+// local, publica um sitemap index estavel e sela cada HTML com a versao exata
+// das fontes. O catalogo dinamico vive em /sitemap-catalogo.xml via Edge.
 import { access, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { basename, dirname, extname, relative, resolve, sep } from 'node:path';
 import {
@@ -102,6 +102,7 @@ for (const route of config.disabledRoutes || []) {
 }
 await rm(safeDistPath(distDir, 'diagnostico.txt'), { force: true });
 await rm(safeDistPath(distDir, 'sitemap.xml'), { force: true });
+await rm(safeDistPath(distDir, 'sitemap-catalogo.xml'), { force: true });
 const assetMap = await versionarAssets();
 const buildInputPath = safeDistPath(distDir, 'build-input.json');
 const buildInput = JSON.parse(await readFile(buildInputPath, 'utf8'));
@@ -132,14 +133,29 @@ const urls = config.routes.map(route => [
   '    <priority>' + escapeXml(route.priority) + '</priority>',
   '  </url>',
 ].join('\n'));
-const sitemap = [
+const sitemapStatic = [
   '<?xml version="1.0" encoding="UTF-8"?>',
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
   ...urls,
   '</urlset>',
   '',
 ].join('\n');
-await writeFile(safeDistPath(distDir, config.seo?.sitemapStaticGateFile || 'sitemap-static.xml'), sitemap);
+const seo = config.seo || {};
+const sitemapStaticFile = seo.sitemapStaticGateFile || 'sitemap-static.xml';
+const sitemapIndexFile = seo.sitemapIndexFile || 'sitemap.xml';
+const sitemapCatalogPath = seo.sitemapCatalogPath || '/sitemap-catalogo.xml';
+const sitemapCatalogUrl = new URL(sitemapCatalogPath, config.origin).href;
+const sitemapIndex = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  '  <sitemap>',
+  '    <loc>' + escapeXml(sitemapCatalogUrl) + '</loc>',
+  '  </sitemap>',
+  '</sitemapindex>',
+  '',
+].join('\n');
+await writeFile(safeDistPath(distDir, sitemapStaticFile.replace(/^\/+/, '')), sitemapStatic);
+await writeFile(safeDistPath(distDir, sitemapIndexFile.replace(/^\/+/, '')), sitemapIndex);
 
 const artifacts = await artifactManifest(distDir);
 const version = {

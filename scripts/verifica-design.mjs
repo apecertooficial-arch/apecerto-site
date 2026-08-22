@@ -38,6 +38,14 @@ function rewriteDestination(renderYaml, source) {
   return renderYaml.match(pattern)?.[1] ?? null;
 }
 
+function headerValue(renderYaml, path, name) {
+  const pattern = new RegExp(
+    '-\\s+path:\\s*' + escapeRegex(path) + '\\s*\\n\\s*name:\\s*' + escapeRegex(name) + '\\s*\\n\\s*value:\\s*([^\\r\\n#]+)',
+    'i',
+  );
+  return renderYaml.match(pattern)?.[1]?.trim() ?? null;
+}
+
 async function expandedHtml(html, distDir) {
   const match = html.match(/<script type="__bundler\/template">\s*([\s\S]*?)\s*<\/script>/);
   const shell = html.replace(/<script type="__bundler\/(?:manifest|template)">[\s\S]*?<\/script>/g, '');
@@ -194,21 +202,43 @@ export async function verifySite({
 
   const staticSitemapFile = config.seo?.sitemapStaticGateFile || 'sitemap-static.xml';
   const sitemapPath = safeDistPath(absoluteDist, staticSitemapFile);
-  let sitemap = '';
-  try { sitemap = await readFile(sitemapPath, 'utf8'); }
+  let staticSitemap = '';
+  try { staticSitemap = await readFile(sitemapPath, 'utf8'); }
   catch (error) { errors.push(staticSitemapFile + ' ilegivel: ' + error.message); }
-  const sitemapUrls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
+  const sitemapUrls = [...staticSitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
   const expectedUrls = config.routes.map(route => route.canonical);
   if (JSON.stringify(sitemapUrls) !== JSON.stringify(expectedUrls)) errors.push('sitemap estatico de gate divergiu das rotas ativas');
-  if (await existe(safeDistPath(absoluteDist, 'sitemap.xml'))) errors.push('dist/sitemap.xml bloquearia o rewrite dinamico do Render');
+
+  const seo = config.seo || {};
+  const sitemapIndexPath = seo.sitemapIndexPath || '/sitemap.xml';
+  const sitemapIndexFile = seo.sitemapIndexFile || sitemapIndexPath.replace(/^\/+/, '');
+  const sitemapCatalogPath = seo.sitemapCatalogPath || '/sitemap-catalogo.xml';
+  const sitemapCatalogUrl = new URL(sitemapCatalogPath, config.origin).href;
+  let sitemapIndex = '';
+  try { sitemapIndex = await readFile(safeDistPath(absoluteDist, sitemapIndexFile.replace(/^\/+/, '')), 'utf8'); }
+  catch (error) { errors.push(sitemapIndexFile + ' ilegivel: ' + error.message); }
+  const indexUrls = [...sitemapIndex.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
+  if (!/<sitemapindex\b[^>]*xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9"/i.test(sitemapIndex)
+      || /<urlset\b/i.test(sitemapIndex)
+      || JSON.stringify(indexUrls) !== JSON.stringify([sitemapCatalogUrl])) {
+    errors.push('sitemap.xml deve ser um indice fisico com referencia unica ao catalogo dinamico');
+  }
+  if (await existe(safeDistPath(absoluteDist, sitemapCatalogPath.replace(/^\/+/, '')))) {
+    errors.push('sitemap-catalogo.xml fisico bloquearia o rewrite dinamico do Render');
+  }
 
   const robots = await readFile(safeDistPath(absoluteDist, 'robots.txt'), 'utf8').catch(() => '');
-  if (!robots.includes(config.origin + '/sitemap.xml')) errors.push('robots.txt nao aponta para o sitemap oficial');
+  if (!robots.includes(new URL(sitemapIndexPath, config.origin).href)) errors.push('robots.txt nao aponta para o sitemap index oficial');
 
   const render = await readFile(resolve(root, 'render.yaml'), 'utf8').catch(() => '');
-  const seo = config.seo || {};
-  const sitemapDestination = rewriteDestination(render, seo.sitemapPath || '/sitemap.xml');
-  if (sitemapDestination !== seo.sitemapEdgeDestination) errors.push('rewrite do sitemap dinamico divergiu do contrato de deploy');
+  if (rewriteDestination(render, sitemapIndexPath)) errors.push('sitemap index fisico nao pode ter rewrite no Render');
+  const sitemapDestination = rewriteDestination(render, sitemapCatalogPath);
+  if (sitemapDestination !== seo.sitemapEdgeDestination) errors.push('rewrite do catalogo dinamico divergiu do contrato de deploy');
+  for (const path of [sitemapIndexPath, sitemapCatalogPath]) {
+    if (headerValue(render, path, 'Content-Type') !== 'application/xml; charset=utf-8') {
+      errors.push('header XML ausente no Render: ' + path);
+    }
+  }
   const propertyDestination = rewriteDestination(render, seo.propertyPath || '/imovel/*');
   if (propertyDestination !== (seo.propertyLocalDestination || '/index.html')) errors.push('rota de imovel deve permanecer no shell estatico ate existir custom domain da Edge');
   if (seo.propertyEdgeEnabled !== false || seo.propertyEdgeRequiresCustomDomain !== true) errors.push('gate de HTML da Edge deve permanecer desativado e exigir custom domain');
@@ -217,7 +247,7 @@ export async function verifySite({
   for (const route of config.disabledRoutes || []) {
     const relative = route.replace(/^\/+|\/+$/g, '');
     if (relative && await existe(safeDistPath(absoluteDist, relative))) errors.push('rota desativada ainda publicada: ' + route);
-    if (sitemap.includes(config.origin + route.replace(/^\/+/, ''))) errors.push('rota desativada ainda presente no sitemap: ' + route);
+    if (staticSitemap.includes(config.origin + route.replace(/^\/+/, ''))) errors.push('rota desativada ainda presente no sitemap: ' + route);
   }
   const rootDocument = routeDocuments.get('/');
   const rootHtml = await readFile(safeDistPath(absoluteDist, 'index.html'), 'utf8').catch(() => '');

@@ -95,6 +95,34 @@ test('verificador encerra com codigo diferente de zero para link local quebrado'
   assert.match(result.stderr, /link local quebrado/);
 });
 
+test('build publica sitemap index e reserva o catalogo para a Edge', async () => {
+  const config = JSON.parse(await readFile(join(root, 'site.deploy.json'), 'utf8'));
+  const sitemapIndex = await readFile(join(root, 'dist/sitemap.xml'), 'utf8');
+  assert.match(sitemapIndex, /<sitemapindex\b[^>]*xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9"/);
+  assert.doesNotMatch(sitemapIndex, /<urlset\b/);
+  assert.deepEqual(
+    [...sitemapIndex.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]),
+    ['https://apecerto.com/sitemap-catalogo.xml'],
+  );
+  assert.equal(config.seo.sitemapIndexFile, 'sitemap.xml');
+  assert.equal(config.seo.sitemapCatalogPath, '/sitemap-catalogo.xml');
+  await assert.rejects(readFile(join(root, 'dist/sitemap-catalogo.xml')), /ENOENT/);
+});
+
+test('verificador rejeita sitemap antigo e arquivo que sombreia o catalogo dinamico', async () => {
+  const antigo = await cloneDist();
+  await writeFile(join(antigo, 'sitemap.xml'), '<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://apecerto.com/</loc></url></urlset>');
+  let result = cliVerify(antigo);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /sitemap\.xml deve ser um indice fisico/);
+
+  const sombreado = await cloneDist();
+  await writeFile(join(sombreado, 'sitemap-catalogo.xml'), '<?xml version="1.0"?><urlset/>');
+  result = cliVerify(sombreado);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /sitemap-catalogo\.xml fisico bloquearia o rewrite/);
+});
+
 test('build de producao nao executa payload ou download mutavel', async () => {
   const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
   const buildSource = await readFile(join(root, 'scripts/build-site.mjs'), 'utf8');
@@ -131,8 +159,10 @@ test('Render aguarda CI e envia headers seguros e cache imutavel', async () => {
   assert.match(render, /autoDeployTrigger: checksPass/);
   assert.match(render, /source: \/imovel\/\*/);
   assert.match(render, /destination: \/index\.html/);
-  assert.match(render, /source: \/sitemap\.xml[\s\S]*destination: https:\/\/diaegvfveqezispcthwk\.supabase\.co\/functions\/v1\/site-seo\/sitemap\.xml/);
+  assert.match(render, /source: \/sitemap-catalogo\.xml\s+destination: https:\/\/diaegvfveqezispcthwk\.supabase\.co\/functions\/v1\/site-seo\/sitemap\.xml/);
+  assert.doesNotMatch(render, /source: \/sitemap\.xml\s+destination:/);
   assert.match(render, /path: \/sitemap\.xml\s+name: Content-Type\s+value: application\/xml; charset=utf-8/);
+  assert.match(render, /path: \/sitemap-catalogo\.xml\s+name: Content-Type\s+value: application\/xml; charset=utf-8/);
   assert.doesNotMatch(render, /source: \/imovel\/\*[\s\S]{0,160}destination: https:\/\/[^/]+\.supabase\.co/);
   assert.match(render, /Cache-Control[\s\S]*max-age=31536000, immutable/);
   for (const header of [

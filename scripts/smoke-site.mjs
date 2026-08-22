@@ -66,6 +66,17 @@ try {
   const version = await versionResponse.json().catch(() => null);
   if (!version?.version || !version?.sourceFingerprint || !version?.artifactFingerprint) errors.push('/version.json nao contem os fingerprints obrigatorios');
 
+  const sitemapIndexResponse = await fetch(base + (config.seo?.sitemapIndexPath || '/sitemap.xml'), { signal: AbortSignal.timeout(5000) });
+  const sitemapIndex = await sitemapIndexResponse.text();
+  const expectedCatalogUrl = new URL(config.seo?.sitemapCatalogPath || '/sitemap-catalogo.xml', config.origin).href;
+  if (sitemapIndexResponse.status !== 200) errors.push('/sitemap.xml respondeu ' + sitemapIndexResponse.status);
+  if (!sitemapIndexResponse.headers.get('content-type')?.startsWith('application/xml')) errors.push('/sitemap.xml respondeu content-type incorreto');
+  if (!/<sitemapindex\b/i.test(sitemapIndex) || /<urlset\b/i.test(sitemapIndex) || !sitemapIndex.includes('<loc>' + expectedCatalogUrl + '</loc>')) {
+    errors.push('/sitemap.xml nao respondeu o indice do catalogo dinamico');
+  }
+  const localCatalog = await fetch(base + (config.seo?.sitemapCatalogPath || '/sitemap-catalogo.xml'), { signal: AbortSignal.timeout(5000) });
+  if (localCatalog.status !== 404) errors.push('catalogo dinamico nao pode existir como arquivo fisico no pacote');
+
   const budgets = config.budgets || {};
   const totalBytes = (version?.artifacts || []).reduce((sum, artifact) => sum + Number(artifact.bytes || 0), 0);
   if (budgets.maxTotalBytes && totalBytes > budgets.maxTotalBytes) errors.push('pacote excedeu o limite total: ' + totalBytes + ' > ' + budgets.maxTotalBytes + ' bytes');
