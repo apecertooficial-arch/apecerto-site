@@ -114,6 +114,7 @@ test('build aplica a camada de producao e tracking', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const analytics = await readFile('dist/' + await assetPublicado('assets/analytics.js'), 'utf8');
   const productionCss = await readFile('dist/' + await assetPublicado('assets/production.css'), 'utf8');
+  const landingOwner = await readFile('static/avaliacao-imovel-moema/index.html', 'utf8');
   const siteTrack = await readFile('supabase/functions/site-track/index.ts', 'utf8');
   const crmCapi = await readFile('supabase/functions/crm-capi/index.ts', 'utf8');
   assert.ok(analytics.includes('G-P63KVXKJDH'), 'o Analytics deve estar ligado ao site');
@@ -143,6 +144,8 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(!/owner_(?:portal_open|cta_click):\s*'Lead'/.test(analytics), 'abrir o portal ou clicar no CTA nao pode ser contado como Lead na Meta');
   assert.match(analytics, /generate_lead:\s*'Lead'/, 'somente o envio concluido deve alimentar a conversao Lead');
   assert.match(analytics, /ADS_CONVERSION_LABELS\s*=\s*\{[\s\S]*generate_lead:\s*'anMDCOmFieQcEI7398BE'/, 'o envio concluido deve alimentar a conversao principal do Google Ads');
+  assert.match(analytics, /event_callback:\s*function\s*\(\)\s*\{\s*finish\(true\);\s*\}/, 'o Google Ads deve confirmar o beacon antes de liberar redirecionamentos');
+  assert.match(landingOwner, /await window\.apecertoTrack\('generate_lead'/, 'a landing deve aguardar a conversao antes de abrir o WhatsApp');
   assert.ok(analytics.includes('transaction_id: clean(eventId, 120)'), 'a conversao do Google Ads deve ser deduplicada pelo event_id');
   assert.ok(analytics.includes("window.gtag('set', 'user_data'"), 'conversoes otimizadas devem receber os dados consentidos do lead');
   assert.ok(analytics.includes("['campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'placement']"), 'GA e o banco devem receber os identificadores da campanha');

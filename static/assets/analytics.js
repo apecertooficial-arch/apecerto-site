@@ -278,15 +278,28 @@
 
   // Dispara a conversao do Google Ads quando ha um label mapeado para o evento.
   function adsConversion(eventName, params, eventId) {
-    if (!consent.marketing || !googleAdsLoaded) return;
+    if (!consent.marketing || !googleAdsLoaded) return Promise.resolve(false);
     var label = clean(ADS_CONVERSION_LABELS[eventName], 120);
-    if (!/^[A-Za-z0-9_-]+$/.test(label)) return;
-    var data = {
-      send_to: GOOGLE_ADS_ID + '/' + label,
-      transaction_id: clean(eventId, 120),
-    };
-    if (params && typeof params.value === 'number') { data.value = params.value; data.currency = params.currency || 'BRL'; }
-    window.gtag('event', 'conversion', data);
+    if (!/^[A-Za-z0-9_-]+$/.test(label)) return Promise.resolve(false);
+    return new Promise(function (resolve) {
+      var settled = false;
+      var finish = function (sent) {
+        if (settled) return;
+        settled = true;
+        resolve(sent);
+      };
+      // Evita que um redirecionamento imediato (por exemplo, para o WhatsApp)
+      // cancele o beacon antes de o Google Ads confirmar o recebimento.
+      setTimeout(function () { finish(false); }, 1800);
+      var data = {
+        send_to: GOOGLE_ADS_ID + '/' + label,
+        transaction_id: clean(eventId, 120),
+        event_callback: function () { finish(true); },
+        event_timeout: 1500,
+      };
+      if (params && typeof params.value === 'number') { data.value = params.value; data.currency = params.currency || 'BRL'; }
+      window.gtag('event', 'conversion', data);
+    });
   }
 
   function loadClarity() {
@@ -524,10 +537,11 @@
         phone_number: identity.phone || undefined,
       });
     }
-    adsConversion(eventName, publicParams, eventId);
+    var adsPromise = adsConversion(eventName, publicParams, eventId);
     if (clarityLoaded && window.clarity && /^(generate_lead|view_item|whatsapp_click|phone_click|sara_results|owner_portal_open)$/.test(eventName)) {
       window.clarity('event', eventName);
     }
+    return adsPromise;
   };
 
   window.apecertoLeadTracking = function () {
