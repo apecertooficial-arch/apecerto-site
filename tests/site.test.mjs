@@ -45,6 +45,41 @@ test('cards de bairro nao abrem o seletor de arquivos no site publico', async ()
   );
 });
 
+test('imagens dinâmicas só recebem src depois de o template resolver a URL', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const { out } = await pacotePublicado();
+  const origemLiteral = /<img[^>]*\ssrc="\{\{\s*(?:p\.foto|galFotoAtual)\s*\}\}"/;
+
+  assert.doesNotMatch(design, origemLiteral, 'o HTML-fonte não pode disparar uma URL literal do template');
+  assert.doesNotMatch(out, origemLiteral, 'o pacote publicado não pode reintroduzir a URL literal');
+  assert.equal((design.match(/data-ape-src="\{\{ p\.foto \}\}"/g) || []).length, 5, 'todos os cards devem usar a fonte inerte');
+  assert.equal((design.match(/data-ape-src="\{\{ galFotoAtual \}\}"/g) || []).length, 1, 'a foto principal da galeria deve usar a fonte inerte');
+  assert.ok(design.includes("src.includes('{{') || src.includes('}}')"), 'o ativador deve rejeitar placeholders ainda não resolvidos');
+  assert.ok(design.includes("img.setAttribute('src', src)"), 'a imagem resolvida deve continuar sendo exibida');
+});
+
+test('acesso do portal associa rótulos e orienta preenchimento e leitores de tela', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const campos = [
+    ['nome', 'name'],
+    ['telefone', 'tel'],
+    ['email', 'email'],
+    ['senha', '{{ authSenhaAutocomplete }}'],
+  ];
+
+  for (const [campo, autocomplete] of campos) {
+    assert.ok(design.includes(`label for="portal-auth-${campo}"`), `o rótulo de ${campo} deve apontar para o campo`);
+    assert.match(
+      design,
+      new RegExp(`<input id="portal-auth-${campo}"[^>]*autocomplete="${autocomplete.replace(/[{}]/g, '\\$&')}"[^>]*aria-required="true"`),
+      `${campo} deve expor autocomplete e obrigatoriedade`,
+    );
+  }
+  assert.ok(design.includes("authSenhaAutocomplete: criar ? 'new-password' : 'current-password'"), 'a senha deve distinguir criação de login');
+  assert.ok(design.includes('role="alert" aria-live="assertive"'), 'erros de autenticação devem ser anunciados imediatamente');
+  assert.ok(design.includes('role="status" aria-live="polite"'), 'confirmações de autenticação devem ser anunciadas sem interromper');
+});
+
 test('Sara consulta somente a vitrine pública já filtrada pelo banco', async () => {
   const fn = await readFile('supabase/functions/sara-site/index.ts', 'utf8');
   assert.match(fn, /\.from\("site_produtos"\)/);
@@ -174,6 +209,8 @@ test('Sara recomenda todas as unidades publicadas e preserva tipologias comercia
   assert.ok(edge.includes('.map((unit) => ({ row, price:'), 'a busca não pode reduzir cada prédio à unidade mais barata');
   assert.ok(edge.includes('unitBedrooms(unit) ?? (row.dormitorios'), 'tipologias como Garden e R2V devem usar dormitórios do empreendimento como fallback');
   assert.ok(edge.includes("(unitBedrooms(match.unit) ?? match.row.dormitorios)"), 'a resposta deve devolver os dormitórios efetivamente usados no filtro');
+  assert.ok(edge.includes('"apês"}: ${summary}.'), 'a resposta deve separar a quantidade dos filtros com dois-pontos');
+  assert.ok(!edge.includes('"apês"} com ${summary}.'), 'a Sara não pode responder “com para comprar” ou “com para alugar”');
 });
 
 test('leads de visita e financiamento preservam empreendimento e unidade sem retry de POST', async () => {
