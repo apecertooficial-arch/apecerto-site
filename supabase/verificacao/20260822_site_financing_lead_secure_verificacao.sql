@@ -115,6 +115,16 @@ begin
     select 1
     from pg_indexes
     where schemaname = 'private'
+      and indexname = 'site_financing_lead_receipts_site_lead_idx'
+      and lower(indexdef) like '%site_lead_id%'
+  ) then
+    raise exception 'FALHA: FK do recibo sem índice de suporte';
+  end if;
+
+  if not exists (
+    select 1
+    from pg_indexes
+    where schemaname = 'private'
       and indexname = 'site_events_generate_lead_event_id_uidx'
       and lower(indexdef) like '%unique index%'
       and lower(indexdef) like '%event_id%'

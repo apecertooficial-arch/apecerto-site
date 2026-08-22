@@ -217,6 +217,7 @@ test('dedupe é estável para a mesma carga e muda com renda ou percentual', asy
 
 test('SQL usa janela móvel de 30 minutos e trava transacional por dedupe', async () => {
   const sql = await readFile('supabase/migrations/20260822150000_site_financing_lead_secure.sql', 'utf8');
+  const fkIndex = await readFile('supabase/migrations/20260822153000_site_financing_lead_receipt_fk_index.sql', 'utf8');
   assert.match(sql, /pg_advisory_xact_lock[\s\S]*site-financing:request:/);
   assert.match(sql, /pg_advisory_xact_lock[\s\S]*site-financing:dedupe:/);
   assert.match(sql, /created_at\s*>=\s*clock_timestamp\(\)\s*-\s*interval '30 minutes'/);
@@ -224,6 +225,7 @@ test('SQL usa janela móvel de 30 minutos e trava transacional por dedupe', asyn
   assert.doesNotMatch(sql, /date_trunc\([^\n]*dedupe|dedupe_window\s*=/i);
   assert.match(sql, /delete from private\.site_financing_lead_receipts\s+where created_at < now\(\) - interval '30 days';/i);
   assert.doesNotMatch(sql, /created_at < now\(\) - interval '30 days'\s+and site_lead_id is null/i);
+  assert.match(fkIndex, /site_financing_lead_receipts_site_lead_idx[\s\S]*\(site_lead_id\)/);
 });
 
 test('resposta duplicada preserva conversion_event_id estável', async () => {
