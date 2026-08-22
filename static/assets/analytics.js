@@ -299,7 +299,10 @@
     script.async = true;
     script.src = 'https://www.clarity.ms/tag/' + encodeURIComponent(CLARITY_ID);
     document.head.appendChild(script);
-    window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'granted' });
+    window.clarity('consentv2', {
+      ad_Storage: consent.marketing ? 'granted' : 'denied',
+      analytics_Storage: consent.analytics ? 'granted' : 'denied',
+    });
   }
 
   function loadMetaPixel() {
@@ -373,6 +376,7 @@
   }
 
   function applyConsent(next) {
+    var previousConsent = Object.assign({}, consent);
     consent = {
       analytics: !!(next && next.analytics),
       marketing: !!(next && next.marketing),
@@ -396,13 +400,22 @@
       refreshGoogleIdentity();
       setTimeout(refreshGoogleIdentity, 1200);
       loadClarity();
+      if (clarityLoaded && window.clarity) {
+        window.clarity('consentv2', {
+          ad_Storage: consent.marketing ? 'granted' : 'denied',
+          analytics_Storage: 'granted',
+        });
+      }
     } else if (clarityLoaded && window.clarity) {
       window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'denied' });
     }
     if (consent.marketing) {
       loadMetaPixel();
+      if (window.fbq) window.fbq('consent', 'grant');
       loadGoogleAds();
       marketingPageView();
+    } else if (previousConsent.marketing && pixelLoaded && window.fbq) {
+      window.fbq('consent', 'revoke');
     }
   }
 
@@ -772,12 +785,44 @@
     });
   }
 
+  // O site funciona como SPA. Mudancas reais de pathname/query precisam gerar
+  // uma nova visualizacao sem contar simples ancoras (#apes) como outra pagina.
+  function trackSpaNavigation() {
+    var lastUrl = safePageUrl();
+    var scheduled = false;
+    function changed(source) {
+      if (scheduled) return;
+      scheduled = true;
+      setTimeout(function () {
+        scheduled = false;
+        var nextUrl = safePageUrl();
+        if (nextUrl === lastUrl) return;
+        lastUrl = nextUrl;
+        window.apecertoTrack('page_view', {
+          navigation_type: 'spa',
+          navigation_source: source,
+        });
+      }, 0);
+    }
+    ['pushState', 'replaceState'].forEach(function (method) {
+      var original = window.history && window.history[method];
+      if (typeof original !== 'function') return;
+      window.history[method] = function () {
+        var result = original.apply(this, arguments);
+        changed(method);
+        return result;
+      };
+    });
+    window.addEventListener('popstate', function () { changed('popstate'); });
+  }
+
   loadGoogleTag();
   var storedConsent = restoreConsent();
   if (storedConsent) applyConsent(storedConsent);
   bindAutomaticEvents();
   trackScrollDepth();
   trackEngagement();
+  trackSpaNavigation();
   firstPartyTrack('page_view', {});
 
   function trackingReady() {

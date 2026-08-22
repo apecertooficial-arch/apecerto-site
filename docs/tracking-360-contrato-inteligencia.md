@@ -28,10 +28,13 @@ A atribuição Meta de entrada não é criada por gatilho, cron ou consumidor oc
 
 ## Endpoint para a área de Inteligência
 
-Use o RPC autenticado:
+Use os RPCs autenticados atualmente publicados:
 
 ```ts
-const { data, error } = await supabase.rpc('tracking_360_snapshot', { p_days: 30 })
+const [{ data: dashboard }, { data: attribution }] = await Promise.all([
+  supabase.rpc('tracking_360_dashboard', { p_days: 30 }),
+  supabase.rpc('tracking_360_attribution_scope', { p_days: 30 }),
+])
 ```
 
 Permissão: `authenticated` com `public.is_equipe()` ou `service_role`. O retorno é agregado e não contém nome, telefone, e-mail, IP, `fbclid`, `gclid` ou identificadores de sessão individuais.
@@ -91,6 +94,8 @@ Conversões Meta do CRM, em ordem de qualidade:
 
 Cada envio inclui `stage_event`, `funnel_stage` e `stage_rank`, além da atribuição disponível de campanha, conjunto, anúncio e criativo. O antigo número de etapa 68 não é tratado como qualificação: no banco ele significa “Em atendimento”.
 
+Quando o lead nasceu em formulário instantâneo da Meta, `meta_lead_id` também é enviado como `user_data.lead_id`, o campo oficial de correspondência da Conversions API. E-mail e telefone hasheados continuam como sinais complementares.
+
 `LeadRespondeu` significa exclusivamente uma mensagem de entrada enviada pelo próprio lead. O evento leva `response_actor: lead` e `message_direction: inbound`. Mensagens de saída do corretor (`out`, `saida`, `enviada` ou `sent`) são descartadas pelo gatilho e não geram esse evento.
 
 ## Atribuição que acompanha o lead
@@ -118,4 +123,4 @@ O banco first-party mede page views, caminhos, cliques e abandonos de forma anô
 
 ## Prompt curto para o chat que implementa a Inteligência
 
-> Conecte as telas de Inteligência ao RPC autenticado `tracking_360_snapshot(p_days)`. Preserve integralmente o design já aprovado. Substitua dados demo pelas seções reais `traffic`, `funnel`, `abandonment`, `events`, `pages`, `campaigns`, `properties`, `consent`, `meta_delivery` e `crm_attribution`. Não leia tabelas privadas diretamente e não exponha PII. Mantenha filtros de período no parâmetro `p_days`, estados loading/empty/error e drill-down coerente. “Lead” significa somente envio concluído; intenção, formulário iniciado, WhatsApp e agendamento iniciado permanecem métricas separadas. A saúde da Meta deve vir dos recibos `meta_delivery`, e não de inferência visual.
+> Conecte as telas de Inteligência aos RPCs autenticados `tracking_360_dashboard(p_days)` e `tracking_360_attribution_scope(p_days)`. Preserve integralmente o design já aprovado. Substitua dados demo pelas seções reais retornadas pelos dois contratos. Não leia tabelas privadas diretamente e não exponha PII. Mantenha filtros de período no parâmetro `p_days`, estados loading/empty/error e drill-down coerente. “Lead” significa somente envio concluído; intenção, formulário iniciado, WhatsApp e agendamento iniciado permanecem métricas separadas. A saúde da Meta deve vir dos recibos de entrega, e não de inferência visual.

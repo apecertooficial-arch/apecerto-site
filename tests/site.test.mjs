@@ -138,6 +138,8 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes("data-consent=\"analytics\""), 'Analytics deve ter consentimento separado');
   assert.ok(analytics.includes("data-consent=\"all\""), 'marketing deve exigir aceite explicito');
   assert.ok(analytics.includes('apecerto-consent-settings'), 'o visitante deve conseguir reabrir as preferencias de privacidade');
+  assert.ok(analytics.includes("window.fbq('consent', 'revoke')"), 'revogar marketing deve interromper explicitamente o Pixel');
+  assert.ok(analytics.includes("window.fbq('consent', 'grant')"), 'aceitar marketing deve liberar explicitamente o Pixel');
   assert.ok(!/owner_(?:portal_open|cta_click):\s*'Lead'/.test(analytics), 'abrir o portal ou clicar no CTA nao pode ser contado como Lead na Meta');
   assert.match(analytics, /generate_lead:\s*'Lead'/, 'somente o envio concluido deve alimentar a conversao Lead');
   assert.match(analytics, /ADS_CONVERSION_LABELS\s*=\s*\{[\s\S]*generate_lead:\s*'anMDCOmFieQcEI7398BE'/, 'o envio concluido deve alimentar a conversao principal do Google Ads');
@@ -146,6 +148,7 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes("['campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'placement']"), 'GA e o banco devem receber os identificadores da campanha');
   assert.doesNotMatch(analytics, /owner_(?:portal_open|cta_click):\s*'anMDCOmFieQcEI7398BE'/, 'clique ou abertura nao pode virar conversao do Google Ads');
   assert.ok(out.includes('GTM-524TZP8X'), 'o Tag Manager deve estar ligado ao site');
+  assert.ok(out.includes('googletagmanager.com/ns.html?id=GTM-524TZP8X'), 'o fallback noscript do Tag Manager deve estar no shell publico');
   assert.ok(out.includes('id="apecerto-recovery-scrub"'), 'tokens de recuperacao devem ser retirados da URL antes do tracking');
   assert.ok(
     out.indexOf('id="apecerto-recovery-scrub"') < out.indexOf('googletagmanager.com/gtm.js'),
@@ -174,6 +177,8 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes("window.apecertoTrack('form_submit_attempt'"), 'tentativas de envio devem ser observaveis');
   assert.ok(analytics.includes("window.apecertoTrack('form_error'"), 'erros de formulario devem ser observaveis');
   assert.ok(analytics.includes("window.apecertoTrack('engagement_time'"), 'tempo ativo deve ser medido por faixas');
+  assert.ok(analytics.includes("['pushState', 'replaceState']"), 'navegacao SPA deve observar alteracoes reais de URL');
+  assert.ok(analytics.includes("navigation_type: 'spa'"), 'page view virtual deve identificar navegacao SPA');
   assert.ok(siteTrack.includes('"gtm_health"'), 'o GTM deve conseguir deixar prova de saude na telemetria propria');
   assert.ok(crmCapi.includes('tracking_delivery_claim'), 'a CAPI do CRM deve aceitar somente fatos do outbox canonico');
   assert.ok(crmCapi.includes('internal_delivery_required'), 'chamadas publicas nao podem fabricar visita, proposta ou venda');
