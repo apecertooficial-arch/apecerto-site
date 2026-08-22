@@ -239,13 +239,19 @@ test('leads de visita e financiamento preservam empreendimento e unidade sem ret
   for (const [nome, metodo] of [['visita', visita], ['financiamento', financiamento]]) {
     assert.ok(metodo.includes('this.empreendimentoId(det)'), nome + ' deve resolver a FK do empreendimento');
     assert.ok(metodo.includes('this.unidadeId(det)'), nome + ' deve resolver a unidade selecionada');
-    assert.equal((metodo.match(/empreendimento_id: empreendimentoId/g) || []).length, 2, nome + ' deve enviar empreendimento no topo e no contexto');
-    assert.equal((metodo.match(/unidade_id: unidadeId/g) || []).length, 2, nome + ' deve enviar unidade no topo e no contexto');
     assert.doesNotMatch(metodo, /empreendimento_id:\s*det(?:\s*\?|\.)/, nome + ' não pode usar o ID visual como FK');
-    assert.equal((metodo.match(/apecertoSubmitSiteLead\s*\(/g) || []).length, 1, nome + ' deve fazer uma única tentativa explícita');
     assert.doesNotMatch(metodo, /\/rest\/v1\/site_leads|fetch\s*\(/, nome + ' não pode manter POST alternativo ou retry automático');
-    assert.match(metodo, /registrarErro\('lead_(?:comprador|financiamento)', e\)/, nome + ' deve registrar a falha antes de liberar retry manual');
   }
+  assert.equal((visita.match(/empreendimento_id: empreendimentoId/g) || []).length, 2, 'visita deve enviar empreendimento no topo e no contexto');
+  assert.equal((visita.match(/unidade_id: unidadeId/g) || []).length, 2, 'visita deve enviar unidade no topo e no contexto');
+  assert.equal((visita.match(/apecertoSubmitSiteLead\s*\(/g) || []).length, 1, 'visita deve fazer uma única tentativa explícita');
+  assert.match(visita, /registrarErro\('lead_comprador', e\)/, 'visita deve registrar a falha antes de liberar retry manual');
+
+  assert.equal((financiamento.match(/empreendimento_id: empreendimentoId/g) || []).length, 1, 'financiamento deve enviar o empreendimento uma vez no contrato dedicado');
+  assert.equal((financiamento.match(/unidade_id: unidadeId/g) || []).length, 1, 'financiamento deve enviar a unidade uma vez no contrato dedicado');
+  assert.equal((financiamento.match(/apecertoSubmitFinancingLead\s*\(/g) || []).length, 1, 'financiamento deve fazer uma única tentativa explícita');
+  assert.doesNotMatch(financiamento, /apecertoSubmitSiteLead\s*\(/, 'financiamento não pode voltar à porta REST genérica');
+  assert.match(financiamento, /registrarErro\('lead_financiamento', e, e && e\.status\)/, 'financiamento deve registrar a falha sanitizada antes do retry manual');
 });
 
 test('telemetria sem cookie minimiza dados e tem retencao', async () => {

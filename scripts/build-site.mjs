@@ -276,20 +276,20 @@ const financeProductionForm = `          <div data-tracking-form="financiamento"
             <div style="background: var(--success-bg); color: var(--success); border-radius: var(--radius-md); padding: 10px 14px; font-size: var(--text-sm)">Nesta etapa pedimos apenas os dados necessários para o contato. CPF, RG e documentos serão solicitados pela equipe somente se você decidir avançar.</div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
               <div style="display: flex; flex-direction: column; gap: 6px; grid-column: 1 / -1">
-                <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Nome completo *</label>
-                <input name="nome" autocomplete="name" placeholder="Seu nome" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                <label for="financing-nome" style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Nome completo *</label>
+                <input id="financing-nome" name="nome" autocomplete="name" required="" aria-required="true" placeholder="Seu nome" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
               </div>
               <div style="display: flex; flex-direction: column; gap: 6px">
-                <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Telefone / WhatsApp *</label>
-                <input name="telefone" autocomplete="tel" placeholder="(11) 99999-9999" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                <label for="financing-telefone" style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Telefone / WhatsApp *</label>
+                <input id="financing-telefone" name="telefone" type="tel" inputmode="tel" autocomplete="tel" required="" aria-required="true" placeholder="(11) 99999-9999" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
               </div>
               <div style="display: flex; flex-direction: column; gap: 6px">
-                <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">E-mail *</label>
-                <input name="email" type="email" autocomplete="email" placeholder="voce@email.com" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                <label for="financing-email" style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">E-mail *</label>
+                <input id="financing-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" required="" aria-required="true" placeholder="voce@email.com" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
               </div>
               <div style="display: flex; flex-direction: column; gap: 6px; grid-column: 1 / -1">
-                <label style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Renda mensal aproximada *</label>
-                <input name="renda" inputmode="numeric" placeholder="R$" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
+                <label for="financing-renda" style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--fg-3)">Renda mensal aproximada *</label>
+                <input id="financing-renda" name="renda" inputmode="numeric" required="" aria-required="true" placeholder="R$" style="width: 100%; box-sizing: border-box; border: 1px solid var(--border-default); border-radius: 12px; height: 44px; padding: 0 14px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
               </div>
             </div>
 `;
@@ -303,40 +303,75 @@ design = trocaBlocoObrigatorio(
 );
 
 const financeLeadProductionMethod = `  async fichaEnviar() {
-    if (this.state.fichaEnviando) return;
+    if (this.fichaSubmitInFlight || this.state.fichaEnviando || this.state.fichaOk) return;
+    this.fichaSubmitInFlight = true;
     const f = this.ficha, det = this.state.det, st = this.state;
-    if (!f.nome || !f.telefone || !f.email) return this.setState({ fichaErro: 'Nome, telefone e e-mail são obrigatórios.' });
-    if (!f.renda) return this.setState({ fichaErro: 'Coloca sua renda mensal — pode ser aproximada.' });
-    this.setState({ fichaEnviando: true, fichaErro: null });
+    const itemId = det ? String(det.id || '') : '';
+    const itemName = det ? det.nome || '' : '';
+    const trackingBase = { form_context: 'financiamento', item_id: itemId, item_name: itemName };
+    const nome = String(f.nome || '').trim();
+    const telefone = String(f.telefone || '').trim();
+    const email = String(f.email || '').trim();
+    const telefoneDigitos = telefone.replace(/\\D/g, '');
+    const telefoneValido = /^[1-9][0-9]{9,10}$/.test(telefoneDigitos) || /^55[1-9][0-9]{9,10}$/.test(telefoneDigitos);
+    const rendaMensal = this.num(f.renda);
     const preco = det ? this.precoDe(det) : 0;
+    const empreendimentoId = det ? this.empreendimentoId(det) : null;
+    const unidadeId = det ? this.unidadeId(det) : null;
+    this.setState({ fichaEnviando: true, fichaErro: null });
     try {
-      if (!window.apecertoSubmitSiteLead) throw new Error('tracking_unavailable');
-      const empreendimentoId = det ? this.empreendimentoId(det) : null;
-      const unidadeId = det ? this.unidadeId(det) : null;
-      await window.apecertoSubmitSiteLead({
-        lead_type: 'financiamento',
+      if (window.apecertoTrack) {
+        try { await window.apecertoTrack('form_submit_attempt', trackingBase); } catch (trackingError) {}
+      }
+      if (nome.length < 2 || !telefoneValido || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+        if (window.apecertoTrack) window.apecertoTrack('form_error', Object.assign({}, trackingBase, { error_type: 'contact_required' }));
+        this.setState({ fichaEnviando: false, fichaErro: 'Confira nome, telefone e e-mail para continuar.' });
+        return;
+      }
+      if (!Number.isFinite(rendaMensal) || rendaMensal < 500 || rendaMensal > 10000000) {
+        if (window.apecertoTrack) window.apecertoTrack('form_error', Object.assign({}, trackingBase, { error_type: 'income_required' }));
+        this.setState({ fichaEnviando: false, fichaErro: 'Informe uma renda mensal válida — pode ser aproximada.' });
+        return;
+      }
+      if (!empreendimentoId) {
+        if (window.apecertoTrack) window.apecertoTrack('form_error', Object.assign({}, trackingBase, { error_type: 'item_unavailable' }));
+        this.setState({ fichaEnviando: false, fichaErro: 'Este imóvel não está disponível para simulação agora.' });
+        return;
+      }
+      if (!window.apecertoSubmitFinancingLead) {
+        if (window.apecertoTrack) window.apecertoTrack('form_error', Object.assign({}, trackingBase, { error_type: 'tracking_unavailable' }));
+        throw new Error('tracking_unavailable');
+      }
+      const persisted = await window.apecertoSubmitFinancingLead({
         empreendimento_id: empreendimentoId,
         unidade_id: unidadeId,
-        empreendimento_nome: det ? det.nome : null,
-        nome: f.nome,
-        telefone: f.telefone,
-        email: f.email,
-        context: {
-          empreendimento_id: empreendimentoId,
-          unidade_id: unidadeId,
-          empreendimento_nome: det ? det.nome : null,
-          renda_mensal: this.num(f.renda),
-          valor_imovel: preco || null,
-          percentual_financiado: st.finPct,
-          valor_entrada: preco ? Math.round(preco * (100 - st.finPct) / 100) : null,
-          valor_financiar: preco ? Math.round(preco * st.finPct / 100) : null,
-          source: 'finance_simulator'
-        }
+        item_id: itemId,
+        item_codigo: det ? det.codigo || det.unidade_codigo || null : null,
+        item_name: itemName,
+        nome: nome,
+        telefone: telefone,
+        email: email,
+        renda_mensal: rendaMensal,
+        percentual_financiado: st.finPct
       });
-      if (window.apecertoTrack) window.apecertoTrack('generate_lead', { lead_type: 'financiamento', item_id: det ? String(det.id || '') : '', __identity: { email: f.email || '', phone: f.telefone || '' } });
+      if (!persisted || persisted.accepted !== true || !persisted.conversion_event_id) throw new Error('financing_not_persisted');
+      if (window.apecertoTrack) await window.apecertoTrack('generate_lead', {
+        event_id: persisted.conversion_event_id,
+        lead_type: 'financiamento',
+        item_id: itemId,
+        item_name: itemName,
+        value: preco || undefined,
+        currency: 'BRL',
+        __identity: { email: email, phone: telefone }
+      });
       this.ficha = {};
       this.setState({ fichaEnviando: false, fichaOk: true });
-    } catch (e) { this.registrarErro('lead_financiamento', e); this.setState({ fichaEnviando: false, fichaErro: 'Não deu certo agora — tenta de novo ou chama a gente no WhatsApp.' }); }
+    } catch (e) {
+      this.registrarErro('lead_financiamento', e, e && e.status);
+      this.setState({ fichaEnviando: false, fichaErro: 'Não deu certo agora — tenta de novo ou chama a gente no WhatsApp.' });
+    } finally {
+      this.fichaSubmitInFlight = false;
+    }
   }
 `;
 
@@ -344,8 +379,14 @@ design = trocaBlocoObrigatorio(design, '  async fichaEnviar() {', '  similares(d
 design = trocaObrigatoria(
   design,
   '  abrirFicha() {\n    this.fichaFocusOrigin = document.activeElement;',
-  "  abrirFicha() {\n    const det = this.state.det;\n    if (window.apecertoTrack) window.apecertoTrack('financing_open', { item_id: det ? String(det.id || '') : '', item_name: det ? det.nome || '' : '' });\n    this.fichaFocusOrigin = document.activeElement;",
+  "  abrirFicha() {\n    if (this.state.fichaOn || this.fichaSubmitInFlight || this.state.fichaEnviando) return;\n    const det = this.state.det;\n    const itemId = det ? String(det.id || '') : '';\n    const novaIntencao = this.state.fichaOk || (this.fichaRequestItemId && this.fichaRequestItemId !== itemId);\n    if (novaIntencao && window.apecertoResetFinancingLead) window.apecertoResetFinancingLead();\n    this.fichaRequestItemId = itemId;\n    if (window.apecertoTrack) window.apecertoTrack('financing_open', { cta_name: 'simular_financiamento', item_id: itemId, item_name: det ? det.nome || '' : '' });\n    this.fichaFocusOrigin = document.activeElement;",
   'evento abertura do financiamento',
+);
+design = trocaObrigatoria(
+  design,
+  '  fecharFicha() {\n    this.setState({ fichaOn: false }, () => {',
+  '  fecharFicha() {\n    if (this.fichaSubmitInFlight || this.state.fichaEnviando) return;\n    this.setState({ fichaOn: false }, () => {',
+  'guarda de fechamento durante envio do financiamento',
 );
 design = trocaObrigatoria(design, 'Preenche seus dados e a simulação do financiamento chega no seu e-mail.', 'Informe seus dados de contato e receba a orientação da equipe sobre financiamento.', 'texto seguro do financiamento');
 design = trocaObrigatoria(design, 'Ficha enviada!', 'Pedido de simulação enviado!', 'confirmacao do financiamento');

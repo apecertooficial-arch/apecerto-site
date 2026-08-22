@@ -61,6 +61,7 @@
   ]);
   var lastViewedItemId = '';
   var lastViewedItemName = '';
+  var financingRequestId = '';
 
   window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
@@ -473,16 +474,31 @@
       utm_campaign: clean(currentTouch.utm_campaign, 160) || null,
       properties: properties,
     };
-    fetch(SUPABASE_URL + '/functions/v1/site-track', {
-      method: 'POST',
-      keepalive: true,
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    }).catch(function () {});
+    var controller = typeof window.AbortController === 'function' ? new window.AbortController() : null;
+    var timeoutId = controller ? window.setTimeout(function () { controller.abort(); }, 2500) : null;
+    try {
+      return fetch(SUPABASE_URL + '/functions/v1/site-track', {
+        method: 'POST',
+        keepalive: true,
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+        signal: controller ? controller.signal : undefined,
+      }).then(function (response) {
+        return !!response.ok;
+      }).catch(function () {
+        return false;
+      }).then(function (sent) {
+        if (timeoutId !== null) window.clearTimeout(timeoutId);
+        return sent;
+      });
+    } catch (error) {
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      return Promise.resolve(false);
+    }
   }
 
   window.apecertoTrack = function (eventName, params) {
@@ -492,6 +508,8 @@
       : null;
     var publicParams = Object.assign({}, sourceParams);
     delete publicParams.__identity;
+    var suppliedEventId = uuidOrNull(publicParams.event_id);
+    delete publicParams.event_id;
     if (eventName === 'view_item') {
       var nextItem = clean(publicParams.item_id, 100);
       if (lastViewedItemId && nextItem && lastViewedItemId !== nextItem) publicParams.from_item_id = lastViewedItemId;
@@ -508,7 +526,7 @@
       publicParams.item_id = clean(currentItem.id, 100);
       if (currentItem.name) publicParams.item_name = clean(currentItem.name, 160);
     }
-    var eventId = makeUuid();
+    var eventId = suppliedEventId || makeUuid();
     var payload = Object.assign({ page_location: safePageUrl(), event_id: eventId }, publicParams);
     var attribution = readStoredAttribution();
     var campaignTouch = attribution.last && Object.keys(attribution.last).length
@@ -525,7 +543,7 @@
     if (consent.analytics && googleIdentity.client_id) payload.ga_client_id = googleIdentity.client_id;
     if (consent.analytics && googleIdentity.session_id) payload.ga_session_id = googleIdentity.session_id;
     if (consent.marketing && ((attribution.first && attribution.first.gclid) || currentTouch.gclid)) payload.has_gclid = true;
-    firstPartyTrack(eventName, Object.assign({ event_id: eventId }, publicParams));
+    var firstPartyPromise = firstPartyTrack(eventName, Object.assign({ event_id: eventId }, publicParams));
     window.dataLayer.push(Object.assign({
       event: 'apecerto_event',
       apecerto_event_name: eventName,
@@ -543,7 +561,10 @@
     if (clarityLoaded && window.clarity && /^(generate_lead|view_item|whatsapp_click|phone_click|sara_results|owner_portal_open)$/.test(eventName)) {
       window.clarity('event', eventName);
     }
-    return adsPromise;
+    return Promise.all([
+      Promise.resolve(firstPartyPromise).catch(function () { return false; }),
+      Promise.resolve(adsPromise).catch(function () { return false; }),
+    ]).then(function () { return true; }).catch(function () { return false; });
   };
 
   window.apecertoLeadTracking = function () {
@@ -572,11 +593,142 @@
     };
   };
 
+  function nextFinancingRequestId() {
+    if (!uuidOrNull(financingRequestId)) financingRequestId = makeUuid();
+    return financingRequestId;
+  }
+
+  window.apecertoResetFinancingLead = function () {
+    financingRequestId = '';
+  };
+
+  function financingErrorType(status) {
+    if (status === 400) return 'invalid_request';
+    if (status === 403) return 'origin_not_allowed';
+    if (status === 409) return 'idempotency_conflict';
+    if (status === 429) return 'rate_limited';
+    if (status === 503) return 'temporarily_unavailable';
+    return status ? 'request_rejected' : 'network_error';
+  }
+
+  function trackFinancingError(errorType, source) {
+    window.apecertoTrack('form_error', {
+      form_context: 'financiamento',
+      error_type: clean(errorType, 60) || 'request_rejected',
+      item_id: clean(source && source.item_id, 100),
+      item_name: clean(source && source.item_name, 160),
+    });
+  }
+
+  // O financiamento usa uma Edge Function pública própria. request_id e o
+  // cabeçalho de idempotência permanecem estáveis nos retries manuais da mesma
+  // ficha; não há retry automático nem envio de chave/sessão do Supabase.
+  window.apecertoSubmitFinancingLead = async function (input) {
+    var source = input && typeof input === 'object' ? input : {};
+    var tracking = window.apecertoLeadTracking ? window.apecertoLeadTracking() : {};
+    var requestId = nextFinancingRequestId();
+    var body = {
+      request_id: requestId,
+      event_id: requestId,
+      nome: clean(source.nome, 120),
+      telefone: clean(source.telefone, 40),
+      email: clean(source.email, 254),
+      renda_mensal: Number(source.renda_mensal),
+      percentual_financiado: Number(source.percentual_financiado),
+      empreendimento_id: uuidOrNull(source.empreendimento_id),
+      unidade_id: uuidOrNull(source.unidade_id),
+      page_view_id: uuidOrNull(tracking.page_view_id),
+      tracking: tracking,
+      page_url: safePageUrl(),
+      item_id: clean(source.item_id, 100) || undefined,
+      item_codigo: clean(source.item_codigo, 80) || undefined,
+      item_name: clean(source.item_name, 160) || undefined,
+    };
+    var phoneDigits = body.telefone.replace(/\D/g, '');
+    var validPhone = /^[1-9][0-9]{9,10}$/.test(phoneDigits)
+      || /^55[1-9][0-9]{9,10}$/.test(phoneDigits);
+    var validContact = body.nome.length >= 2
+      && validPhone
+      && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email);
+    var validIncome = Number.isFinite(body.renda_mensal)
+      && body.renda_mensal >= 500
+      && body.renda_mensal <= 10000000;
+    var validPercent = Number.isFinite(body.percentual_financiado)
+      && Number.isInteger(body.percentual_financiado)
+      && body.percentual_financiado >= 20
+      && body.percentual_financiado <= 90
+      && body.percentual_financiado % 5 === 0;
+    if (!validContact || !validIncome || !validPercent || !body.empreendimento_id || !body.page_view_id) {
+      trackFinancingError('invalid_request', source);
+      var invalid = new Error('financing_invalid_request');
+      invalid.status = 400;
+      throw invalid;
+    }
+    var response;
+    var result;
+    var controller = typeof window.AbortController === 'function' ? new window.AbortController() : null;
+    var timedOut = false;
+    var timeoutId = controller ? window.setTimeout(function () {
+      timedOut = true;
+      controller.abort();
+    }, 15000) : null;
+    try {
+      response = await fetch(SUPABASE_URL + '/functions/v1/site-financing-lead', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Idempotency-Key': requestId,
+        },
+        body: JSON.stringify(body),
+        signal: controller ? controller.signal : undefined,
+      });
+      result = await response.json().catch(function () { return null; });
+    } catch (networkError) {
+      var transportError = timedOut || (networkError && networkError.name === 'AbortError')
+        ? 'request_timeout'
+        : 'network_error';
+      trackFinancingError(transportError, source);
+      var unavailable = new Error('financing_' + transportError);
+      unavailable.status = transportError === 'request_timeout' ? 408 : 0;
+      throw unavailable;
+    } finally {
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+    }
+    if (!response.ok || response.status !== 202) {
+      var rejectedType = financingErrorType(response.status);
+      trackFinancingError(rejectedType, source);
+      var rejected = new Error('financing_' + rejectedType);
+      rejected.status = response.status;
+      throw rejected;
+    }
+    if (!result || result.ok !== true || result.accepted !== true || uuidOrNull(result.request_id) !== requestId || !uuidOrNull(result.conversion_event_id)) {
+      trackFinancingError('invalid_response', source);
+      var invalidResponse = new Error('financing_invalid_response');
+      invalidResponse.status = response.status;
+      throw invalidResponse;
+    }
+    return {
+      accepted: true,
+      duplicate: result.duplicate === true,
+      request_id: requestId,
+      conversion_event_id: uuidOrNull(result.conversion_event_id),
+    };
+  };
+
   // Porta unica para todos os leads publicos. O navegador envia somente contato,
   // contexto comercial permitido e a atribuicao consentida — nunca documentos.
   window.apecertoSubmitSiteLead = async function (input) {
     var source = input && typeof input === 'object' ? input : {};
-    var leadType = /^(comprador|proprietario|financiamento)$/.test(source.lead_type)
+    if (source.lead_type === 'financiamento') {
+      window.apecertoTrack('form_error', {
+        form_context: 'financiamento',
+        error_type: 'dedicated_endpoint_required',
+      });
+      var dedicatedEndpoint = new Error('financing_requires_dedicated_endpoint');
+      dedicatedEndpoint.status = 400;
+      throw dedicatedEndpoint;
+    }
+    var leadType = /^(comprador|proprietario)$/.test(source.lead_type)
       ? source.lead_type
       : 'comprador';
     var allowedContext = [
@@ -759,8 +911,6 @@
         window.apecertoTrack('property_search', { source: 'hero' });
       } else if (/agendar visita|melhor dia|pedir visita/i.test(label)) {
         window.apecertoTrack('schedule_start', { cta_name: 'agendar_visita' });
-      } else if (/simular financiamento|financiamento/i.test(label)) {
-        window.apecertoTrack('financing_open', { cta_name: 'simular_financiamento' });
       } else if (/anunciar meu apê|anunciar meu ape/i.test(label)) {
         window.apecertoTrack('owner_cta_click', { source: 'site' });
       }

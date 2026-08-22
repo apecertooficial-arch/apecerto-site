@@ -2736,7 +2736,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <div role="status" aria-live="polite" style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 0; text-align: center">
             <span style="width: 56px; height: 56px; border-radius: 50%; background: var(--success-bg); color: var(--success); display: flex; align-items: center; justify-content: center; font-size: 24px">✓</span>
             <div style="font-size: var(--text-md); font-weight: var(--weight-semibold)">Ficha enviada!</div>
-            <p style="margin: 0; font-size: var(--text-sm); color: var(--fg-3); max-width: 380px">A equipe roda a simulação e manda o resultado no seu e-mail em até 1 dia útil.</p>
+            <p style="margin: 0; font-size: var(--text-sm); color: var(--fg-3); max-width: 380px">Recebemos seu pedido. A equipe vai orientar os próximos passos pelo contato informado.</p>
+            <a data-financing-success-whatsapp="" href="{{ finZapUrl }}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; border-radius: var(--radius-pill); padding: 12px 18px; background: #25D366; color: #fff; font-size: var(--text-sm); font-weight: var(--weight-semibold)"><i data-lucide="message-circle" style="width: 18px; height: 18px"></i>Continuar no WhatsApp</a>
           </div>
         </sc-if>
         <sc-if value="{{ fichaForm }}" hint-placeholder-val="{{ true }}">
@@ -4787,7 +4788,11 @@ class Component extends DCLogic {
       },
       fichaEnviar: () => this.fichaEnviar(),
       fichaLabel: st.fichaEnviando ? 'Enviando…' : 'Enviar ficha',
-      fichaImovel: det ? (this.fmtR$(this.precoDe(det)) || 'sob consulta') : '',
+      fichaImovel: det ? [
+        det.empreendimento_nome || this.nomePublico(det),
+        det.codigo ? 'cód. ' + det.codigo : null,
+        det.unidade_numero && det.unidade_numero !== 's/n' ? 'un. ' + det.unidade_numero : null
+      ].filter(Boolean).join(' · ') : '',
       fichaTglConj: () => this.setState({ fichaConjOn: !this.state.fichaConjOn }),
       fichaConjOn: st.fichaConjOn,
       fichaConjLabel: st.fichaConjOn ? '− Remover cônjuge' : '+ Incluir cônjuge na renda',
@@ -4835,7 +4840,7 @@ class Component extends DCLogic {
       })(),
       leadDias: this.proxDias().map(d => ({ val: d.val })),
       leadHoras: (() => { const hs = []; for (let h = 8; h <= 19; h++) { hs.push(String(h).padStart(2, '0') + ':00'); if (h < 19) hs.push(String(h).padStart(2, '0') + ':30'); } return hs; })().map(h => ({ label: h, sel: () => this.setState({ leadHora: h, horaOn: false }), bg: st.leadHora === h ? 'var(--bg-tint-orange)' : 'var(--bg-surface)', fg: st.leadHora === h ? 'var(--ape-orange-700)' : 'var(--fg-2)', bd: st.leadHora === h ? 'var(--ape-orange)' : 'var(--border-soft)' })),
-      finZapUrl: det ? 'https://wa.me/55' + String(this.props.whatsappNumero || '').replace(/\D/g, '') + '?text=' + encodeURIComponent('Oi! Quero simular o financiamento do ' + this.nomePublico(det) + ': ' + st.finPct + '% financiado (' + (this.fmtR$(this.precoDe(det) * st.finPct / 100) || '') + ') com entrada de ' + (this.fmtR$(this.precoDe(det) * (100 - st.finPct) / 100) || '')) : '#',
+      finZapUrl: det ? 'https://wa.me/55' + String(this.props.whatsappNumero || '').replace(/\D/g, '') + '?text=' + encodeURIComponent('Oi! Quero simular o financiamento do ' + this.nomePublico(det) + (det.codigo ? ' (cód. ' + det.codigo + ')' : '') + ': ' + st.finPct + '% financiado (' + (this.fmtR$(this.precoDe(det) * st.finPct / 100) || '') + ') com entrada de ' + (this.fmtR$(this.precoDe(det) * (100 - st.finPct) / 100) || '')) : '#',
       detLinhas: det ? [
         det.area_util ? { k: 'Área útil', v: Math.round(Number(det.area_util)) + ' m²' } : null,
         det.dormitorios ? { k: 'Dormitórios', v: String(det.dormitorios) + (det.suites ? ' (' + det.suites + (det.suites > 1 ? ' suítes)' : ' suíte)') : '') } : null,
@@ -4854,7 +4859,7 @@ class Component extends DCLogic {
       leadInput: e => { const t = e.target; if (t && t.name) this.lead[t.name] = t.value; },
       leadEnviar: () => this.leadEnviar(),
       leadLabel: st.leadEnviando ? 'Enviando…' : 'Pedir visita',
-      zapFlutuanteOn: true,
+      zapFlutuanteOn: !(st.fichaOn && !st.fichaOk),
       zapFlutuanteUrl: (this.props.whatsappNumero ? 'https://wa.me/55' + String(this.props.whatsappNumero).replace(/\D/g, '') : 'https://wa.me/') + '?text=' + encodeURIComponent('Oi! Vim pelo site da apêcerto 🔑'),
       zapOn: !!(this.props.whatsappNumero && det),
       zapUrl: det ? 'https://wa.me/55' + String(this.props.whatsappNumero || '').replace(/\D/g, '') + '?text=' + encodeURIComponent('Oi! Vi o ' + this.nomePublico(det) + (det.codigo ? ' (cód. ' + det.codigo + ')' : '') + ' no site e quero saber mais') : '#',
