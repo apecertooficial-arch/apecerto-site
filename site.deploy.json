@@ -18,11 +18,14 @@
   ],
   "requiredFiles": [
     "robots.txt",
+    "sitemap.xml",
     "sitemap-static.xml",
     "version.json"
   ],
   "seo": {
-    "sitemapPath": "/sitemap.xml",
+    "sitemapIndexPath": "/sitemap.xml",
+    "sitemapIndexFile": "sitemap.xml",
+    "sitemapCatalogPath": "/sitemap-catalogo.xml",
     "sitemapStaticGateFile": "sitemap-static.xml",
     "sitemapEdgeDestination": "https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/sitemap.xml",
     "propertyPath": "/imovel/*",

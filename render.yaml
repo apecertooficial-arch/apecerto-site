@@ -7,13 +7,16 @@ services:
     autoDeployTrigger: checksPass
     routes:
       - type: rewrite
-        source: /sitemap.xml
+        source: /sitemap-catalogo.xml
         destination: https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/sitemap.xml
       - type: rewrite
         source: /imovel/*
         destination: /index.html
     headers:
       - path: /sitemap.xml
+        name: Content-Type
+        value: application/xml; charset=utf-8
+      - path: /sitemap-catalogo.xml
         name: Content-Type
         value: application/xml; charset=utf-8
       - path: /assets/*

@@ -42,11 +42,18 @@ rota para o shell da aplicação sem transformar a navegação em erro 404.
 ## SEO dinâmico do catálogo
 
 A função pública `supabase/functions/site-seo/index.ts` lê somente a view
-aprovada `site_produtos`. `GET /sitemap.xml` é reescrito pelo Render para essa
-função e reúne as seis rotas fixas, os empreendimentos e cada unidade publicada.
-O build gera `dist/sitemap-static.xml` apenas como gate determinístico da CI;
-`dist/sitemap.xml` é proibido porque um arquivo físico teria precedência sobre o
-rewrite. O `robots.txt` continua apontando para o endereço público dinâmico.
+aprovada `site_produtos`. O build publica `/sitemap.xml` como um sitemap index
+físico e estável, contendo uma única referência para `/sitemap-catalogo.xml`.
+Somente essa segunda rota é reescrita pelo Render para a função, que reúne as
+seis rotas fixas, os empreendimentos e cada unidade publicada. Essa separação
+impede que um sitemap estático antigo esconda o catálogo atual por precedência
+de arquivo no host.
+
+`dist/sitemap-static.xml` continua sendo o gate determinístico das seis rotas
+fixas. Já `dist/sitemap-catalogo.xml` é proibido, pois um arquivo físico nesse
+caminho impediria o rewrite dinâmico. O `robots.txt` aponta para o índice público
+`https://apecerto.com/sitemap.xml`, e o Blueprint solicita o Content-Type XML
+tanto no índice quanto no catálogo.
 
 O handler também já sabe montar as páginas `/imovel/<slug>/` com title,
 canonical, descrição, Open Graph e JSON-LD, além de 404 com `noindex`. Esse
@@ -56,12 +63,14 @@ ativado depois de configurar um custom domain compatível; os testes e o
 verificador bloqueiam a ativação acidental pela URL `*.supabase.co`.
 
 Ordem de publicação: primeiro publicar `site-seo` com `verify_jwt = false` e
-confirmar que a URL direta de `/sitemap.xml` responde `200` com XML íntegro. O
-gateway hospedado do Supabase pode expor essa resposta como `text/plain`; por
-isso o Blueprint fixa `Content-Type: application/xml; charset=utf-8` no endereço
-público `https://apecerto.com/sitemap.xml`. Esse endereço público deve ser
-validado depois do deploy do Render. O repositório não executa essas duas
-publicações durante o build.
+confirmar que a URL direta de `/sitemap.xml` da função responde `200` com XML
+íntegro. Depois do deploy do Render, validar o índice público em
+`https://apecerto.com/sitemap.xml` e o catálogo em
+`https://apecerto.com/sitemap-catalogo.xml`. O índice físico deve responder
+`Content-Type: application/xml; charset=utf-8`. O gateway padrão do Supabase
+pode expor o catálogo dinâmico como `text/plain` mesmo com o header XML pedido
+ao Render; nesse caso o corpo ainda precisa ser XML íntegro e conter o catálogo
+completo. O repositório não executa essas duas publicações durante o build.
 
 ## Orçamento de desempenho
 
