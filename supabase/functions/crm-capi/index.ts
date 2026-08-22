@@ -152,6 +152,12 @@ Deno.serve(async (request: Request) => {
   if (lead.telefone) userData.ph = await sha256(String(lead.telefone).replace(/\D/g, ""));
   if (attribution?.fbp ?? identity.fbp) userData.fbp = String(attribution?.fbp ?? identity.fbp);
   if (attribution?.fbc ?? identity.fbc) userData.fbc = String(attribution?.fbc ?? identity.fbc);
+  // Para Lead Ads, a Meta oferece lead_id como identificador proprio de
+  // correspondencia. Mantemos telefone/e-mail como sinais complementares,
+  // mas o ID devolvido pelo formulario precisa viver em user_data (sem hash),
+  // e nao somente como dimensao de relatorio em custom_data.
+  if (attribution?.meta_lead_id) userData.lead_id = String(attribution.meta_lead_id);
+  if (attribution?.page_id) userData.page_id = String(attribution.page_id);
 
   const customData: Record<string, unknown> = {
     lead_event_source: "crm_canonico",

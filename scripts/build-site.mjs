@@ -575,6 +575,12 @@ let out = shell;
 
 out = trocaObrigatoria(out, '<html>', '<html lang="pt-BR">', 'idioma do documento');
 out = trocaObrigatoria(out, '<title>Bundled Page</title>', '<title>ApeCerto | Apartamentos em Moema</title><meta name="viewport" content="width=device-width, initial-scale=1">' + productionHead, 'SEO do head');
+out = trocaObrigatoria(
+  out,
+  '<body>',
+  '<body>\n<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-524TZP8X" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>',
+  'noscript do Tag Manager no shell publico',
+);
 
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist', { recursive: true });

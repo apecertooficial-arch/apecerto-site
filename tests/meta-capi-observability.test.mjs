@@ -33,6 +33,8 @@ test("crm-capi versionada resolve visita, proposta e venda e registra recibo", (
   assert.match(crmCapi, /sourceTable === "vendas"/);
   assert.match(crmCapi, /fbtrace_id/);
   assert.match(crmCapi, /tracking_last_touch/);
+  assert.match(crmCapi, /userData\.lead_id\s*=\s*String\(attribution\.meta_lead_id\)/);
+  assert.match(crmCapi, /userData\.page_id\s*=\s*String\(attribution\.page_id\)/);
   assert.match(crmCapi, /lead_attribution/);
   assert.match(crmCapi, /event_time: Math\.max\(1, eventTime\)/);
   assert.match(crmCapi, /funnel_stage/);
