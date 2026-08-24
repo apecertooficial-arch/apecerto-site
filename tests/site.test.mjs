@@ -185,6 +185,8 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.match(landingOwner, /await window\.apecertoTrack\('generate_lead'/, 'a landing deve aguardar a conversao antes de abrir o WhatsApp');
   assert.ok(analytics.includes('transaction_id: clean(eventId, 120)'), 'a conversao do Google Ads deve ser deduplicada pelo event_id');
   assert.ok(analytics.includes("window.gtag('set', 'user_data'"), 'conversoes otimizadas devem receber os dados consentidos do lead');
+  assert.ok(analytics.includes("eventName === 'page_view' || !window.apecertoGtmGa4Managed"), 'o GTM deve assumir os eventos do GA4 sem duplicar page_view');
+  assert.ok(analytics.includes('window.apecertoGtmAdsManaged'), 'o GTM deve assumir a conversao do Google Ads com fallback direto');
   assert.ok(analytics.includes("['utm_id', 'campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'form_id', 'placement', 'tracking_ref']"), 'GA e o banco devem receber os identificadores da campanha');
   assert.doesNotMatch(analytics, /owner_(?:portal_open|cta_click):\s*'anMDCOmFieQcEI7398BE'/, 'clique ou abertura nao pode virar conversao do Google Ads');
   assert.ok(out.includes('GTM-524TZP8X'), 'o Tag Manager deve estar ligado ao site');
@@ -217,9 +219,12 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes("window.apecertoTrack('form_submit_attempt'"), 'tentativas de envio devem ser observaveis');
   assert.ok(analytics.includes("window.apecertoTrack('form_error'"), 'erros de formulario devem ser observaveis');
   assert.ok(analytics.includes("window.apecertoTrack('engagement_time'"), 'tempo ativo deve ser medido por faixas');
-  assert.ok(analytics.includes("['pushState', 'replaceState']"), 'navegacao SPA deve observar alteracoes reais de URL');
+  assert.ok(analytics.includes("['pushState']"), 'navegacao SPA deve observar apenas navegacoes reais');
+  assert.ok(!analytics.includes("['pushState', 'replaceState']"), 'replaceState interno nao pode inflar page_view');
   assert.ok(analytics.includes("navigation_type: 'spa'"), 'page view virtual deve identificar navegacao SPA');
   assert.ok(analytics.includes('var lastPath = pagePath()'), 'filtros em query string nao podem inflar page_view');
+  assert.ok(analytics.includes('pageViewId = makeUuid()'), 'cada pagina virtual deve receber um page_view_id novo');
+  assert.ok(analytics.includes('external_id: ensureSessionId() || undefined'), 'Pixel e CAPI devem compartilhar a identidade first-party consentida');
   assert.ok(analytics.includes("'form_id', 'placement', 'tracking_ref'"), 'a referencia e o formulario do link devem sobreviver na atribuicao');
   assert.ok(analytics.includes("'Ref: ' + trackingRef"), 'o WhatsApp deve carregar referencia humana rastreavel');
   assert.ok(siteTrack.includes('"gtm_health"'), 'o GTM deve conseguir deixar prova de saude na telemetria propria');
