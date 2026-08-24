@@ -128,6 +128,24 @@ test('logos dos cabecalhos preservam a proporcao apos o runtime informar dimenso
   }
 });
 
+test('mapa ignora coordenadas ausentes ou impossiveis antes de calcular o enquadramento', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const trecho = design.match(/\n  coordenadas\(r\) \{([\s\S]*?)\n  \}\n  saraBuscar\(txt\)/);
+  assert.ok(trecho, 'a validação de coordenadas deve continuar isolada e testável');
+  const coordenadas = new Function('r', trecho[1]);
+
+  assert.equal(coordenadas({ latitude: null, longitude: null }), null, 'NULL do banco não pode virar o ponto 0,0');
+  assert.equal(coordenadas({ latitude: '', longitude: '' }), null, 'campos vazios não podem criar marcador');
+  assert.equal(coordenadas({ latitude: '-23.603', longitude: '46.667' }), null, 'longitude com sinal invertido não pode abrir o mapa até a África');
+  assert.equal(coordenadas({ latitude: '0', longitude: '0' }), null, 'o ponto nulo explícito deve ser descartado');
+  assert.equal(coordenadas({ latitude: '-22.90', longitude: '-43.20' }), null, 'um ponto fora da região atendida não pode afastar o mapa de São Paulo');
+  assert.deepEqual(
+    coordenadas({ latitude: '-23.603', longitude: '-46.667' }),
+    [-23.603, -46.667],
+    'uma coordenada válida de São Paulo deve continuar no mapa',
+  );
+});
+
 test('build aplica a camada de producao e tracking', async () => {
   const { out } = await pacotePublicado();
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');

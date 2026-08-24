@@ -4226,8 +4226,11 @@ class Component extends DCLogic {
     } catch (e) { return ''; }
   }
   coordenadas(r) {
-    const lat = Number(r && r.latitude), lng = Number(r && r.longitude);
-    return Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 ? [lat, lng] : null;
+    const rawLat = r && r.latitude, rawLng = r && r.longitude;
+    if (rawLat == null || rawLng == null || String(rawLat).trim() === '' || String(rawLng).trim() === '') return null;
+    const lat = Number(rawLat), lng = Number(rawLng);
+    const dentroDaGrandeSaoPaulo = lat >= -24.2 && lat <= -23.2 && lng >= -47.2 && lng <= -46.0;
+    return Number.isFinite(lat) && Number.isFinite(lng) && dentroDaGrandeSaoPaulo ? [lat, lng] : null;
   }
   saraBuscar(txt) {
     const t = txt.toLowerCase();
