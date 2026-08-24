@@ -109,6 +109,25 @@ test('build injeta o design no pacote-base', async t => {
   );
 });
 
+test('logos dos cabecalhos preservam a proporcao apos o runtime informar dimensoes intrinsecas', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const logos = [...design.matchAll(/<img\b[^>]*alt="apêcerto"[^>]*>/g)].map(match => match[0]);
+
+  assert.ok(logos.length >= 5, 'todas as variacoes visuais do logo devem ser verificadas');
+  for (const logo of logos) {
+    assert.match(
+      logo,
+      /style="[^"]*\bwidth:\s*(?:auto|fit-content)\b/,
+      'o logo não pode usar como largura visual o atributo width injetado pelo runtime',
+    );
+  }
+
+  const logosDeCabecalho = logos.filter(logo => logo.includes('display: block'));
+  for (const logo of logosDeCabecalho) {
+    assert.match(logo, /\bflex-shrink:\s*0\b/, 'o logo do cabeçalho não pode ser deformado pelo flexbox');
+  }
+});
+
 test('build aplica a camada de producao e tracking', async () => {
   const { out } = await pacotePublicado();
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
