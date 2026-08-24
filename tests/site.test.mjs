@@ -146,6 +146,58 @@ test('mapa ignora coordenadas ausentes ou impossiveis antes de calcular o enquad
   );
 });
 
+test('mapa carrega o catalogo atual sem limite de preco ou paginacao escondida', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(
+    design,
+    /fFinalidade:\s*'venda',\s*fPreco:\s*null,[\s\S]{0,120}?fPrecoMax:\s*null,[\s\S]{0,120}?precoTocado:\s*false/,
+    'o estado inicial deve representar busca sem limite de preco',
+  );
+  assert.match(design, /const tamanho = 100;/, 'a primeira requisicao deve comportar todo o catalogo atual');
+  assert.match(design, /else if \(temMais\) this\.carregarProdutos\(true\);/, 'lotes futuros devem ser carregados automaticamente');
+  assert.match(
+    design,
+    /Range:\s*inicio \+ '-' \+ \(inicio \+ tamanho - 1\)/,
+    'o Range deve continuar derivado do tamanho auditado',
+  );
+});
+
+test('mapa agrupa unidades por empreendimento sem esconder unidades do popup', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const trecho = design.match(/\n  gruposMapa\(rows\) \{([\s\S]*?)\n  \}\n  syncListaMapa\(\)/);
+  assert.ok(trecho, 'o agrupamento do mapa deve continuar isolado e testavel');
+  const gruposMapa = new Function('rows', trecho[1]);
+  const contexto = {
+    coordenadas: r => r.latitude == null || r.longitude == null ? null : [Number(r.latitude), Number(r.longitude)],
+    empreendimentoId: r => r.empreendimento_id || null,
+  };
+  const grupos = gruposMapa.call(contexto, [
+    { id: 'u1', empreendimento_id: 'e1', empreendimento_nome: 'Predio A', latitude: -23.60, longitude: -46.66 },
+    { id: 'u2', empreendimento_id: 'e1', empreendimento_nome: 'Predio A', latitude: -23.60, longitude: -46.66 },
+    { id: 'u3', empreendimento_id: 'e2', empreendimento_nome: 'Predio B', latitude: -23.60, longitude: -46.66 },
+    { id: 'u4', empreendimento_id: 'e3', empreendimento_nome: 'Sem local', latitude: null, longitude: null },
+  ]);
+
+  assert.equal(grupos.length, 2, 'cada empreendimento localizado deve produzir exatamente um grupo');
+  assert.equal(grupos[0].itens.length, 2, 'todas as unidades do empreendimento devem permanecer acessiveis');
+  assert.equal(grupos[1].itens.length, 1, 'empreendimentos diferentes nao podem ser fundidos pela coordenada');
+  assert.deepEqual(grupos[0].ll, [-23.60, -46.66]);
+
+  const mapa = design.match(/\n  syncListaMapa\(\) \{([\s\S]*?)\n  \}\n  checkDemo\(\)/)?.[1] || '';
+  assert.match(mapa, /grupo\.ll\.join\(','\)/, 'a assinatura deve reagir a mudancas de latitude e longitude');
+  assert.match(mapa, /grupo\.itens\.length/, 'a assinatura e o pin devem reagir a quantidade de unidades');
+  assert.match(mapa, /this\.pinIcon\(34, qtd\)/, 'o pin deve exibir a quantidade agregada');
+  assert.match(mapa, /mk\.bindPopup\(painel/, 'o pin deve abrir a lista navegavel de unidades');
+  assert.match(mapa, /max-height:260px;overflow-y:auto/, 'grupos grandes devem ter rolagem interna');
+  assert.match(mapa, /this\.abrirDetalhe\(r\)/, 'cada unidade listada deve preservar a abertura do detalhe');
+  assert.match(mapa, /qtd === 1[\s\S]*?this\.abrirDetalhe\(grupo\.itens\[0\]\)/, 'pin de uma unidade deve manter abertura direta como antes');
+  assert.match(mapa, /minWidth:\s*220,[\s\S]*?maxWidth:\s*300/, 'popup deve caber em telas pequenas');
+  assert.match(mapa, /e\.key === ' '/, 'marcadores devem responder tambem a tecla Espaco');
+  assert.match(mapa, /setAttribute\('aria-label', ariaLabel\)/, 'o pin deve ter nome acessivel e contagem');
+  assert.match(design, /const temContagem = total != null;/, 'o badge deve aparecer somente nos pins agrupados da lista');
+  assert.match(design, /this\.pinIcon\(36\)/, 'o mapa da ficha deve preservar o pin simples, sem badge artificial');
+});
+
 test('build aplica a camada de producao e tracking', async () => {
   const { out } = await pacotePublicado();
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
