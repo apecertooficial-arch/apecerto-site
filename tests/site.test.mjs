@@ -198,6 +198,25 @@ test('mapa agrupa unidades por empreendimento sem esconder unidades do popup', a
   assert.match(design, /this\.pinIcon\(36\)/, 'o mapa da ficha deve preservar o pin simples, sem badge artificial');
 });
 
+test('crédito do mapa preserva o OpenStreetMap sem exibir a marca visual do Leaflet', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.equal(
+    (design.match(/attributionControl\.setPrefix\(false\)/g) || []).length,
+    2,
+    'a lista e a ficha devem remover apenas o prefixo visual da biblioteca Leaflet',
+  );
+  assert.equal(
+    (design.match(/https:\/\/www\.openstreetmap\.org\/copyright/g) || []).length,
+    2,
+    'o crédito obrigatório do OpenStreetMap deve continuar visível e clicável nos dois mapas',
+  );
+  assert.match(
+    design,
+    /#lista-mapa \.leaflet-control-attribution,[\s\S]*?#det-mapa \.leaflet-control-attribution[\s\S]*?border-radius:\s*var\(--radius-pill\)/,
+    'a atribuição deve seguir o estilo discreto do site sem ser ocultada',
+  );
+});
+
 test('build aplica a camada de producao e tracking', async () => {
   const { out } = await pacotePublicado();
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');

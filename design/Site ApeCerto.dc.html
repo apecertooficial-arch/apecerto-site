@@ -1822,6 +1822,26 @@ svg.leaflet-image-layer.leaflet-interactive path {
       .rw-sara { width: calc(100vw - 72px) !important; }
       #lista-mapa { height: 420px !important; position: relative !important; top: auto !important; }
     }
+    #lista-mapa .leaflet-control-attribution,
+    #det-mapa .leaflet-control-attribution {
+      margin: 0 8px 8px 0;
+      padding: 3px 7px;
+      border: 1px solid rgba(110, 103, 96, 0.16);
+      border-radius: var(--radius-pill);
+      background: rgba(250, 248, 246, 0.88);
+      box-shadow: 0 2px 8px rgba(31, 28, 26, 0.08);
+      color: var(--fg-3);
+      font-family: var(--font-body);
+      font-size: 10px;
+      line-height: 1.2;
+      backdrop-filter: blur(6px);
+    }
+    #lista-mapa .leaflet-control-attribution a,
+    #det-mapa .leaflet-control-attribution a {
+      color: inherit;
+      font-weight: var(--weight-semibold);
+      text-decoration: none;
+    }
   </style>
 </helmet>
 
@@ -3560,7 +3580,10 @@ class Component extends DCLogic {
     this.listaMapaSig = sig;
     if (!grupos.length) return;
     const m = window.L.map(el, { scrollWheelZoom: true });
-    window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(m);
+    window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" aria-label="Créditos do mapa OpenStreetMap">© OpenStreetMap</a>'
+    }).addTo(m);
+    if (m.attributionControl && m.attributionControl.setPrefix) m.attributionControl.setPrefix(false);
     const bounds = [];
     grupos.forEach(grupo => {
       bounds.push(grupo.ll);
@@ -4683,7 +4706,10 @@ class Component extends DCLogic {
       if (!el) return;
       if (this.mapa) { this.mapa.remove(); this.mapa = null; }
       this.mapa = window.L.map(el, { scrollWheelZoom: true }).setView(ll, 16);
-      window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(this.mapa);
+      window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" aria-label="Créditos do mapa OpenStreetMap">© OpenStreetMap</a>'
+      }).addTo(this.mapa);
+      if (this.mapa.attributionControl && this.mapa.attributionControl.setPrefix) this.mapa.attributionControl.setPrefix(false);
       window.L.marker(ll, { icon: this.pinIcon(36) }).addTo(this.mapa);
     }, 250);
   }
