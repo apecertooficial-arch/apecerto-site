@@ -329,7 +329,10 @@
       if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = [];
       t = b.createElement(e); t.async = !0; t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
     }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-    window.fbq('init', PIXEL_ID);
+    // A sessão first-party só é usada depois do consentimento de marketing.
+    // O mesmo external_id segue no Pixel e na CAPI, melhorando a qualidade de
+    // correspondência sem coletar telefone/e-mail antes de uma conversão.
+    window.fbq('init', PIXEL_ID, { external_id: ensureSessionId() || undefined });
   }
 
   // Envia o evento para a Conversions API (server-side) com o mesmo event_id do Pixel.
@@ -350,7 +353,10 @@
     if (fbc) body.fbc = fbc;
     if (identity && identity.email) body.email = clean(identity.email, 160);
     if (identity && identity.phone) body.phone = clean(identity.phone, 40);
-    if (identity && identity.external_id) body.external_id = clean(identity.external_id, 120);
+    var externalId = identity && identity.external_id
+      ? clean(identity.external_id, 120)
+      : (ensureSessionId() || '');
+    if (externalId) body.external_id = externalId;
     fetch(CAPI_URL, {
       method: 'POST',
       keepalive: true,
@@ -372,7 +378,9 @@
     if (pixelLoaded && window.fbq) {
       window.fbq(META_CUSTOM_EVENTS.has(eventName) ? 'trackCustom' : 'track', metaEvent, params || {}, { eventID: eventId });
     }
-    capiSend(eventName, params || {}, eventId, identity || null);
+    capiSend(eventName, params || {}, eventId, Object.assign({
+      external_id: ensureSessionId() || undefined,
+    }, identity || {}));
   }
 
   function marketingPageView() {
@@ -388,7 +396,7 @@
     };
     window.dataLayer.push(payload);
     if (pixelLoaded && window.fbq) window.fbq('track', 'PageView', {}, { eventID: eventId });
-    capiSend('page_view', {}, eventId);
+    capiSend('page_view', {}, eventId, { external_id: ensureSessionId() || undefined });
   }
 
   function applyConsent(next) {
@@ -469,9 +477,9 @@
       referrer_host: referrerHost() || null,
       device_category: deviceCategory(),
       consent_level: consentLevel(),
-      utm_source: clean(currentTouch.utm_source, 120) || null,
-      utm_medium: clean(currentTouch.utm_medium, 120) || null,
-      utm_campaign: clean(currentTouch.utm_campaign, 160) || null,
+      utm_source: clean(campaignTouch && campaignTouch.utm_source, 120) || null,
+      utm_medium: clean(campaignTouch && campaignTouch.utm_medium, 120) || null,
+      utm_campaign: clean(campaignTouch && campaignTouch.utm_campaign, 160) || null,
       properties: properties,
     };
     var controller = typeof window.AbortController === 'function' ? new window.AbortController() : null;
@@ -544,20 +552,32 @@
     if (consent.analytics && googleIdentity.session_id) payload.ga_session_id = googleIdentity.session_id;
     if (consent.marketing && ((attribution.first && attribution.first.gclid) || currentTouch.gclid)) payload.has_gclid = true;
     var firstPartyPromise = firstPartyTrack(eventName, Object.assign({ event_id: eventId }, publicParams));
-    window.dataLayer.push(Object.assign({
-      event: 'apecerto_event',
-      apecerto_event_name: eventName,
-      apecerto_event_id: eventId,
-    }, payload));
-    window.gtag('event', eventName, payload);
-    metaTrack(eventName, publicParams, eventId, identity);
+    // Disponibiliza os dados consentidos antes de o evento entrar no dataLayer,
+    // para a tag de conversão do GTM conseguir aplicar conversões otimizadas.
     if (identity && consent.marketing) {
       window.gtag('set', 'user_data', {
         email: identity.email || undefined,
         phone_number: identity.phone || undefined,
       });
     }
-    var adsPromise = adsConversion(eventName, publicParams, eventId);
+    window.dataLayer.push(Object.assign({
+      event: 'apecerto_event',
+      apecerto_event_name: eventName,
+      apecerto_event_id: eventId,
+    }, payload));
+    // Depois que o contêiner oficial assume os eventos, o navegador não envia
+    // a mesma ocorrência duas vezes ao GA4. O page_view continua direto porque
+    // a tag do GTM o exclui deliberadamente; se o GTM não carregar, o envio
+    // direto permanece como fallback para todos os eventos.
+    if (eventName === 'page_view' || !window.apecertoGtmGa4Managed) {
+      window.gtag('event', eventName, payload);
+    }
+    metaTrack(eventName, publicParams, eventId, identity);
+    // A conversão generate_lead é gerenciada no GTM quando o contêiner está
+    // saudável. Sem GTM, mantém o beacon direto como contingência.
+    var adsPromise = window.apecertoGtmAdsManaged
+      ? Promise.resolve(false)
+      : adsConversion(eventName, publicParams, eventId);
     if (clarityLoaded && window.clarity && /^(generate_lead|view_item|whatsapp_click|phone_click|sara_results|owner_portal_open)$/.test(eventName)) {
       window.clarity('event', eventName);
     }
@@ -962,8 +982,9 @@
     });
   }
 
-  // O site funciona como SPA. Somente mudancas reais de pathname representam
-  // outra pagina; filtros em query string ja possuem o evento filter_change.
+  // O site funciona como SPA. pushState e popstate representam navegação.
+  // replaceState é usado internamente pelo catálogo dezenas de vezes para
+  // sincronizar estado e nunca deve criar uma nova visualização.
   function trackSpaNavigation() {
     var lastPath = pagePath();
     var scheduled = false;
@@ -975,13 +996,14 @@
         var nextPath = pagePath();
         if (nextPath === lastPath) return;
         lastPath = nextPath;
+        pageViewId = makeUuid();
         window.apecertoTrack('page_view', {
           navigation_type: 'spa',
           navigation_source: source,
         });
       }, 0);
     }
-    ['pushState', 'replaceState'].forEach(function (method) {
+    ['pushState'].forEach(function (method) {
       var original = window.history && window.history[method];
       if (typeof original !== 'function') return;
       window.history[method] = function () {
