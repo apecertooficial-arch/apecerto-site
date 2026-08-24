@@ -128,6 +128,21 @@ test('logos dos cabecalhos preservam a proporcao apos o runtime informar dimenso
   }
 });
 
+test('grafismos da marca preservam a proporcao depois da externalizacao das imagens', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const grafismos = [...design.matchAll(/<img\b[^>]*class="rw-grafismo"[^>]*>/g)].map(match => match[0]);
+
+  assert.equal(grafismos.length, 2, 'home e portal devem usar o grafismo protegido');
+  for (const grafismo of grafismos) {
+    assert.match(
+      grafismo,
+      /style="[^"]*\bheight:\s*auto\b/,
+      'a altura intrinseca injetada pelo runtime nao pode esticar o grafismo',
+    );
+    assert.match(grafismo, /style="[^"]*\bdisplay:\s*block\b/, 'o grafismo nao deve criar espaco de linha');
+  }
+});
+
 test('mapa ignora coordenadas ausentes ou impossiveis antes de calcular o enquadramento', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const trecho = design.match(/\n  coordenadas\(r\) \{([\s\S]*?)\n  \}\n  saraBuscar\(txt\)/);
