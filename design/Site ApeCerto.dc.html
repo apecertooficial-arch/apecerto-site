@@ -2421,6 +2421,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
             </sc-if>
           </div>
         </div>
+        <div style="display: flex; align-items: center; gap: 8px; color: var(--fg-3); font-size: var(--text-sm)">
+          <i data-lucide="images" style="width: 16px; height: 16px; color: var(--ape-orange)"></i>
+          <span>{{ galResumo }}</span>
+        </div>
         <div class="rw-g1" style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 40px; align-items: start">
           <div style="display: flex; flex-direction: column; gap: 28px">
             <sc-if value="{{ detSlogan }}" hint-placeholder-val="{{ false }}">
@@ -2855,7 +2859,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <sc-if value="{{ galOn }}" hint-placeholder-val="{{ false }}">
     <div sc-camel-on-click="{{ galFecha }}" style="position: fixed; inset: 0; z-index: 200; background: rgba(31, 28, 26, 0.94); display: flex; flex-direction: column; padding: 20px">
       <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--neutral-0)">
-        <span style="font-size: var(--text-sm); font-weight: var(--weight-semibold)">{{ galContador }}</span>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: var(--text-sm); font-weight: var(--weight-semibold)">{{ galContador }}</span>
+          <span style="font-size: var(--text-xs); color: var(--neutral-300)">{{ galGrupoAtual }}</span>
+        </div>
         <button sc-camel-on-click="{{ galFecha }}" aria-label="Fechar galeria" style="border: none; cursor: pointer; width: 40px; height: 40px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.12); color: var(--neutral-0); font-size: 16px; font-family: var(--font-body)" style-hover="background: rgba(255, 255, 255, 0.24)">✕</button>
       </div>
       <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 16px; min-height: 0; padding: 12px 0">
@@ -4128,8 +4135,9 @@ class Component extends DCLogic {
         const dorm = /studio/i.test(u.tipologia || '') ? 0 : dm ? Number(dm[1]) : r.dormitorios;
         const unidadeId = this.uuidValido(u.id || u.unidade_id) ? (u.id || u.unidade_id) : null;
         const unidadeRef = u.codigo || u.numero || String(out.length + 1);
-        const fotosUnidade = Array.isArray(u.fotos) && u.fotos.length ? u.fotos.slice() : (Array.isArray(r.fotos) ? r.fotos.slice() : []);
-        const capaUnidade = u.capa_path || fotosUnidade[0] || r.capa_path || null;
+        const fotosUnidade = Array.isArray(u.fotos) ? u.fotos.slice() : [];
+        const fotosCondominio = Array.isArray(r.fotos) ? r.fotos.slice() : [];
+        const capaUnidade = u.capa_path || fotosUnidade[0] || null;
         const precoUnidade = this.normalizarPrecoImovel(u.valor, this.finalidadeDe(r)) || this.precoDe(r);
         out.push(Object.assign({}, r, {
           id: unidadeId || r.id + ':' + unidadeRef,
@@ -4149,7 +4157,10 @@ class Component extends DCLogic {
           area_util: u.area_m2 || r.area_util,
           vagas: u.vagas != null ? u.vagas : r.vagas,
           dormitorios: dorm,
-          unidades_disponiveis: 1
+          unidades_disponiveis: 1,
+          // A unidade é o imóvel vendido. As fotos do prédio ficam separadas
+          // como áreas comuns e nunca viram capa ou galeria privativa.
+          fotos_condominio: fotosCondominio
         }));
       }
     }
@@ -4632,7 +4643,10 @@ class Component extends DCLogic {
     const fPrecoMin = st.fPrecoMin != null ? st.fPrecoMin : piso; const fPrecoMax = st.fPrecoMax != null ? st.fPrecoMax : (st.fPreco != null ? st.fPreco : teto);
     const det = st.det;
     const detTourUrl = det ? this.tourUrl(det.tour_url) : '';
-    const fotosDet = det ? (det.fotos || []).map(p => this.fotoUrl(p)) : [];
+    const fotosPrivativasDet = det ? (det.fotos || []).map(p => ({ url: this.fotoUrl(p), grupo: 'Fotos do imóvel' })) : [];
+    const fotosComunsDet = det ? (det.fotos_condominio || []).map(p => ({ url: this.fotoUrl(p), grupo: 'Áreas comuns do condomínio' })) : [];
+    const galeriaDet = fotosPrivativasDet.concat(fotosComunsDet);
+    const fotosDet = galeriaDet.map(f => f.url);
     const gi = Math.min(st.galIdx || 0, Math.max(0, fotosDet.length - 1));
     const detBadge = det ? (this.badges[det.status] || this.badges.pronto) : null;
     return {
@@ -4749,11 +4763,13 @@ class Component extends DCLogic {
       galOn: st.galOn && fotosDet.length > 0,
       galFotoAtual: fotosDet[gi] || '',
       galContador: (gi + 1) + ' de ' + fotosDet.length,
+      galGrupoAtual: galeriaDet[gi] ? galeriaDet[gi].grupo : '',
+      galResumo: fotosPrivativasDet.length + ' foto(s) do imóvel' + (fotosComunsDet.length ? ' · ' + fotosComunsDet.length + ' foto(s) de áreas comuns' : ''),
       galFecha: () => this.setState({ galOn: false }),
       galNada: e => { if (e && e.stopPropagation) e.stopPropagation(); },
       galPrev: e => { e.stopPropagation(); this.setState({ galIdx: (gi - 1 + fotosDet.length) % fotosDet.length }); },
       galNext: e => { e.stopPropagation(); this.setState({ galIdx: (gi + 1) % fotosDet.length }); },
-      galThumbs: fotosDet.map((u, i) => ({ url: u, sel: e => { e.stopPropagation(); this.setState({ galIdx: i }); }, borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' })),
+      galThumbs: galeriaDet.map((foto, i) => ({ url: foto.url, grupo: foto.grupo, sel: e => { e.stopPropagation(); this.setState({ galIdx: i }); }, borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' })),
       detDescricao: det && det.descricao,
       detTourOn: !!detTourUrl, detTourUrl,
       detTemDif: !!(det && det.diferenciais && det.diferenciais.length), detDif: (det && det.diferenciais) || [],

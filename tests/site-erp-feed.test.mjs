@@ -38,8 +38,18 @@ test("catálogo público vem da aprovação de Produtos do ERP", () => {
 
 test("produto pronto só aparece como unidade aprovada e usa a galeria da unidade", () => {
   assert.match(design, /r && r\.status !== 'pronto'/);
-  assert.match(design, /const capaUnidade = u\.capa_path \|\| fotosUnidade\[0\] \|\| r\.capa_path \|\| null/);
-  assert.match(design, /const fotosUnidade = Array\.isArray\(u\.fotos\) && u\.fotos\.length \? u\.fotos\.slice\(\) : \(Array\.isArray\(r\.fotos\) \? r\.fotos\.slice\(\) : \[\]\)/);
+  assert.match(design, /const capaUnidade = u\.capa_path \|\| fotosUnidade\[0\] \|\| null/);
+  assert.match(design, /const fotosUnidade = Array\.isArray\(u\.fotos\) \? u\.fotos\.slice\(\) : \[\]/);
+  assert.match(design, /const fotosCondominio = Array\.isArray\(r\.fotos\) \? r\.fotos\.slice\(\) : \[\]/);
+  assert.match(design, /fotos_condominio: fotosCondominio/);
+  assert.doesNotMatch(design, /fotosUnidade\[0\] \|\| r\.capa_path/);
+  assert.doesNotMatch(design, /u\.fotos\.length \? u\.fotos\.slice\(\) : \(Array\.isArray\(r\.fotos\)/);
+});
+
+test("detalhe separa fotos privativas das áreas comuns do condomínio", () => {
+  assert.match(design, /grupo: 'Fotos do imóvel'/);
+  assert.match(design, /grupo: 'Áreas comuns do condomínio'/);
+  assert.match(design, /galGrupoAtual/);
 });
 
 test("bundle continua estruturalmente íntegro", () => {
