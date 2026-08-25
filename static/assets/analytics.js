@@ -508,18 +508,32 @@
       utm_campaign: clean(campaignTouch && campaignTouch.utm_campaign, 160) || null,
       properties: properties,
     };
+    var trackUrl = SUPABASE_URL + '/functions/v1/site-track';
+    var serializedBody = JSON.stringify(body);
+    // O endpoint valida origem, evento e payload no servidor e não exige JWT.
+    // text/plain mantém o beacon como requisição CORS simples, sem preflight;
+    // request.json() continua interpretando o corpo normalmente na Edge.
+    try {
+      if (window.navigator && typeof window.navigator.sendBeacon === 'function' && typeof window.Blob === 'function') {
+        var beaconBody = new window.Blob([serializedBody], { type: 'text/plain;charset=UTF-8' });
+        if (window.navigator.sendBeacon(trackUrl, beaconBody)) return Promise.resolve(true);
+      }
+    } catch (beaconError) {}
+
+    // Navegadores sem Beacon (ou com a fila cheia) usam fetch abortável. Não
+    // usamos keepalive aqui: algumas implementações mantêm esse request vivo
+    // mesmo depois do prazo, atrasando a condição de rede ociosa da página.
     var controller = typeof window.AbortController === 'function' ? new window.AbortController() : null;
     var timeoutId = controller ? window.setTimeout(function () { controller.abort(); }, 2500) : null;
     try {
-      return fetch(SUPABASE_URL + '/functions/v1/site-track', {
+      return fetch(trackUrl, {
         method: 'POST',
-        keepalive: true,
         headers: {
           apikey: SUPABASE_KEY,
           Authorization: 'Bearer ' + SUPABASE_KEY,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        body: serializedBody,
         signal: controller ? controller.signal : undefined,
       }).then(function (response) {
         return !!response.ok;

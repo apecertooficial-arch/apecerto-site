@@ -161,6 +161,11 @@ test('shell antecipa recursos críticos e o template preserva metadados após a 
   assert.ok(shell.includes('<link rel="preload" as="fetch" href="' + version.templatePath + '" crossorigin>'), 'o template externo deve ser descoberto no head com modo compatível com fetch');
   assert.match(shell, /<link rel="preconnect" href="https:\/\/diaegvfveqezispcthwk\.supabase\.co" crossorigin>/);
   assert.match(shell, /<link rel="preload" as="image" href="\/assets\/bundle-optimized\/[a-f0-9]{20}\.webp" fetchpriority="high">/);
+  assert.equal((shell.match(/<link rel="preload" as="script" href="\/assets\/bundle\/[a-f0-9]{20}\.js">/g) || []).length, 4, 'runtime, React, ReactDOM e design system devem começar junto do template');
+  assert.equal(version.initialAssets.filter(path => path.endsWith('.woff2')).length, 4, 'os quatro pesos usados na abertura devem usar WOFF2');
+  assert.equal(version.initialAssets.filter(path => path.endsWith('.ttf')).length, 0, 'TTF não deve permanecer no carregamento inicial');
+  assert.match(html, /format\('woff2'\)/, 'o CSS publicado deve declarar o formato comprimido correto');
+  assert.doesNotMatch(html, /format\('truetype'\)/, 'o CSS publicado não deve anunciar TTF para arquivos WOFF2');
   for (const document of [shell, html]) {
     assert.match(document, /<meta name="description" content="Apartamentos para comprar em Moema/);
     assert.match(document, /<link rel="canonical" href="https:\/\/apecerto\.com\/">/);
@@ -182,11 +187,41 @@ test('bundles publicados não apontam para source maps ausentes', async () => {
   }
 });
 
+test('build publica somente o subconjunto de ícones usado pelo site', async () => {
+  const shell = await readFile(join(root, 'dist/index.html'), 'utf8');
+  const manifest = JSON.parse(shell.match(/<script type="__bundler\/manifest">\s*([\s\S]*?)\s*<\/script>/)[1]);
+  const lucide = manifest['d76081c9-365b-497c-a53c-e3f94767ebc9'];
+  assert.ok(lucide && lucide.url, 'o UUID do Lucide deve continuar resolvível pelo runtime do design');
+  const source = await readFile(join(root, 'dist', lucide.url.replace(/^\/+/, '')), 'utf8');
+  assert.ok(Buffer.byteLength(source) < 30000, 'o subconjunto Lucide deve ficar abaixo de 30 KB');
+  assert.match(source, /createIcons/);
+  assert.match(source, /bed-double/);
+  assert.doesNotMatch(source, /AArrowDown/);
+});
+
+test('Leaflet não pertence ao orçamento inicial', async () => {
+  const version = JSON.parse(await readFile(join(root, 'dist/version.json'), 'utf8'));
+  const shell = await readFile(join(root, 'dist/index.html'), 'utf8');
+  const manifest = JSON.parse(shell.match(/<script type="__bundler\/manifest">\s*([\s\S]*?)\s*<\/script>/)[1]);
+  const leafletUrl = manifest['4e06a80d-cb55-4dd3-8f0d-a47dbcf50aa4'].url;
+  assert.ok(!version.initialAssets.includes(leafletUrl), 'o mapa deve baixar a biblioteca apenas perto da área visível');
+  for (const uuid of [
+    '423dc31e-8e4e-4cd6-bed6-eee6085ba021',
+    '99ceddc7-e4c8-4fd7-967d-62da1c6abea2',
+    '6ca08ada-3f93-4b37-86c8-e0f15e8940d3',
+  ]) {
+    assert.ok(version.initialAssets.includes(manifest[uuid].url), 'o orçamento deve contabilizar ' + uuid);
+  }
+});
+
 test('Render aguarda CI e envia headers seguros e cache imutavel', async () => {
   const render = await readFile(join(root, 'render.yaml'), 'utf8');
   const workflow = await readFile(join(root, '.github/workflows/validate-site.yml'), 'utf8');
+  const localServer = await readFile(join(root, 'scripts/serve-dist.mjs'), 'utf8');
   assert.match(render, /buildCommand: npm run ci/);
   assert.match(render, /autoDeployTrigger: checksPass/);
+  assert.match(localServer, /public, max-age=31536000, immutable/, 'a medição local deve espelhar o cache de assets do Render');
+  assert.match(localServer, /public, max-age=0, must-revalidate/, 'documentos locais devem revalidar sem bloquear o bfcache');
   assert.match(render, /source: \/imovel\/\*/);
   assert.match(render, /destination: \/index\.html/);
   assert.match(render, /source: \/sitemap-catalogo\.xml\s+destination: https:\/\/diaegvfveqezispcthwk\.supabase\.co\/functions\/v1\/site-seo\/sitemap\.xml/);

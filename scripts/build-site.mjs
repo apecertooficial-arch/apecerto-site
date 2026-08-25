@@ -4,23 +4,58 @@
 import { readFile, writeFile, mkdir, access, cp, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
+import vm from 'node:vm';
 
 const existe = p => access(p).then(() => true, () => false);
 
 const base = await readFile('index.html', 'utf8');
 let design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+const productionCss = await readFile('static/assets/production.css', 'utf8');
 const heroVariants = JSON.parse(await readFile('build-assets/hero-variants.json', 'utf8'));
 const optimizedBundleAssets = JSON.parse(await readFile('build-assets/bundle-optimized.json', 'utf8'));
 const embeddedAssets = new Map();
+const LUCIDE_UUID = 'd76081c9-365b-497c-a53c-e3f94767ebc9';
+
+// O arquivo recebido do Cloud Design traz os mais de 1.700 ícones do Lucide,
+// embora esta interface use apenas algumas dezenas. Mantemos o mesmo UUID
+// esperado pelo runtime e publicamos uma implementação compatível contendo só
+// os desenhos realmente referenciados pelo template.
+const criarLucideMinimo = bytes => {
+  const nomes = new Set([
+    ...[...design.matchAll(/data-lucide="([^"{}]+)"/g)].map(match => match[1]),
+    ...[...design.matchAll(/\bic:\s*['"]([^'"]+)['"]/g)].map(match => match[1]),
+  ]);
+  const paraPascal = nome => nome.split('-').filter(Boolean).map(parte => parte[0].toUpperCase() + parte.slice(1)).join('');
+  const sandbox = {};
+  sandbox.globalThis = sandbox;
+  sandbox.self = sandbox;
+  const context = vm.createContext(sandbox, { codeGeneration: { strings: false, wasm: false } });
+  new vm.Script(bytes.toString('utf8'), { filename: 'lucide-v0.462.0.js' }).runInContext(context, { timeout: 1000 });
+  if (!sandbox.lucide || !sandbox.lucide.icons) throw new Error('pacote Lucide inválido');
+  const icons = {};
+  for (const nome of [...nomes].sort()) {
+    const desenho = sandbox.lucide.icons[paraPascal(nome)];
+    if (!desenho) throw new Error('ícone Lucide ausente: ' + nome);
+    icons[nome] = desenho;
+  }
+  const runtime = `/*! @license lucide v0.462.0 - ISC | subset ApeCerto */
+(function(g){"use strict";var icons=${JSON.stringify(icons)};var ns="http://www.w3.org/2000/svg";function make(def){var el=document.createElementNS(ns,def[0]),attrs=def[1]||{},kids=def[2]||[];Object.keys(attrs).forEach(function(k){el.setAttribute(k,String(attrs[k]))});kids.forEach(function(k){el.appendChild(make(k))});return el}function createIcons(){document.querySelectorAll("[data-lucide]").forEach(function(old){var name=old.getAttribute("data-lucide"),def=icons[name];if(!def)return;var svg=make(def),classes=["lucide","lucide-"+name,old.getAttribute("class")||""].filter(Boolean).join(" ");Array.from(old.attributes).forEach(function(a){if(a.name!=="data-lucide"&&a.name!=="class")svg.setAttribute(a.name,a.value)});svg.setAttribute("class",classes);if(!svg.hasAttribute("aria-label")&&!svg.hasAttribute("aria-hidden"))svg.setAttribute("aria-hidden","true");old.replaceWith(svg)})}g.lucide={icons:icons,createIcons:createIcons}})(window);`;
+  return Buffer.from(runtime);
+};
 
 const manifestMatch = base.match(/<script type="__bundler\/manifest">\s*([\s\S]*?)\s*<\/script>/);
 if (!manifestMatch) throw new Error('manifesto do pacote-base ausente');
 const originalManifest = JSON.parse(manifestMatch[1]);
+const extResourcesMatch = base.match(/<script type="__bundler\/ext_resources">\s*([\s\S]*?)\s*<\/script>/);
+const extResourceUuids = extResourcesMatch
+  ? JSON.parse(extResourcesMatch[1]).map(entry => entry && entry.uuid).filter(Boolean)
+  : [];
 const bundleManifest = {};
 const bundleExtension = mime => ({
   'application/javascript': 'js',
   'text/javascript': 'js',
   'font/ttf': 'ttf',
+  'font/woff2': 'woff2',
   'image/png': 'png',
   'image/jpeg': 'jpg',
   'text/html': 'html',
@@ -42,9 +77,11 @@ for (const [uuid, entry] of Object.entries(originalManifest)) {
   // O pacote-base referencia mapas de Lucide/Leaflet que não existem no
   // artefato publicado. O comentário não afeta o runtime e sua remoção evita
   // 404 quando auditorias ou DevTools tentam baixar esses arquivos.
-  const publishedBytes = /(?:application|text)\/javascript/.test(entry.mime)
-    ? Buffer.from(bytes.toString('utf8').replace(/\n?\/\/# sourceMappingURL=[^\r\n]+\s*$/gm, ''))
-    : bytes;
+  const publishedBytes = uuid === LUCIDE_UUID
+    ? criarLucideMinimo(bytes)
+    : /(?:application|text)\/javascript/.test(entry.mime)
+      ? Buffer.from(bytes.toString('utf8').replace(/\n?\/\/# sourceMappingURL=[^\r\n]+\s*$/gm, ''))
+      : bytes;
   const publishedHash = createHash('sha256').update(publishedBytes).digest('hex');
   const relative = 'assets/bundle/' + publishedHash.slice(0, 20) + '.' + bundleExtension(entry.mime);
   embeddedAssets.set(relative, publishedBytes);
@@ -66,6 +103,10 @@ const trocaBlocoObrigatorio = (texto, inicio, fim, novo, rotulo) => {
   return texto.slice(0, a) + novo + texto.slice(b);
 };
 
+const formatosFonteTtf = (design.match(/format\('truetype'\)/g) || []).length;
+if (formatosFonteTtf !== 10) throw new Error('contrato de fontes Quicksand mudou: esperados 10 formatos TTF');
+design = design.replaceAll("format('truetype')", "format('woff2')");
+
 const productionMetadata = `
   <meta name="description" content="Apartamentos para comprar em Moema e região, com curadoria local, atendimento digital 24 horas e visitas agendadas pela ApeCerto.">
   <meta name="robots" content="index,follow,max-image-preview:large">
@@ -83,10 +124,10 @@ const productionMetadata = `
 
 const productionHead = `${productionMetadata}
   <style id="apecerto-no-bundle-splash">#__bundler_loading,#__bundler_thumbnail{display:none!important}</style>
+  <style id="apecerto-production-css">${productionCss}</style>
   <script id="apecerto-recovery-scrub">(function(){try{var p=new URLSearchParams(String(location.hash||'').replace(/^#/,''));var t=p.get('type');var a=p.get('access_token');var e=p.get('error_description');if((a&&t==='recovery')||e){Object.defineProperty(window,'__APECERTO_RECOVERY__',{value:{type:t,access_token:a,error_description:e},configurable:true});history.replaceState({},'',location.pathname+location.search)}}catch(_){}})();</script>
   <script>window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments)};window.gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});</script>
-  <script id="apecerto-gtm-deferred">(function(w,d,l,i){w[l]=w[l]||[];function load(){if(w.apecertoGtmLoading||w.apecertoGtmContainerLoaded)return;w.apecertoGtmLoading=true;w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName('script')[0],j=d.createElement('script'),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;j.onload=function(){w.apecertoGtmContainerLoaded=true};j.onerror=function(){w.apecertoGtmLoadFailed=true;if(w.apecertoLoadGoogleFallback)w.apecertoLoadGoogleFallback()};f.parentNode.insertBefore(j,f)}w.apecertoLoadGtm=load;function schedule(){var start=function(){if('requestIdleCallback' in w)w.requestIdleCallback(load,{timeout:2500});else w.setTimeout(load,1800)};if(d.readyState==='complete')start();else w.addEventListener('load',start,{once:true})}schedule()})(window,document,'dataLayer','GTM-524TZP8X');</script>
-  <link rel="stylesheet" href="/assets/production.css">
+  <script id="apecerto-gtm-deferred">(function(w,d,l,i){w[l]=w[l]||[];function load(){if(w.apecertoGtmLoading||w.apecertoGtmContainerLoaded)return;w.apecertoGtmLoading=true;w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName('script')[0],j=d.createElement('script'),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;j.onload=function(){w.apecertoGtmContainerLoaded=true};j.onerror=function(){w.apecertoGtmLoadFailed=true;if(w.apecertoLoadGoogleFallback)w.apecertoLoadGoogleFallback()};f.parentNode.insertBefore(j,f)}w.apecertoLoadGtm=load;function schedule(){var started=false,start=function(){if(started)return;started=true;['pointerdown','touchstart','keydown'].forEach(function(n){d.removeEventListener(n,start,true)});load()};['pointerdown','touchstart','keydown'].forEach(function(n){d.addEventListener(n,start,{capture:true,once:true,passive:n!=='keydown'})});w.setTimeout(start,12000)}if(d.readyState==='complete')schedule();else w.addEventListener('load',schedule,{once:true})})(window,document,'dataLayer','GTM-524TZP8X');</script>
   <script src="/assets/analytics.js" defer></script>`;
 
 design = trocaObrigatoria(design, '<html><head>', '<html lang="pt-BR"><head>', 'idioma do design');
@@ -112,9 +153,17 @@ design = trocaObrigatoria(
               <image-slot id="{{ b.slot }}" shape="rect" placeholder="{{ b.foto }}"></image-slot>
             </div>`,
   `            <a href="#apes" sc-camel-on-click="{{ b.filtrar }}" aria-label="Ver os apês de {{ b.nome }}" data-bairro-image-link="true" style="height: 170px; position: relative; display: block">
-              <image-slot id="{{ b.slot }}" shape="rect" placeholder="{{ b.foto }}" style="pointer-events: none"></image-slot>
+              <span class="rw-bairro-visual" data-bairro-visual="{{ b.slot }}" aria-hidden="true" style="display: block; height: 100%; pointer-events: none">
+                <svg viewBox="0 0 480 170" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" focusable="false" aria-hidden="true"><path d="M0 134L62 98l48 26 74-68 61 51 56-38 179 84v17H0Z" fill="currentColor" opacity=".09"></path><path d="M42 135V97h70v38m20 0V76h92v59m24 0V101h80v34m20 0V65h86v70" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" opacity=".34"></path><path d="M27 135h426" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".34"></path><circle cx="382" cy="38" r="15" fill="none" stroke="currentColor" stroke-width="5" opacity=".42"></circle><path d="M397 38h34m-10 0v11m-10-11v8" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" opacity=".42"></path></svg>
+              </span>
             </a>`,
-  'cards de bairro sem upload no site publico',
+  'cards de bairro sem controles editoriais no site publico',
+);
+design = trocaObrigatoria(
+  design,
+  '<script src="ff9f78ad-2cb1-45e3-80ee-5aeee257da44"></script>',
+  '<!-- runtime image-slot omitido: nenhum controle editorial é publicado -->',
+  'runtime de upload removido do site publico',
 );
 
 design = trocaObrigatoria(
@@ -136,8 +185,8 @@ design = trocaObrigatoria(
 
 design = trocaObrigatoria(
   design,
-  'const setIdx = (e, i) => this.trocarFotoCard(e, r.id, fotos, i);',
-  "const setIdx = (e, i) => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(r.id || ''), item_name: r.nome || '', action_label: i > idx ? 'Próxima foto' : 'Foto anterior' }); this.trocarFotoCard(e, r.id, fotos, i); };",
+  '    const setIdx = (e, i) => {\n      if (!galeriaPendente)',
+  "    const setIdx = (e, i) => {\n      if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(r.id || ''), item_name: r.nome || '', action_label: i > idx ? 'Próxima foto' : 'Foto anterior' });\n      if (!galeriaPendente)",
   'galeria do card com contexto do imovel',
 );
 
@@ -164,8 +213,8 @@ design = trocaObrigatoria(
 
 design = trocaObrigatoria(
   design,
-  '      galPrev: e => this.trocarFotoGaleria(e, fotosDet, (gi - 1 + fotosDet.length) % fotosDet.length),\n      galNext: e => this.trocarFotoGaleria(e, fotosDet, (gi + 1) % fotosDet.length),\n      galThumbs: galeriaDet.map((foto, i) => ({ url: foto.url, grupo: foto.grupo, sel: e => this.trocarFotoGaleria(e, fotosDet, i), borda: i === gi ? \'var(--ape-orange)\' : \'transparent\', op: i === gi ? \'1\' : \'0.6\' })),',
-  "      galPrev: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Foto anterior' }); this.trocarFotoGaleria(e, fotosDet, (gi - 1 + fotosDet.length) % fotosDet.length); },\n      galNext: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Próxima foto' }); this.trocarFotoGaleria(e, fotosDet, (gi + 1) % fotosDet.length); },\n      galThumbs: galeriaDet.map((foto, i) => ({ url: foto.url, grupo: foto.grupo, sel: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Miniatura ' + (i + 1) }); this.trocarFotoGaleria(e, fotosDet, i); }, borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' })),",
+  '      galPrev: e => this.trocarFotoGaleria(e, fotosDet, (gi - 1 + fotosDet.length) % fotosDet.length),\n      galNext: e => this.trocarFotoGaleria(e, fotosDet, (gi + 1) % fotosDet.length),\n      galThumbs: galThumbsDet.map((foto, pos) => { const i = galThumbInicio + pos; return { url: foto.url, grupo: foto.grupo, label: \'Ver foto \' + (i + 1) + \' de \' + fotosDet.length + \' — \' + foto.grupo, atual: i === gi, sel: e => this.trocarFotoGaleria(e, fotosDet, i), borda: i === gi ? \'var(--ape-orange)\' : \'transparent\', op: i === gi ? \'1\' : \'0.6\' }; }),',
+  "      galPrev: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Foto anterior' }); this.trocarFotoGaleria(e, fotosDet, (gi - 1 + fotosDet.length) % fotosDet.length); },\n      galNext: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Próxima foto' }); this.trocarFotoGaleria(e, fotosDet, (gi + 1) % fotosDet.length); },\n      galThumbs: galThumbsDet.map((foto, pos) => { const i = galThumbInicio + pos; return { url: foto.url, grupo: foto.grupo, label: 'Ver foto ' + (i + 1) + ' de ' + fotosDet.length + ' — ' + foto.grupo, atual: i === gi, sel: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Miniatura ' + (i + 1) }); this.trocarFotoGaleria(e, fotosDet, i); }, borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' }; }),",
   'galeria do detalhe com contexto do imovel',
 );
 
@@ -379,7 +428,9 @@ const financeLeadProductionMethod = `  async fichaEnviar() {
         __identity: { email: email, phone: telefone }
       });
       this.ficha = {};
-      this.setState({ fichaEnviando: false, fichaOk: true });
+      this.setState({ fichaEnviando: false, fichaOk: true }, () => {
+        setTimeout(() => { const confirmacao = document.querySelector('[data-financing-success]'); if (confirmacao && confirmacao.focus) confirmacao.focus(); }, 30);
+      });
     } catch (e) {
       this.registrarErro('lead_financiamento', e, e && e.status);
       this.setState({ fichaEnviando: false, fichaErro: 'Não deu certo agora — tenta de novo ou chama a gente no WhatsApp.' });
@@ -553,9 +604,9 @@ design = trocaObrigatoria(design, "setAlugar: () => this.aplicarFiltros({ aba: '
 
 // Clarity grava movimento/cliques, mas nunca recebe os blocos que podem conter
 // conversa, documentos, dados de lead ou informacoes internas do portal.
-design = trocaObrigatoria(design, '<div class="rw-sara" style=', '<div class="rw-sara" data-clarity-mask="true" style=', 'mascara conversa da Sara');
+design = trocaObrigatoria(design, '<div id="sara-painel" class="rw-sara" role="region" aria-label="Busca assistida pela Sara" style=', '<div id="sara-painel" class="rw-sara" role="region" aria-label="Busca assistida pela Sara" data-clarity-mask="true" style=', 'mascara conversa da Sara');
 design = trocaObrigatoria(design, '<div sc-camel-on-click="{{ fichaFechar }}" style="position: fixed; inset: 0; z-index: 220;', '<div sc-camel-on-click="{{ fichaFechar }}" data-clarity-mask="true" style="position: fixed; inset: 0; z-index: 220;', 'mascara ficha financeira');
-design = trocaObrigatoria(design, '<div style="position: fixed; inset: 0; z-index: 100; background: var(--bg-page); overflow-y: auto">', '<div data-clarity-mask="true" style="position: fixed; inset: 0; z-index: 100; background: var(--bg-page); overflow-y: auto">', 'mascara portal do proprietario');
+design = trocaObrigatoria(design, '<div data-portal-modal="" tabindex="-1" role="dialog" aria-modal="true" aria-label="Portal do proprietário" style="position: fixed; inset: 0; z-index: 100; background: var(--bg-page); overflow-y: auto">', '<div data-portal-modal="" tabindex="-1" role="dialog" aria-modal="true" aria-label="Portal do proprietário" data-clarity-mask="true" style="position: fixed; inset: 0; z-index: 100; background: var(--bg-page); overflow-y: auto">', 'mascara portal do proprietario');
 
 // Imagens grandes inline aumentam o HTML inicial e precisam ser decodificadas
 // antes da primeira pintura. No pacote publicado elas viram arquivos imutaveis
@@ -591,6 +642,15 @@ const heroPicture = '<picture style="display:block;width:100%;height:100%">' +
   heroImg.replace('<img ', '<img width="1100" height="1100" fetchpriority="high" decoding="async" srcset="' + heroVariants.variants.jpeg_640.path + ' 640w, ' + heroFallback + ' 1100w" sizes="(max-width: 768px) 100vw, 50vw" ') +
   '</picture>';
 design = trocaObrigatoria(design, heroImg, heroPicture, 'hero responsiva AVIF WebP e JPEG');
+
+const leafletUrl = bundleManifest['4e06a80d-cb55-4dd3-8f0d-a47dbcf50aa4']?.url;
+if (!leafletUrl) throw new Error('Leaflet ausente do manifesto');
+design = trocaObrigatoria(
+  design,
+  'data-ape-leaflet-src="4e06a80d-cb55-4dd3-8f0d-a47dbcf50aa4"',
+  'data-ape-leaflet-src="' + leafletUrl + '"',
+  'URL adiada do Leaflet',
+);
 
 const templateBytes = Buffer.from(design);
 const templateHash = createHash('sha256').update(templateBytes).digest('hex').slice(0, 20);
@@ -634,9 +694,21 @@ out = trocaObrigatoria(out, '<html>', '<html lang="pt-BR">', 'idioma do document
 out = trocaObrigatoria(out, '<title>Bundled Page</title>', '<title>ApeCerto | Apartamentos em Moema</title><meta name="viewport" content="width=device-width, initial-scale=1">' + productionHead, 'SEO do head');
 const lcpGraphic = bundleManifest['7c0ea5e0-a948-412d-9180-9335416036e9']?.url;
 if (!lcpGraphic) throw new Error('grafismo LCP ausente do manifesto');
+const criticalScriptUuids = [
+  '2ec61b09-33b2-4604-b675-c12e32c0621c', // runtime do design
+  '423dc31e-8e4e-4cd6-bed6-eee6085ba021', // React
+  '99ceddc7-e4c8-4fd7-967d-62da1c6abea2', // ReactDOM
+  '02598833-99f9-4b00-b460-5dc8ca1145b8', // componentes ApeCerto
+];
+const criticalScriptPreloads = criticalScriptUuids.map(uuid => {
+  const url = bundleManifest[uuid]?.url;
+  if (!url) throw new Error('script crítico ausente do manifesto: ' + uuid);
+  return '  <link rel="preload" as="script" href="' + url + '">';
+});
 const criticalHead = [
   '  <link rel="preload" as="fetch" href="' + templatePath + '" crossorigin>',
   '  <link rel="preload" as="image" href="' + lcpGraphic + '" fetchpriority="high">',
+  ...criticalScriptPreloads,
   '  <link rel="preconnect" href="https://diaegvfveqezispcthwk.supabase.co" crossorigin>',
   '  <link rel="dns-prefetch" href="//diaegvfveqezispcthwk.supabase.co">',
 ].join('\n');
@@ -659,9 +731,11 @@ for (const [relative, bytes] of embeddedAssets) {
 const directScriptUuids = [...design.matchAll(/<script\b[^>]*\bsrc="([0-9a-f-]{36})"/g)].map(match => match[1]);
 const initialResourceUuids = [
   ...directScriptUuids,
+  ...extResourceUuids,
   'b886aa71-fb4e-41f7-ba33-960f77a5ca3c',
   '7c0ea5e0-a948-412d-9180-9335416036e9',
   '2c349e41-a90f-484e-b399-241f91354687',
+  '6ca08ada-3f93-4b37-86c8-e0f15e8940d3',
   'c228dd28-ee18-49a5-9d30-344b1a58f742',
   'ef871dae-3c1c-42cd-9f58-a1d19995bb62',
 ];
@@ -669,7 +743,6 @@ const initialAssets = [...new Set([
   templatePath,
   heroVariants.variants.avif_640.path,
   '/assets/analytics.js',
-  '/assets/production.css',
   ...initialResourceUuids.map(uuid => bundleManifest[uuid]?.url).filter(Boolean),
 ])];
 await writeFile('dist/build-input.json', JSON.stringify({ initialAssets, templatePath }, null, 2) + '\n');

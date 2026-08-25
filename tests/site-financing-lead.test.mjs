@@ -45,6 +45,46 @@ const financingSubmitFrom = (analytics, dependencies) => {
   );
 };
 
+const firstPartyTrackFrom = (analytics, dependencies) => {
+  const source = between(
+    analytics,
+    'function firstPartyTrack(eventName, params) {',
+    'window.apecertoTrack = function (eventName, params) {',
+  ).trim();
+  return Function(
+    'window',
+    'fetch',
+    'readStoredAttribution',
+    'currentTouch',
+    'consent',
+    'ensureSessionId',
+    'clean',
+    'pageViewId',
+    'pagePath',
+    'referrerHost',
+    'deviceCategory',
+    'consentLevel',
+    'SUPABASE_URL',
+    'SUPABASE_KEY',
+    'return (' + source + ');',
+  )(
+    dependencies.window,
+    dependencies.fetch,
+    () => dependencies.attribution || {},
+    dependencies.currentTouch || {},
+    dependencies.consent || { analytics: false, marketing: false },
+    () => dependencies.sessionId || '',
+    (value, maximum) => String(value == null ? '' : value).trim().slice(0, maximum),
+    'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    () => '/imovel/ap0001/',
+    () => '',
+    () => 'mobile',
+    () => 'essential',
+    'https://diaegvfveqezispcthwk.supabase.co',
+    'public-anon-key',
+  );
+};
+
 const controllerFor = () => ({
   fichaSubmitInFlight: false,
   ficha: {
@@ -234,7 +274,10 @@ test('event_id fornecido é honrado por todos os canais de tracking', async () =
   assert.match(track, /metaTrack\(eventName, publicParams, eventId, identity\)/);
   assert.match(track, /adsConversion\(eventName, publicParams, eventId\)/);
   assert.match(firstParty, /controller\.abort\(\);\s*\}, 2500\)/);
-  assert.match(firstParty, /return fetch\(SUPABASE_URL \+ '\/functions\/v1\/site-track'/);
+  assert.match(firstParty, /window\.navigator\.sendBeacon\(trackUrl, beaconBody\)/);
+  assert.match(firstParty, /text\/plain;charset=UTF-8/);
+  assert.match(firstParty, /return fetch\(trackUrl/);
+  assert.doesNotMatch(firstParty, /keepalive:\s*true/);
   assert.match(firstParty, /catch\(function \(\) \{\s*return false;/);
   assert.match(track, /var firstPartyPromise = firstPartyTrack/);
   assert.match(track, /return Promise\.all\(\[/);
@@ -242,8 +285,83 @@ test('event_id fornecido é honrado por todos os canais de tracking', async () =
   assert.match(track, /Promise\.resolve\(adsPromise\)\.catch/);
 });
 
+test('tracking first-party usa Beacon sem preflight e preserva o payload', async () => {
+  const analytics = await readFile('static/assets/analytics.js', 'utf8');
+  const beaconCalls = [];
+  let fetchCalls = 0;
+  const windowMock = {
+    Blob,
+    navigator: {
+      sendBeacon(url, payload) {
+        beaconCalls.push({ url, payload });
+        return true;
+      },
+    },
+    setTimeout() { throw new Error('o caminho Beacon não deve criar timeout'); },
+    clearTimeout() {},
+  };
+  const track = firstPartyTrackFrom(analytics, {
+    window: windowMock,
+    fetch: async () => { fetchCalls += 1; },
+    currentTouch: { utm_source: 'google', campaign_id: 'campanha-1' },
+  });
+
+  assert.equal(await track('form_submit_attempt', {
+    event_id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    form_context: 'financiamento',
+  }), true);
+  assert.equal(fetchCalls, 0);
+  assert.equal(beaconCalls.length, 1);
+  assert.equal(beaconCalls[0].url, 'https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-track');
+  assert.equal(beaconCalls[0].payload.type, 'text/plain;charset=utf-8');
+  const body = JSON.parse(await beaconCalls[0].payload.text());
+  assert.equal(body.event_name, 'form_submit_attempt');
+  assert.equal(body.page_view_id, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+  assert.equal(body.utm_source, 'google');
+  assert.equal(body.properties.event_id, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+  assert.equal(body.properties.form_context, 'financiamento');
+  assert.equal(body.properties.campaign_id, 'campanha-1');
+});
+
+test('tracking first-party cai para fetch abortável quando Beacon recusa a fila', async () => {
+  const analytics = await readFile('static/assets/analytics.js', 'utf8');
+  const fetchCalls = [];
+  const cleared = [];
+  class MockAbortController {
+    constructor() { this.signal = { aborted: false }; }
+    abort() { this.signal.aborted = true; }
+  }
+  const windowMock = {
+    Blob,
+    AbortController: MockAbortController,
+    navigator: { sendBeacon: () => false },
+    setTimeout(callback, milliseconds) {
+      assert.equal(milliseconds, 2500);
+      return 17;
+    },
+    clearTimeout(id) { cleared.push(id); },
+  };
+  const track = firstPartyTrackFrom(analytics, {
+    window: windowMock,
+    fetch: async (url, options) => {
+      fetchCalls.push({ url, options });
+      return { ok: true };
+    },
+  });
+
+  assert.equal(await track('page_view', {}), true);
+  assert.equal(fetchCalls.length, 1);
+  assert.equal(fetchCalls[0].url, 'https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-track');
+  assert.equal(fetchCalls[0].options.keepalive, undefined);
+  assert.equal(fetchCalls[0].options.headers.apikey, 'public-anon-key');
+  assert.equal(fetchCalls[0].options.headers.Authorization, 'Bearer public-anon-key');
+  assert.equal(fetchCalls[0].options.signal instanceof Object, true);
+  assert.deepEqual(cleared, [17]);
+});
+
 test('sucesso mede tentativa e conversão somente após persistir', async () => {
   const html = await builtTemplate();
+  assert.match(html, /data-financing-success="" tabindex="-1" role="status"/);
   const submit = between(html, '  async fichaEnviar() {', '  similares(det) {');
   const method = Function('window', 'return ({' + submit + '}).fichaEnviar;');
   const events = [];
@@ -368,7 +486,8 @@ test('UI confirma antes do WhatsApp e não duplica abertura ou envio', async () 
   assert.doesNotMatch(open, /this\.fichaSubmitInFlight = false/);
   assert.match(close, /if \(this\.fichaSubmitInFlight \|\| this\.state\.fichaEnviando\) return/);
 
-  assert.match(html, /zapFlutuanteOn: !\(st\.fichaOn && !st\.fichaOk\)/);
+  assert.match(html, /zapFlutuanteOn: !det && !st\.portalOn && !st\.galOn && !st\.fichaOn/);
+  assert.match(submit, /document\.querySelector\('\[data-financing-success\]'\)/);
   assert.match(success, /data-financing-success-whatsapp=""/);
   assert.match(success, /href="\{\{ finZapUrl \}\}"/);
   assert.match(success, /Continuar no WhatsApp/);
