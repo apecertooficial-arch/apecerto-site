@@ -20,6 +20,9 @@ const pacotePublicado = async (file = 'index.html') => {
 test('catalogo publico consulta a view site_produtos', async () => {
   const d = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   assert.ok(d.includes('/rest/v1/site_produtos'), 'o catalogo deve ler a view site_produtos');
+  assert.ok(d.includes("CATALOGO_VIEW = 'site_produtos_catalogo'"), 'a listagem inicial deve usar o contrato leve');
+  assert.ok(d.includes('catalogoLeveDisponivel = false'), 'o site deve manter fallback reversivel enquanto a migration não estiver aplicada');
+  assert.ok(d.includes('hidratarEmpreendimentos'), 'a ficha e as galerias devem ser hidratadas em lote sob demanda');
   assert.ok(d.includes('this.carregarProdutos(mais, procurar, tentativa + 1)'), 'leitura do catalogo deve repetir uma vez em falha transitoria');
   assert.ok(d.includes('status === 408 || status === 429 || status >= 500'), 'retry automatico deve ficar restrito a falhas transitorias');
   assert.ok(!d.includes("location.hash === '#cadastro-demo'"), 'a producao nao pode liberar um portal ficticio por hash publico');
@@ -34,28 +37,63 @@ test('catalogo publico consulta a view site_produtos', async () => {
 });
 
 test('cards de bairro nao abrem o seletor de arquivos no site publico', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const { out } = await pacotePublicado();
+  assert.ok(design.includes('<image-slot id="{{ b.slot }}"'), 'o arquivo-fonte deve continuar editável no Cloud Design');
   assert.ok(
     out.includes('data-bairro-image-link="true"'),
     'a imagem do bairro deve ser um link normal para o catalogo',
   );
-  assert.ok(
-    out.includes('image-slot id="{{ b.slot }}" shape="rect" placeholder="{{ b.foto }}" style="pointer-events: none"'),
-    'o componente visual nao pode capturar o clique e abrir upload',
-  );
+  assert.ok(out.includes('data-bairro-visual="{{ b.slot }}"'), 'o site publicado deve usar o visual de marca dos bairros');
+  assert.ok(out.includes('class="rw-bairro-visual"'), 'o visual publicado deve manter o estilo dedicado');
+  assert.doesNotMatch(out, /<image-slot\b/, 'controles do editor não podem chegar ao site público');
+  assert.doesNotMatch(out, /<script src="ff9f78ad-2cb1-45e3-80ee-5aeee257da44"/, 'o runtime de upload não pode ser baixado no site público');
 });
 
 test('imagens dinâmicas só recebem src depois de o template resolver a URL', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const { out } = await pacotePublicado();
   const origemLiteral = /<img[^>]*\ssrc="\{\{\s*(?:p\.foto|galFotoAtual)\s*\}\}"/;
+  const fundoLiteral = /background-image:\s*url\(['"]?\{\{/;
 
   assert.doesNotMatch(design, origemLiteral, 'o HTML-fonte não pode disparar uma URL literal do template');
   assert.doesNotMatch(out, origemLiteral, 'o pacote publicado não pode reintroduzir a URL literal');
+  assert.doesNotMatch(design, fundoLiteral, 'fundos dinâmicos não podem disparar placeholders antes de serem resolvidos');
+  assert.doesNotMatch(out, fundoLiteral, 'o pacote publicado não pode reintroduzir fundos literais inválidos');
   assert.equal((design.match(/data-ape-src="\{\{ p\.foto \}\}"/g) || []).length, 5, 'todos os cards devem usar a fonte inerte');
   assert.equal((design.match(/data-ape-src="\{\{ galFotoAtual \}\}"/g) || []).length, 1, 'a foto principal da galeria deve usar a fonte inerte');
+  assert.equal((design.match(/data-ape-bg="\{\{/g) || []).length, 10, 'todos os fundos dinâmicos devem usar a fonte inerte');
   assert.ok(design.includes("src.includes('{{') || src.includes('}}')"), 'o ativador deve rejeitar placeholders ainda não resolvidos');
   assert.ok(design.includes("img.setAttribute('src', src)"), 'a imagem resolvida deve continuar sendo exibida');
+  assert.ok(design.includes("el.style.backgroundImage = 'url(' + JSON.stringify(src) + ')'"), 'o fundo resolvido deve ser aplicado com escape seguro');
+});
+
+test('imagens críticas e galerias usam prioridade, dimensões e preparação proporcionais ao espaço', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const heroGraphic = design.match(/<img class="rw-grafismo"[^>]*src="7c0ea5e0-a948-412d-9180-9335416036e9"[^>]*>/)?.[0] || '';
+  const purpleGraphic = design.match(/<img[^>]*src="3c63f1a7-4e93-4c3a-8f10-fa6d729b32ee"[^>]*>/)?.[0] || '';
+  const configuratorStart = design.indexOf('configurarImagens() {');
+  const imageConfigurator = design.slice(configuratorStart, design.indexOf('  tratarTeclaGlobal(e) {', configuratorStart));
+
+  assert.match(heroGraphic, /loading="eager"/, 'o grafismo visível do hero não pode ser lazy');
+  assert.match(heroGraphic, /fetchpriority="high"/, 'o elemento LCP deve ter prioridade alta');
+  assert.match(heroGraphic, /width="760" height="360"/, 'o grafismo deve reservar o espaço na proporção correta');
+  assert.match(purpleGraphic, /height:\s*auto/, 'o grafismo da faixa roxa não pode deformar');
+  assert.match(purpleGraphic, /display:\s*block/, 'o grafismo da faixa roxa deve preservar seu box visual');
+  assert.ok(
+    imageConfigurator.indexOf("img.setAttribute('sizes'") < imageConfigurator.indexOf("img.setAttribute('srcset'"),
+    'sizes deve existir antes de srcset para o navegador não baixar a maior foto',
+  );
+  assert.ok(design.includes('(max-width: 1100px) 50vw, 384px'), 'cards desktop devem limitar a largura solicitada à largura real');
+  assert.ok(design.includes('agendarFotosAdjacentes'), 'o carrossel deve preparar somente as próximas fotos necessárias');
+  assert.ok(design.includes('typeof imagem.decode === \'function\''), 'a próxima foto deve ser decodificada antes da troca');
+  assert.ok(design.includes('.slice(0, 6)'), 'a preparação automática deve ficar limitada aos seis cards visíveis');
+  assert.match(design, /if \(det\) \{[\s\S]*?if \(this\.state\.galOn\)[\s\S]*?return;[\s\S]*?const rows =/, 'uma galeria aberta deve ter prioridade sobre fotos invisíveis dos cards');
+  assert.ok(design.includes('const imageOnlyUpdate ='), 'a troca de foto deve ser reconhecida como atualização visual isolada');
+  assert.match(design, /if \(!imageOnlyUpdate\) \{[\s\S]*?this\.syncListaMapa\(\);/, 'a troca de foto não pode reconstruir o mapa inteiro');
+  assert.ok(design.includes('this.fotoCardReq.get(id) !== req'), 'uma foto antiga não pode vencer o clique mais recente no card');
+  assert.ok(design.includes('this.fotoGaleriaReq === req'), 'uma foto antiga não pode vencer o clique mais recente na galeria');
+  assert.ok((design.match(/this\.fotoGaleriaReq \+= 1;/g) || []).length >= 4, 'abrir e fechar imóvel ou galeria deve invalidar fotos pendentes');
 });
 
 test('acesso do portal associa rótulos e orienta preenchimento e leitores de tela', async () => {
@@ -177,9 +215,49 @@ test('mapa carrega o catalogo atual sem limite de preco ou paginacao escondida',
   );
 });
 
+test('Leaflet e tiles só carregam quando um mapa se aproxima da tela', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.doesNotMatch(design, /<script src="4e06a80d-cb55-4dd3-8f0d-a47dbcf50aa4"/);
+  assert.match(design, /data-ape-leaflet-src="4e06a80d-cb55-4dd3-8f0d-a47dbcf50aa4"/);
+  assert.match(design, /IntersectionObserver/);
+  assert.match(design, /rootMargin:\s*'120px 0px'/);
+  assert.match(design, /carregarLeaflet\(\)/);
+  assert.match(design, /this\.observarMapa\(el/);
+});
+
+test('ajustes de acessibilidade mantêm a identidade e resolvem as falhas medidas', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /--ape-orange-text:\s*#B84B00/i);
+  assert.match(design, /--fg-muted:\s*var\(--neutral-500\)/);
+  assert.match(design, /<label for="preco-minimo"[^>]*>Mínimo<\/label>[\s\S]{0,300}?<input id="preco-minimo" type="range" class="ape-range"/);
+  assert.match(design, /<label for="preco-maximo"[^>]*>Máximo<\/label>[\s\S]{0,300}?<input id="preco-maximo" type="range" class="ape-range"/);
+  assert.doesNotMatch(design, /class="ape-range ape-range-dual"/, 'os controles mínimo e máximo não podem continuar sobrepostos');
+  assert.match(design, /prefers-reduced-motion:\s*reduce/);
+  assert.match(design, /movimentoScroll\(\)/);
+  assert.equal((design.match(/<button data-favorito-card/g) || []).length, 5, 'todos os formatos de card devem manter favoritos acessíveis');
+  assert.match(design, /aria-label="\{\{ p\.favLabel \}\}" aria-pressed="\{\{ p\.fav \}\}"/);
+  assert.match(design, /favLabel: fav \? 'Remover dos favoritos' : 'Adicionar aos favoritos'/);
+  assert.match(design, /e\.metaKey \|\| e\.ctrlKey \|\| e\.shiftKey \|\| e\.altKey/, 'links dos imóveis devem preservar abrir em nova aba');
+  assert.match(design, /document\.querySelector\('\.rw-skip'\)/, 'o link de pular conteúdo deve sair da árvore acessível durante modais');
+  assert.match(design, /document\.querySelector\('\.rw-zap-flutuante'\)/, 'o WhatsApp flutuante não pode receber foco atrás de modais');
+  assert.match(design, /zapFlutuanteOn: !det && !st\.portalOn && !st\.galOn && !st\.fichaOn/, 'o WhatsApp flutuante deve desaparecer enquanto outro fluxo está aberto');
+  assert.match(design, /\[data-ficha-modal\] input\[name="nome"\]/, 'o financiamento deve iniciar o foco no primeiro campo');
+  assert.match(design, /flex-wrap: nowrap; max-height: 76px; overflow-x: auto; overflow-y: hidden/, 'as miniaturas precisam de rolagem horizontal sem escapar do modal');
+  assert.match(design, /flex: 0 0 88px/, 'miniaturas não podem encolher no celular');
+  assert.match(design, /data-financing-success="" tabindex="-1" role="status"/, 'a confirmação financeira deve aceitar foco programático');
+  assert.match(design, /id="galeria-titulo" aria-live="polite" aria-atomic="true"/, 'a posição da galeria deve ser anunciada');
+  assert.match(design, /alt="\{\{ galFotoAlt \}\}"/, 'cada foto deve informar posição e grupo no texto alternativo');
+  assert.match(design, /this\.portalFocusOrigin = \(e && e\.currentTarget\) \|\| document\.activeElement/, 'o portal deve guardar o acionador');
+  assert.match(design, /this\.menuMobileFocusOrigin && this\.menuMobileFocusOrigin\.focus/, 'o menu móvel deve restaurar o foco');
+  assert.match(design, /aria-busy="\{\{ produtosCarregando \}\}"/, 'a atualização do catálogo precisa comunicar seu estado');
+  assert.match(design, /if \(this\.state\.saraOn\) \{ e\.preventDefault\(\); this\.setState\(\{ saraOn: false \}/, 'a busca da Sara deve fechar por Escape');
+  assert.doesNotMatch(design, /<h4[^>]*>\{\{ grupo\.etapa \}\}<\/h4>/);
+  assert.match(design, /<h3[^>]*>\{\{ grupo\.etapa \}\}<\/h3>/);
+});
+
 test('mapa agrupa unidades por empreendimento sem esconder unidades do popup', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
-  const trecho = design.match(/\n  gruposMapa\(rows\) \{([\s\S]*?)\n  \}\n  syncListaMapa\(\)/);
+  const trecho = design.match(/\n  gruposMapa\(rows\) \{([\s\S]*?)\n  \}\n  carregarLeaflet\(\)/);
   assert.ok(trecho, 'o agrupamento do mapa deve continuar isolado e testavel');
   const gruposMapa = new Function('rows', trecho[1]);
   const contexto = {
@@ -277,6 +355,17 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.doesNotMatch(analytics, /owner_(?:portal_open|cta_click):\s*'anMDCOmFieQcEI7398BE'/, 'clique ou abertura nao pode virar conversao do Google Ads');
   assert.ok(out.includes('GTM-524TZP8X'), 'o Tag Manager deve estar ligado ao site');
   assert.ok(out.includes('googletagmanager.com/ns.html?id=GTM-524TZP8X'), 'o fallback noscript do Tag Manager deve estar no shell publico');
+  assert.ok(out.includes('id="apecerto-gtm-deferred"'), 'o Tag Manager deve esperar a pintura crítica');
+  assert.ok(out.includes("['pointerdown','touchstart','keydown']"), 'a tag externa deve esperar a primeira interação real');
+  assert.ok(out.includes('setTimeout(start,12000)'), 'a tag externa deve ter fallback tardio para visitas sem interação');
+  assert.doesNotMatch(out, /requestIdleCallback\(load/, 'uma janela ociosa logo após a carga não pode antecipar meio megabyte de tags');
+  assert.ok(analytics.includes('function scheduleGoogleTagFallback()'), 'o gtag direto deve existir somente como contingência');
+  assert.ok(analytics.includes('function requestGtmNow()'), 'o consentimento e as conversões críticas devem conseguir antecipar o GTM');
+  assert.match(analytics, /if \(consent\.marketing\) \{[\s\S]*?requestGtmNow\(\);[\s\S]*?loadMetaPixel\(\);/, 'aceitar marketing deve iniciar o GTM antes das demais tags');
+  assert.match(analytics, /\^\(generate_lead\|schedule_complete\|whatsapp_click\|phone_click\)\$[\s\S]*?requestGtmNow\(\)/, 'conversões críticas devem confirmar o transporte Google antes da saída');
+  assert.ok(analytics.includes("if (!gtmContainerReady()) loadGoogleTag();"), 'a contingência não pode duplicar o contêiner saudável');
+  assert.ok(analytics.includes('window.apecertoGtmLoadFailed || !window.apecertoGtmLoading'), 'a contingência não pode competir com uma requisição GTM ainda em andamento');
+  assert.doesNotMatch(analytics, /\n\s*loadGoogleTag\(\);\n\s*var storedConsent/, 'o gtag direto não pode competir com o GTM no início');
   assert.ok(out.includes('id="apecerto-recovery-scrub"'), 'tokens de recuperacao devem ser retirados da URL antes do tracking');
   assert.ok(
     out.indexOf('id="apecerto-recovery-scrub"') < out.indexOf('googletagmanager.com/gtm.js'),

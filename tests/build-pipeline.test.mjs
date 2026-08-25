@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { cp, mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, cp, mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -140,6 +140,7 @@ test('build externaliza imagem grande e explicita orcamentos de tamanho', async 
   assert.ok(Buffer.byteLength(shell) <= 150000, 'o shell HTML deve ficar abaixo de 150 KB');
   assert.match(html, /\/assets\/media\/[a-f0-9]{20}\.jpg/);
   assert.match(html, /<picture[^>]*>[\s\S]*type="image\/avif"[\s\S]*type="image\/webp"/);
+  assert.match(html, /<source media="\(max-width: 768px\)" type="image\/avif" srcset="\/assets\/media\/[a-f0-9]{20}\.avif 640w" sizes="100vw">/);
   assert.match(html, /srcset="\/assets\/media\/[a-f0-9]{20}\.avif 640w, \/assets\/media\/[a-f0-9]{20}\.avif 1100w"/);
   assert.match(html, /srcset="\/assets\/media\/[a-f0-9]{20}\.webp 640w, \/assets\/media\/[a-f0-9]{20}\.webp 1100w"/);
   const inline = [...html.matchAll(/data:image\/[a-zA-Z0-9.+-]+;base64,([A-Za-z0-9+/=]+)/g)];
@@ -152,11 +153,75 @@ test('build externaliza imagem grande e explicita orcamentos de tamanho', async 
   assert.ok(config.budgets.maxGzipRatio > 0 && config.budgets.maxGzipRatio < 1);
 });
 
+test('shell antecipa recursos críticos e o template preserva metadados após a hidratação', async () => {
+  const shell = await readFile(join(root, 'dist/index.html'), 'utf8');
+  const version = JSON.parse(await readFile(join(root, 'dist/version.json'), 'utf8'));
+  const html = await readFile(join(root, 'dist', version.templatePath.replace(/^\/+/, '')), 'utf8');
+
+  assert.ok(shell.includes('<link rel="preload" as="fetch" href="' + version.templatePath + '" crossorigin>'), 'o template externo deve ser descoberto no head com modo compatível com fetch');
+  assert.match(shell, /<link rel="preconnect" href="https:\/\/diaegvfveqezispcthwk\.supabase\.co" crossorigin>/);
+  assert.match(shell, /<link rel="preload" as="image" href="\/assets\/bundle-optimized\/[a-f0-9]{20}\.webp" fetchpriority="high">/);
+  assert.equal((shell.match(/<link rel="preload" as="script" href="\/assets\/bundle\/[a-f0-9]{20}\.js">/g) || []).length, 4, 'runtime, React, ReactDOM e design system devem começar junto do template');
+  assert.equal(version.initialAssets.filter(path => path.endsWith('.woff2')).length, 4, 'os quatro pesos usados na abertura devem usar WOFF2');
+  assert.equal(version.initialAssets.filter(path => path.endsWith('.ttf')).length, 0, 'TTF não deve permanecer no carregamento inicial');
+  assert.match(html, /format\('woff2'\)/, 'o CSS publicado deve declarar o formato comprimido correto');
+  assert.doesNotMatch(html, /format\('truetype'\)/, 'o CSS publicado não deve anunciar TTF para arquivos WOFF2');
+  for (const document of [shell, html]) {
+    assert.match(document, /<meta name="description" content="Apartamentos para comprar em Moema/);
+    assert.match(document, /<link rel="canonical" href="https:\/\/apecerto\.com\/">/);
+    assert.match(document, /<link rel="icon" type="image\/svg\+xml" href="\/favicon\.svg">/);
+    assert.match(document, /<link rel="shortcut icon" type="image\/svg\+xml" href="\/favicon\.svg">/);
+  }
+  await access(join(root, 'dist/favicon.svg'));
+  await access(join(root, 'dist/favicon.ico'));
+  await access(join(root, 'dist/.image-slots.state.json'));
+});
+
+test('bundles publicados não apontam para source maps ausentes', async () => {
+  const version = JSON.parse(await readFile(join(root, 'dist/version.json'), 'utf8'));
+  const scripts = version.artifacts.filter(artifact => /^assets\/bundle\/[^/]+\.js$/.test(artifact.path));
+  assert.ok(scripts.length > 0);
+  for (const script of scripts) {
+    const source = await readFile(join(root, 'dist', script.path), 'utf8');
+    assert.doesNotMatch(source, /sourceMappingURL=/, script.path + ' não pode provocar 404 de mapa ausente');
+  }
+});
+
+test('build publica somente o subconjunto de ícones usado pelo site', async () => {
+  const shell = await readFile(join(root, 'dist/index.html'), 'utf8');
+  const manifest = JSON.parse(shell.match(/<script type="__bundler\/manifest">\s*([\s\S]*?)\s*<\/script>/)[1]);
+  const lucide = manifest['d76081c9-365b-497c-a53c-e3f94767ebc9'];
+  assert.ok(lucide && lucide.url, 'o UUID do Lucide deve continuar resolvível pelo runtime do design');
+  const source = await readFile(join(root, 'dist', lucide.url.replace(/^\/+/, '')), 'utf8');
+  assert.ok(Buffer.byteLength(source) < 30000, 'o subconjunto Lucide deve ficar abaixo de 30 KB');
+  assert.match(source, /createIcons/);
+  assert.match(source, /bed-double/);
+  assert.doesNotMatch(source, /AArrowDown/);
+});
+
+test('Leaflet não pertence ao orçamento inicial', async () => {
+  const version = JSON.parse(await readFile(join(root, 'dist/version.json'), 'utf8'));
+  const shell = await readFile(join(root, 'dist/index.html'), 'utf8');
+  const manifest = JSON.parse(shell.match(/<script type="__bundler\/manifest">\s*([\s\S]*?)\s*<\/script>/)[1]);
+  const leafletUrl = manifest['4e06a80d-cb55-4dd3-8f0d-a47dbcf50aa4'].url;
+  assert.ok(!version.initialAssets.includes(leafletUrl), 'o mapa deve baixar a biblioteca apenas perto da área visível');
+  for (const uuid of [
+    '423dc31e-8e4e-4cd6-bed6-eee6085ba021',
+    '99ceddc7-e4c8-4fd7-967d-62da1c6abea2',
+    '6ca08ada-3f93-4b37-86c8-e0f15e8940d3',
+  ]) {
+    assert.ok(version.initialAssets.includes(manifest[uuid].url), 'o orçamento deve contabilizar ' + uuid);
+  }
+});
+
 test('Render aguarda CI e envia headers seguros e cache imutavel', async () => {
   const render = await readFile(join(root, 'render.yaml'), 'utf8');
   const workflow = await readFile(join(root, '.github/workflows/validate-site.yml'), 'utf8');
+  const localServer = await readFile(join(root, 'scripts/serve-dist.mjs'), 'utf8');
   assert.match(render, /buildCommand: npm run ci/);
   assert.match(render, /autoDeployTrigger: checksPass/);
+  assert.match(localServer, /public, max-age=31536000, immutable/, 'a medição local deve espelhar o cache de assets do Render');
+  assert.match(localServer, /public, max-age=0, must-revalidate/, 'documentos locais devem revalidar sem bloquear o bfcache');
   assert.match(render, /source: \/imovel\/\*/);
   assert.match(render, /destination: \/index\.html/);
   assert.match(render, /source: \/sitemap-catalogo\.xml\s+destination: https:\/\/diaegvfveqezispcthwk\.supabase\.co\/functions\/v1\/site-seo\/sitemap\.xml/);

@@ -271,6 +271,28 @@
     });
   }
 
+  function gtmContainerReady() {
+    return !!(
+      window.apecertoGtmContainerLoaded ||
+      (window.google_tag_manager && window.google_tag_manager['GTM-524TZP8X'])
+    );
+  }
+
+  function scheduleGoogleTagFallback() {
+    // O contêiner oficial é a fonte principal. A tag direta só entra se a
+    // requisição do GTM realmente falhar ou continuar ausente após 15 segundos.
+    window.apecertoLoadGoogleFallback = function () {
+      if (!gtmContainerReady()) loadGoogleTag();
+    };
+    window.setTimeout(function () {
+      if (!gtmContainerReady() && (window.apecertoGtmLoadFailed || !window.apecertoGtmLoading)) loadGoogleTag();
+    }, 15000);
+  }
+
+  function requestGtmNow() {
+    if (typeof window.apecertoLoadGtm === 'function') window.apecertoLoadGtm();
+  }
+
   // Google Ads: ativa a tag de anuncios (remarketing + gclid + enhanced conversions)
   // somente com consentimento de marketing.
   function loadGoogleAds() {
@@ -434,6 +456,10 @@
       window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'denied' });
     }
     if (consent.marketing) {
+      // O consentimento já foi atualizado no dataLayer. A partir daqui o GTM
+      // pode iniciar sem competir com a primeira pintura e sem perder uma
+      // conversão caso o visitante avance rapidamente para o WhatsApp.
+      requestGtmNow();
       loadMetaPixel();
       if (window.fbq) window.fbq('consent', 'grant');
       loadGoogleAds();
@@ -482,18 +508,32 @@
       utm_campaign: clean(campaignTouch && campaignTouch.utm_campaign, 160) || null,
       properties: properties,
     };
+    var trackUrl = SUPABASE_URL + '/functions/v1/site-track';
+    var serializedBody = JSON.stringify(body);
+    // O endpoint valida origem, evento e payload no servidor e não exige JWT.
+    // text/plain mantém o beacon como requisição CORS simples, sem preflight;
+    // request.json() continua interpretando o corpo normalmente na Edge.
+    try {
+      if (window.navigator && typeof window.navigator.sendBeacon === 'function' && typeof window.Blob === 'function') {
+        var beaconBody = new window.Blob([serializedBody], { type: 'text/plain;charset=UTF-8' });
+        if (window.navigator.sendBeacon(trackUrl, beaconBody)) return Promise.resolve(true);
+      }
+    } catch (beaconError) {}
+
+    // Navegadores sem Beacon (ou com a fila cheia) usam fetch abortável. Não
+    // usamos keepalive aqui: algumas implementações mantêm esse request vivo
+    // mesmo depois do prazo, atrasando a condição de rede ociosa da página.
     var controller = typeof window.AbortController === 'function' ? new window.AbortController() : null;
     var timeoutId = controller ? window.setTimeout(function () { controller.abort(); }, 2500) : null;
     try {
-      return fetch(SUPABASE_URL + '/functions/v1/site-track', {
+      return fetch(trackUrl, {
         method: 'POST',
-        keepalive: true,
         headers: {
           apikey: SUPABASE_KEY,
           Authorization: 'Bearer ' + SUPABASE_KEY,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(body),
+        body: serializedBody,
         signal: controller ? controller.signal : undefined,
       }).then(function (response) {
         return !!response.ok;
@@ -518,6 +558,7 @@
     delete publicParams.__identity;
     var suppliedEventId = uuidOrNull(publicParams.event_id);
     delete publicParams.event_id;
+    if (consent.marketing && /^(generate_lead|schedule_complete|whatsapp_click|phone_click)$/.test(eventName)) requestGtmNow();
     if (eventName === 'view_item') {
       var nextItem = clean(publicParams.item_id, 100);
       if (lastViewedItemId && nextItem && lastViewedItemId !== nextItem) publicParams.from_item_id = lastViewedItemId;
@@ -1015,7 +1056,7 @@
     window.addEventListener('popstate', function () { changed('popstate'); });
   }
 
-  loadGoogleTag();
+  scheduleGoogleTagFallback();
   var storedConsent = restoreConsent();
   if (storedConsent) applyConsent(storedConsent);
   bindAutomaticEvents();

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ApêCerto">
+  <rect width="64" height="64" rx="16" fill="#fff8f2"/>
+  <path d="M12 29.5 32 12l20 17.5" fill="none" stroke="#ff7000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M18 27v24h28V27" fill="none" stroke="#ff7000" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m27 36 5 5 12-13" fill="none" stroke="#8b00cc" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
