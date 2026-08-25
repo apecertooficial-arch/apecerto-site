@@ -244,6 +244,11 @@ test('Render aguarda CI e envia headers seguros e cache imutavel', async () => {
     /Content-Security-Policy-Report-Only[\s\S]*upgrade-insecure-requests/,
     'upgrade-insecure-requests é ignorado em CSP report-only e gera erro no navegador',
   );
+  assert.match(
+    render,
+    /script-src 'self' 'unsafe-inline' 'unsafe-eval'/,
+    'o CSP report-only deve declarar a avaliação dinâmica exigida pelo runtime do Cloud Design',
+  );
   assert.match(render, /diaegvfveqezispcthwk\.supabase\.co|\*\.supabase\.co/);
   assert.match(render, /googletagmanager\.com/);
   assert.match(render, /connect\.facebook\.net/);
