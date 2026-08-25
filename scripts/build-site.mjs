@@ -39,8 +39,15 @@ for (const [uuid, entry] of Object.entries(originalManifest)) {
     bundleManifest[uuid] = { mime: optimized.mime, compressed: false, url: optimized.path };
     continue;
   }
-  const relative = 'assets/bundle/' + sourceHash.slice(0, 20) + '.' + bundleExtension(entry.mime);
-  embeddedAssets.set(relative, bytes);
+  // O pacote-base referencia mapas de Lucide/Leaflet que não existem no
+  // artefato publicado. O comentário não afeta o runtime e sua remoção evita
+  // 404 quando auditorias ou DevTools tentam baixar esses arquivos.
+  const publishedBytes = /(?:application|text)\/javascript/.test(entry.mime)
+    ? Buffer.from(bytes.toString('utf8').replace(/\n?\/\/# sourceMappingURL=[^\r\n]+\s*$/gm, ''))
+    : bytes;
+  const publishedHash = createHash('sha256').update(publishedBytes).digest('hex');
+  const relative = 'assets/bundle/' + publishedHash.slice(0, 20) + '.' + bundleExtension(entry.mime);
+  embeddedAssets.set(relative, publishedBytes);
   bundleManifest[uuid] = { mime: entry.mime, compressed: false, url: '/' + relative };
 }
 
@@ -59,10 +66,12 @@ const trocaBlocoObrigatorio = (texto, inicio, fim, novo, rotulo) => {
   return texto.slice(0, a) + novo + texto.slice(b);
 };
 
-const productionHead = `
+const productionMetadata = `
   <meta name="description" content="Apartamentos para comprar em Moema e região, com curadoria local, atendimento digital 24 horas e visitas agendadas pela ApeCerto.">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <meta name="theme-color" content="#FF7000">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="shortcut icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="canonical" href="https://apecerto.com/">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="pt_BR">
@@ -70,11 +79,13 @@ const productionHead = `
   <meta property="og:description" content="Curadoria local de apartamentos em Moema e região. Fale com a ApeCerto e agende sua visita.">
   <meta property="og:url" content="https://apecerto.com/">
   <meta property="og:site_name" content="ApeCerto">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"RealEstateAgent","name":"ApeCerto","url":"https://apecerto.com/","telephone":"+55 11 98015-4312","email":"contato@apecerto.com","address":{"@type":"PostalAddress","streetAddress":"Avenida Iraí, 79, conjunto 95A","addressLocality":"São Paulo","addressRegion":"SP","addressCountry":"BR"},"areaServed":["Moema","Campo Belo","Vila Nova Conceição","Brooklin","Planalto Paulista"]}</script>`;
+
+const productionHead = `${productionMetadata}
   <style id="apecerto-no-bundle-splash">#__bundler_loading,#__bundler_thumbnail{display:none!important}</style>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"RealEstateAgent","name":"ApeCerto","url":"https://apecerto.com/","telephone":"+55 11 98015-4312","email":"contato@apecerto.com","address":{"@type":"PostalAddress","streetAddress":"Avenida Iraí, 79, conjunto 95A","addressLocality":"São Paulo","addressRegion":"SP","addressCountry":"BR"},"areaServed":["Moema","Campo Belo","Vila Nova Conceição","Brooklin","Planalto Paulista"]}</script>
   <script id="apecerto-recovery-scrub">(function(){try{var p=new URLSearchParams(String(location.hash||'').replace(/^#/,''));var t=p.get('type');var a=p.get('access_token');var e=p.get('error_description');if((a&&t==='recovery')||e){Object.defineProperty(window,'__APECERTO_RECOVERY__',{value:{type:t,access_token:a,error_description:e},configurable:true});history.replaceState({},'',location.pathname+location.search)}}catch(_){}})();</script>
   <script>window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments)};window.gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});</script>
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-524TZP8X');</script>
+  <script id="apecerto-gtm-deferred">(function(w,d,l,i){w[l]=w[l]||[];function load(){if(w.apecertoGtmLoading||w.apecertoGtmContainerLoaded)return;w.apecertoGtmLoading=true;w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName('script')[0],j=d.createElement('script'),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;j.onload=function(){w.apecertoGtmContainerLoaded=true};j.onerror=function(){w.apecertoGtmLoadFailed=true;if(w.apecertoLoadGoogleFallback)w.apecertoLoadGoogleFallback()};f.parentNode.insertBefore(j,f)}w.apecertoLoadGtm=load;function schedule(){var start=function(){if('requestIdleCallback' in w)w.requestIdleCallback(load,{timeout:2500});else w.setTimeout(load,1800)};if(d.readyState==='complete')start();else w.addEventListener('load',start,{once:true})}schedule()})(window,document,'dataLayer','GTM-524TZP8X');</script>
   <link rel="stylesheet" href="/assets/production.css">
   <script src="/assets/analytics.js" defer></script>`;
 
@@ -82,9 +93,12 @@ design = trocaObrigatoria(design, '<html><head>', '<html lang="pt-BR"><head>', '
 design = trocaObrigatoria(
   design,
   '<meta name="viewport" content="width=device-width, initial-scale=1">',
-  '<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>ApeCerto | Apartamentos em Moema</title>',
-  'titulo do design sem tracking duplicado',
+  '<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>ApeCerto | Apartamentos em Moema</title>' + productionMetadata,
+  'metadados persistentes do design sem tracking duplicado',
 );
+const faviconInline = /var ico = 'data:image\/png;base64,[A-Za-z0-9+/=]+';/;
+if (!faviconInline.test(design)) throw new Error('favicon inline do design ausente');
+design = design.replace(faviconInline, "var ico = '/favicon.svg';");
 design = trocaObrigatoria(
   design,
   '<body>',
@@ -122,8 +136,8 @@ design = trocaObrigatoria(
 
 design = trocaObrigatoria(
   design,
-  'const setIdx = (e, i) => { e.stopPropagation(); this.setState({ cardGal: Object.assign({}, this.state.cardGal, { [r.id]: i }) }); };',
-  "const setIdx = (e, i) => { e.stopPropagation(); if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(r.id || ''), item_name: r.nome || '', action_label: i > idx ? 'Próxima foto' : 'Foto anterior' }); this.setState({ cardGal: Object.assign({}, this.state.cardGal, { [r.id]: i }) }); };",
+  'const setIdx = (e, i) => this.trocarFotoCard(e, r.id, fotos, i);',
+  "const setIdx = (e, i) => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(r.id || ''), item_name: r.nome || '', action_label: i > idx ? 'Próxima foto' : 'Foto anterior' }); this.trocarFotoCard(e, r.id, fotos, i); };",
   'galeria do card com contexto do imovel',
 );
 
@@ -150,8 +164,8 @@ design = trocaObrigatoria(
 
 design = trocaObrigatoria(
   design,
-  '      galPrev: e => { e.stopPropagation(); this.setState({ galIdx: (gi - 1 + fotosDet.length) % fotosDet.length }); },\n      galNext: e => { e.stopPropagation(); this.setState({ galIdx: (gi + 1) % fotosDet.length }); },\n      galThumbs: galeriaDet.map((foto, i) => ({ url: foto.url, grupo: foto.grupo, sel: e => { e.stopPropagation(); this.setState({ galIdx: i }); }, borda: i === gi ? \'var(--ape-orange)\' : \'transparent\', op: i === gi ? \'1\' : \'0.6\' })),',
-  "      galPrev: e => { e.stopPropagation(); if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Foto anterior' }); this.setState({ galIdx: (gi - 1 + fotosDet.length) % fotosDet.length }); },\n      galNext: e => { e.stopPropagation(); if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Próxima foto' }); this.setState({ galIdx: (gi + 1) % fotosDet.length }); },\n      galThumbs: galeriaDet.map((foto, i) => ({ url: foto.url, grupo: foto.grupo, sel: e => { e.stopPropagation(); if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Miniatura ' + (i + 1) }); this.setState({ galIdx: i }); }, borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' })),",
+  '      galPrev: e => this.trocarFotoGaleria(e, fotosDet, (gi - 1 + fotosDet.length) % fotosDet.length),\n      galNext: e => this.trocarFotoGaleria(e, fotosDet, (gi + 1) % fotosDet.length),\n      galThumbs: galeriaDet.map((foto, i) => ({ url: foto.url, grupo: foto.grupo, sel: e => this.trocarFotoGaleria(e, fotosDet, i), borda: i === gi ? \'var(--ape-orange)\' : \'transparent\', op: i === gi ? \'1\' : \'0.6\' })),',
+  "      galPrev: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Foto anterior' }); this.trocarFotoGaleria(e, fotosDet, (gi - 1 + fotosDet.length) % fotosDet.length); },\n      galNext: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Próxima foto' }); this.trocarFotoGaleria(e, fotosDet, (gi + 1) % fotosDet.length); },\n      galThumbs: galeriaDet.map((foto, i) => ({ url: foto.url, grupo: foto.grupo, sel: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Miniatura ' + (i + 1) }); this.trocarFotoGaleria(e, fotosDet, i); }, borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' })),",
   'galeria do detalhe com contexto do imovel',
 );
 
@@ -570,6 +584,8 @@ for (const [name, variant] of Object.entries(heroVariants.variants || {})) {
 }
 const heroImg = '<img src="' + heroFallback + '" alt="Sala decorada de um apê pronto pra morar em Moema" style="width: 100%; height: 100%; object-fit: cover; border-radius: 24px; display: block; box-shadow: var(--shadow-md)">';
 const heroPicture = '<picture style="display:block;width:100%;height:100%">' +
+  '<source media="(max-width: 768px)" type="image/avif" srcset="' + heroVariants.variants.avif_640.path + ' 640w" sizes="100vw">' +
+  '<source media="(max-width: 768px)" type="image/webp" srcset="' + heroVariants.variants.webp_640.path + ' 640w" sizes="100vw">' +
   '<source type="image/avif" srcset="' + heroVariants.variants.avif_640.path + ' 640w, ' + heroVariants.variants.avif_1100.path + ' 1100w" sizes="(max-width: 768px) 100vw, 50vw">' +
   '<source type="image/webp" srcset="' + heroVariants.variants.webp_640.path + ' 640w, ' + heroVariants.variants.webp_1100.path + ' 1100w" sizes="(max-width: 768px) 100vw, 50vw">' +
   heroImg.replace('<img ', '<img width="1100" height="1100" fetchpriority="high" decoding="async" srcset="' + heroVariants.variants.jpeg_640.path + ' 640w, ' + heroFallback + ' 1100w" sizes="(max-width: 768px) 100vw, 50vw" ') +
@@ -616,6 +632,15 @@ let out = shell;
 
 out = trocaObrigatoria(out, '<html>', '<html lang="pt-BR">', 'idioma do documento');
 out = trocaObrigatoria(out, '<title>Bundled Page</title>', '<title>ApeCerto | Apartamentos em Moema</title><meta name="viewport" content="width=device-width, initial-scale=1">' + productionHead, 'SEO do head');
+const lcpGraphic = bundleManifest['7c0ea5e0-a948-412d-9180-9335416036e9']?.url;
+if (!lcpGraphic) throw new Error('grafismo LCP ausente do manifesto');
+const criticalHead = [
+  '  <link rel="preload" as="fetch" href="' + templatePath + '" crossorigin>',
+  '  <link rel="preload" as="image" href="' + lcpGraphic + '" fetchpriority="high">',
+  '  <link rel="preconnect" href="https://diaegvfveqezispcthwk.supabase.co" crossorigin>',
+  '  <link rel="dns-prefetch" href="//diaegvfveqezispcthwk.supabase.co">',
+].join('\n');
+out = trocaObrigatoria(out, '</head>', criticalHead + '\n</head>', 'descoberta dos recursos criticos');
 out = trocaObrigatoria(
   out,
   '<body>',

@@ -49,13 +49,44 @@ test('imagens dinâmicas só recebem src depois de o template resolver a URL', a
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const { out } = await pacotePublicado();
   const origemLiteral = /<img[^>]*\ssrc="\{\{\s*(?:p\.foto|galFotoAtual)\s*\}\}"/;
+  const fundoLiteral = /background-image:\s*url\(['"]?\{\{/;
 
   assert.doesNotMatch(design, origemLiteral, 'o HTML-fonte não pode disparar uma URL literal do template');
   assert.doesNotMatch(out, origemLiteral, 'o pacote publicado não pode reintroduzir a URL literal');
+  assert.doesNotMatch(design, fundoLiteral, 'fundos dinâmicos não podem disparar placeholders antes de serem resolvidos');
+  assert.doesNotMatch(out, fundoLiteral, 'o pacote publicado não pode reintroduzir fundos literais inválidos');
   assert.equal((design.match(/data-ape-src="\{\{ p\.foto \}\}"/g) || []).length, 5, 'todos os cards devem usar a fonte inerte');
   assert.equal((design.match(/data-ape-src="\{\{ galFotoAtual \}\}"/g) || []).length, 1, 'a foto principal da galeria deve usar a fonte inerte');
+  assert.equal((design.match(/data-ape-bg="\{\{/g) || []).length, 10, 'todos os fundos dinâmicos devem usar a fonte inerte');
   assert.ok(design.includes("src.includes('{{') || src.includes('}}')"), 'o ativador deve rejeitar placeholders ainda não resolvidos');
   assert.ok(design.includes("img.setAttribute('src', src)"), 'a imagem resolvida deve continuar sendo exibida');
+  assert.ok(design.includes("el.style.backgroundImage = 'url(' + JSON.stringify(src) + ')'"), 'o fundo resolvido deve ser aplicado com escape seguro');
+});
+
+test('imagens críticas e galerias usam prioridade, dimensões e preparação proporcionais ao espaço', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const heroGraphic = design.match(/<img class="rw-grafismo"[^>]*src="7c0ea5e0-a948-412d-9180-9335416036e9"[^>]*>/)?.[0] || '';
+  const purpleGraphic = design.match(/<img[^>]*src="3c63f1a7-4e93-4c3a-8f10-fa6d729b32ee"[^>]*>/)?.[0] || '';
+  const configuratorStart = design.indexOf('configurarImagens() {');
+  const imageConfigurator = design.slice(configuratorStart, design.indexOf('  tratarTeclaGlobal(e) {', configuratorStart));
+
+  assert.match(heroGraphic, /loading="eager"/, 'o grafismo visível do hero não pode ser lazy');
+  assert.match(heroGraphic, /fetchpriority="high"/, 'o elemento LCP deve ter prioridade alta');
+  assert.match(heroGraphic, /width="760" height="360"/, 'o grafismo deve reservar o espaço na proporção correta');
+  assert.match(purpleGraphic, /height:\s*auto/, 'o grafismo da faixa roxa não pode deformar');
+  assert.match(purpleGraphic, /display:\s*block/, 'o grafismo da faixa roxa deve preservar seu box visual');
+  assert.ok(
+    imageConfigurator.indexOf("img.setAttribute('sizes'") < imageConfigurator.indexOf("img.setAttribute('srcset'"),
+    'sizes deve existir antes de srcset para o navegador não baixar a maior foto',
+  );
+  assert.ok(design.includes('(max-width: 1100px) 50vw, 384px'), 'cards desktop devem limitar a largura solicitada à largura real');
+  assert.ok(design.includes('agendarFotosAdjacentes'), 'o carrossel deve preparar somente as próximas fotos necessárias');
+  assert.ok(design.includes('typeof imagem.decode === \'function\''), 'a próxima foto deve ser decodificada antes da troca');
+  assert.ok(design.includes('.slice(0, 6)'), 'a preparação automática deve ficar limitada aos seis cards visíveis');
+  assert.ok(design.includes('const imageOnlyUpdate ='), 'a troca de foto deve ser reconhecida como atualização visual isolada');
+  assert.match(design, /if \(!imageOnlyUpdate\) \{[\s\S]*?this\.syncListaMapa\(\);/, 'a troca de foto não pode reconstruir o mapa inteiro');
+  assert.ok(design.includes('this.fotoCardReq.get(id) !== req'), 'uma foto antiga não pode vencer o clique mais recente no card');
+  assert.ok(design.includes('this.fotoGaleriaReq === req'), 'uma foto antiga não pode vencer o clique mais recente na galeria');
 });
 
 test('acesso do portal associa rótulos e orienta preenchimento e leitores de tela', async () => {
@@ -277,6 +308,15 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.doesNotMatch(analytics, /owner_(?:portal_open|cta_click):\s*'anMDCOmFieQcEI7398BE'/, 'clique ou abertura nao pode virar conversao do Google Ads');
   assert.ok(out.includes('GTM-524TZP8X'), 'o Tag Manager deve estar ligado ao site');
   assert.ok(out.includes('googletagmanager.com/ns.html?id=GTM-524TZP8X'), 'o fallback noscript do Tag Manager deve estar no shell publico');
+  assert.ok(out.includes('id="apecerto-gtm-deferred"'), 'o Tag Manager deve esperar a pintura crítica');
+  assert.ok(out.includes('requestIdleCallback'), 'a tag externa deve usar uma janela ociosa com fallback limitado');
+  assert.ok(analytics.includes('function scheduleGoogleTagFallback()'), 'o gtag direto deve existir somente como contingência');
+  assert.ok(analytics.includes('function requestGtmNow()'), 'o consentimento e as conversões críticas devem conseguir antecipar o GTM');
+  assert.match(analytics, /if \(consent\.marketing\) \{[\s\S]*?requestGtmNow\(\);[\s\S]*?loadMetaPixel\(\);/, 'aceitar marketing deve iniciar o GTM antes das demais tags');
+  assert.match(analytics, /\^\(generate_lead\|schedule_complete\|whatsapp_click\|phone_click\)\$[\s\S]*?requestGtmNow\(\)/, 'conversões críticas devem confirmar o transporte Google antes da saída');
+  assert.ok(analytics.includes("if (!gtmContainerReady()) loadGoogleTag();"), 'a contingência não pode duplicar o contêiner saudável');
+  assert.ok(analytics.includes('window.apecertoGtmLoadFailed || !window.apecertoGtmLoading'), 'a contingência não pode competir com uma requisição GTM ainda em andamento');
+  assert.doesNotMatch(analytics, /\n\s*loadGoogleTag\(\);\n\s*var storedConsent/, 'o gtag direto não pode competir com o GTM no início');
   assert.ok(out.includes('id="apecerto-recovery-scrub"'), 'tokens de recuperacao devem ser retirados da URL antes do tracking');
   assert.ok(
     out.indexOf('id="apecerto-recovery-scrub"') < out.indexOf('googletagmanager.com/gtm.js'),

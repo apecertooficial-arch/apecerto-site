@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { cp, mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, cp, mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -140,6 +140,7 @@ test('build externaliza imagem grande e explicita orcamentos de tamanho', async 
   assert.ok(Buffer.byteLength(shell) <= 150000, 'o shell HTML deve ficar abaixo de 150 KB');
   assert.match(html, /\/assets\/media\/[a-f0-9]{20}\.jpg/);
   assert.match(html, /<picture[^>]*>[\s\S]*type="image\/avif"[\s\S]*type="image\/webp"/);
+  assert.match(html, /<source media="\(max-width: 768px\)" type="image\/avif" srcset="\/assets\/media\/[a-f0-9]{20}\.avif 640w" sizes="100vw">/);
   assert.match(html, /srcset="\/assets\/media\/[a-f0-9]{20}\.avif 640w, \/assets\/media\/[a-f0-9]{20}\.avif 1100w"/);
   assert.match(html, /srcset="\/assets\/media\/[a-f0-9]{20}\.webp 640w, \/assets\/media\/[a-f0-9]{20}\.webp 1100w"/);
   const inline = [...html.matchAll(/data:image\/[a-zA-Z0-9.+-]+;base64,([A-Za-z0-9+/=]+)/g)];
@@ -150,6 +151,35 @@ test('build externaliza imagem grande e explicita orcamentos de tamanho', async 
   assert.ok(config.budgets.maxHtmlGzipBytes > 0);
   assert.ok(config.budgets.maxTotalBytes > 0);
   assert.ok(config.budgets.maxGzipRatio > 0 && config.budgets.maxGzipRatio < 1);
+});
+
+test('shell antecipa recursos críticos e o template preserva metadados após a hidratação', async () => {
+  const shell = await readFile(join(root, 'dist/index.html'), 'utf8');
+  const version = JSON.parse(await readFile(join(root, 'dist/version.json'), 'utf8'));
+  const html = await readFile(join(root, 'dist', version.templatePath.replace(/^\/+/, '')), 'utf8');
+
+  assert.ok(shell.includes('<link rel="preload" as="fetch" href="' + version.templatePath + '" crossorigin>'), 'o template externo deve ser descoberto no head com modo compatível com fetch');
+  assert.match(shell, /<link rel="preconnect" href="https:\/\/diaegvfveqezispcthwk\.supabase\.co" crossorigin>/);
+  assert.match(shell, /<link rel="preload" as="image" href="\/assets\/bundle-optimized\/[a-f0-9]{20}\.webp" fetchpriority="high">/);
+  for (const document of [shell, html]) {
+    assert.match(document, /<meta name="description" content="Apartamentos para comprar em Moema/);
+    assert.match(document, /<link rel="canonical" href="https:\/\/apecerto\.com\/">/);
+    assert.match(document, /<link rel="icon" type="image\/svg\+xml" href="\/favicon\.svg">/);
+    assert.match(document, /<link rel="shortcut icon" type="image\/svg\+xml" href="\/favicon\.svg">/);
+  }
+  await access(join(root, 'dist/favicon.svg'));
+  await access(join(root, 'dist/favicon.ico'));
+  await access(join(root, 'dist/.image-slots.state.json'));
+});
+
+test('bundles publicados não apontam para source maps ausentes', async () => {
+  const version = JSON.parse(await readFile(join(root, 'dist/version.json'), 'utf8'));
+  const scripts = version.artifacts.filter(artifact => /^assets\/bundle\/[^/]+\.js$/.test(artifact.path));
+  assert.ok(scripts.length > 0);
+  for (const script of scripts) {
+    const source = await readFile(join(root, 'dist', script.path), 'utf8');
+    assert.doesNotMatch(source, /sourceMappingURL=/, script.path + ' não pode provocar 404 de mapa ausente');
+  }
 });
 
 test('Render aguarda CI e envia headers seguros e cache imutavel', async () => {

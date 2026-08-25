@@ -1878,7 +1878,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
               <sc-if value="{{ menuDestOn }}" hint-placeholder-val="{{ false }}">
                 <div sc-camel-on-click="{{ menuDestAbrir }}" style="cursor: pointer; width: 190px; display: flex; flex-direction: column; gap: 8px">
                   <div style="font-size: var(--text-xs); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--ape-orange)">Destaque</div>
-                  <div style="height: 110px; border-radius: var(--radius-md); background: var(--bg-sunken); background-image: url('{{ menuDestFoto }}'); background-size: cover; background-position: center"></div>
+                  <div data-ape-bg="{{ menuDestFoto }}" data-ape-bg-width="400" style="height: 110px; border-radius: var(--radius-md); background: var(--bg-sunken); background-size: cover; background-position: center"></div>
                   <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--fg-1)">{{ menuDestNome }}</div>
                   <div style="font-size: var(--text-xs); color: var(--fg-3)"><span style="font-weight: var(--weight-bold); color: var(--ape-orange)">{{ menuDestPreco }}</span></div>
                 </div>
@@ -1919,7 +1919,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <!-- ============ HERO ============ -->
   <section id="buscar" style="position: relative; overflow: hidden">
     <sc-if value="{{ grafismoOn }}" hint-placeholder-val="{{ true }}">
-      <img class="rw-grafismo" src="7c0ea5e0-a948-412d-9180-9335416036e9" alt="" style="position: absolute; right: -120px; top: -60px; width: 760px; height: auto; display: block; opacity: 0.5; pointer-events: none">
+      <img class="rw-grafismo" src="7c0ea5e0-a948-412d-9180-9335416036e9" alt="" aria-hidden="true" width="760" height="360" loading="eager" fetchpriority="high" decoding="async" style="position: absolute; right: -120px; top: -60px; width: 760px; height: auto; display: block; opacity: 0.5; pointer-events: none">
     </sc-if>
     <div class="rw-hero" style="position: relative; max-width: 1200px; margin: 0 auto; padding: 72px 24px 80px; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center">
       <div style="min-width: 0; display: flex; flex-direction: column; gap: 24px">
@@ -2272,7 +2272,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <!-- ============ ANUNCIE (section break, purple) ============ -->
   <sc-if value="{{ faixaOn }}" hint-placeholder-val="{{ true }}">
     <section style="background: var(--ape-purple); position: relative; overflow: hidden">
-      <img src="3c63f1a7-4e93-4c3a-8f10-fa6d729b32ee" alt="" style="position: absolute; right: -80px; bottom: -120px; width: 560px; opacity: 0.35; pointer-events: none">
+      <img src="3c63f1a7-4e93-4c3a-8f10-fa6d729b32ee" alt="" aria-hidden="true" width="560" height="265" loading="lazy" decoding="async" style="position: absolute; right: -80px; bottom: -120px; width: 560px; height: auto; display: block; opacity: 0.35; pointer-events: none">
       <div class="rw-sec" style="position: relative; max-width: 1200px; margin: 0 auto; padding: 64px 24px; display: flex; align-items: center; justify-content: space-between; gap: 32px; flex-wrap: wrap">
         <div style="display: flex; flex-direction: column; gap: 8px; max-width: 620px">
           <h2 style="margin: 0; color: var(--fg-inverse)">Tem um apê em Moema? A gente cuida de tudo.</h2>
@@ -2428,11 +2428,11 @@ svg.leaflet-image-layer.leaflet-interactive path {
           </sc-if>
         </div>
         <div class="rw-gal" style="display: grid; grid-template-columns: 1.55fr 1fr 1fr; grid-template-rows: 211px 211px; gap: 10px">
-          <div class="rw-galmain" sc-camel-on-click="{{ galAbre0 }}" style="grid-row: 1 / 3; border-radius: var(--radius-xl); cursor: pointer; background: var(--bg-sunken); background-image: url('{{ galM1 }}'); background-size: cover; background-position: center; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"></div>
-          <div sc-camel-on-click="{{ galAbre1 }}" style="border-radius: var(--radius-lg); cursor: pointer; background: var(--bg-sunken); background-image: url('{{ galM2 }}'); background-size: cover; background-position: center; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"></div>
-          <div sc-camel-on-click="{{ galAbre2 }}" style="border-radius: var(--radius-lg); cursor: pointer; background: var(--bg-sunken); background-image: url('{{ galM3 }}'); background-size: cover; background-position: center; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"></div>
-          <div sc-camel-on-click="{{ galAbre3 }}" style="border-radius: var(--radius-lg); cursor: pointer; background: var(--bg-sunken); background-image: url('{{ galM4 }}'); background-size: cover; background-position: center; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"></div>
-          <div sc-camel-on-click="{{ galAbre4 }}" style="position: relative; border-radius: var(--radius-lg); cursor: pointer; background: var(--bg-sunken); background-image: url('{{ galM5 }}'); background-size: cover; background-position: center; overflow: hidden">
+          <div class="rw-galmain" sc-camel-on-click="{{ galAbre0 }}" data-ape-bg="{{ galM1 }}" data-ape-bg-width="1200" style="grid-row: 1 / 3; border-radius: var(--radius-xl); cursor: pointer; background: var(--bg-sunken); background-size: cover; background-position: center; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"></div>
+          <div sc-camel-on-click="{{ galAbre1 }}" data-ape-bg="{{ galM2 }}" data-ape-bg-width="640" style="border-radius: var(--radius-lg); cursor: pointer; background: var(--bg-sunken); background-size: cover; background-position: center; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"></div>
+          <div sc-camel-on-click="{{ galAbre2 }}" data-ape-bg="{{ galM3 }}" data-ape-bg-width="640" style="border-radius: var(--radius-lg); cursor: pointer; background: var(--bg-sunken); background-size: cover; background-position: center; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"></div>
+          <div sc-camel-on-click="{{ galAbre3 }}" data-ape-bg="{{ galM4 }}" data-ape-bg-width="640" style="border-radius: var(--radius-lg); cursor: pointer; background: var(--bg-sunken); background-size: cover; background-position: center; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"></div>
+          <div sc-camel-on-click="{{ galAbre4 }}" data-ape-bg="{{ galM5 }}" data-ape-bg-width="640" style="position: relative; border-radius: var(--radius-lg); cursor: pointer; background: var(--bg-sunken); background-size: cover; background-position: center; overflow: hidden">
             <sc-if value="{{ galMaisOn }}" hint-placeholder-val="{{ false }}">
               <div style="position: absolute; inset: 0; background: rgba(31, 28, 26, 0.62); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--neutral-0); transition: background 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="background: rgba(31, 28, 26, 0.5)">
                 <i data-lucide="images" style="width: 22px; height: 22px"></i>
@@ -2887,12 +2887,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </div>
       <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 16px; min-height: 0; padding: 12px 0">
         <button sc-camel-on-click="{{ galPrev }}" aria-label="Foto anterior" style="border: none; cursor: pointer; flex-shrink: 0; width: 48px; height: 48px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.12); color: var(--neutral-0); font-size: 20px; font-family: var(--font-body)" style-hover="background: var(--ape-orange)">‹</button>
-        <img sc-camel-on-click="{{ galNada }}" data-ape-src="{{ galFotoAtual }}" alt="Foto do apê" decoding="async" width="1200" height="800" style="flex: 1; align-self: stretch; width: 100%; min-width: 0; object-fit: contain; object-position: center; border-radius: var(--radius-lg)">
+        <img sc-camel-on-click="{{ galNada }}" data-ape-src="{{ galFotoAtual }}" data-ape-gallery-main="true" alt="Foto do apê" decoding="async" width="1200" height="800" style="flex: 1; align-self: stretch; width: 100%; min-width: 0; object-fit: contain; object-position: center; border-radius: var(--radius-lg)">
         <button sc-camel-on-click="{{ galNext }}" aria-label="Próxima foto" style="border: none; cursor: pointer; flex-shrink: 0; width: 48px; height: 48px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.12); color: var(--neutral-0); font-size: 20px; font-family: var(--font-body)" style-hover="background: var(--ape-orange)">›</button>
       </div>
       <div sc-camel-on-click="{{ galNada }}" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; max-height: 76px; overflow: hidden">
         <sc-for list="{{ galThumbs }}" as="t" hint-placeholder-count="0">
-          <div sc-camel-on-click="{{ t.sel }}" style="width: 88px; height: 62px; border-radius: var(--radius-md); cursor: pointer; background-image: url('{{ t.url }}'); background-size: cover; background-position: center; border: 3px solid {{ t.borda }}; opacity: {{ t.op }}"></div>
+          <div sc-camel-on-click="{{ t.sel }}" data-ape-bg="{{ t.url }}" data-ape-bg-width="240" style="width: 88px; height: 62px; border-radius: var(--radius-md); cursor: pointer; background-size: cover; background-position: center; border: 3px solid {{ t.borda }}; opacity: {{ t.op }}"></div>
         </sc-for>
       </div>
     </div>
@@ -2999,7 +2999,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
                 </sc-if>
                 <sc-for list="{{ eqCaps }}" as="c" hint-placeholder-count="0">
                   <div style="background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 18px 20px; display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap">
-                    <div style="width: 88px; height: 66px; border-radius: var(--radius-md); background: var(--bg-sunken); background-image: url('{{ c.foto }}'); background-size: cover; background-position: center; flex-shrink: 0"></div>
+                    <div data-ape-bg="{{ c.foto }}" data-ape-bg-width="240" style="width: 88px; height: 66px; border-radius: var(--radius-md); background: var(--bg-sunken); background-size: cover; background-position: center; flex-shrink: 0"></div>
                     <div style="flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 4px">
                       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
                         <span style="font-size: var(--text-base); font-weight: var(--weight-semibold)">{{ c.titulo }}</span>
@@ -3030,7 +3030,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
                 </sc-if>
                 <sc-for list="{{ eqAnun }}" as="a" hint-placeholder-count="0">
                   <div style="background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-xs); padding: 16px 20px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap">
-                    <div style="width: 88px; height: 66px; border-radius: var(--radius-md); background: var(--bg-sunken); background-image: url('{{ a.foto }}'); background-size: cover; background-position: center; flex-shrink: 0"></div>
+                    <div data-ape-bg="{{ a.foto }}" data-ape-bg-width="240" style="width: 88px; height: 66px; border-radius: var(--radius-md); background: var(--bg-sunken); background-size: cover; background-position: center; flex-shrink: 0"></div>
                     <div style="flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 4px">
                       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
                         <span style="font-size: var(--text-base); font-weight: var(--weight-semibold)">{{ a.titulo }}</span>
@@ -3221,7 +3221,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
                 <div style="background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column">
                   <div style="position: relative; height: 140px; background: var(--bg-sunken)">
                     <sc-if value="{{ c.foto }}" hint-placeholder-val="{{ false }}">
-                      <div style="width: 100%; height: 100%; background-image: url('{{ c.foto }}'); background-size: cover; background-position: center"></div>
+                      <div data-ape-bg="{{ c.foto }}" data-ape-bg-width="480" style="width: 100%; height: 100%; background-size: cover; background-position: center"></div>
                     </sc-if>
                     <span style="position: absolute; top: 10px; left: 10px; background: {{ c.statusBg }}; color: {{ c.statusFg }}; font-size: var(--text-xs); font-weight: var(--weight-semibold); padding: 4px 12px; border-radius: var(--radius-pill)">{{ c.statusLabel }}</span>
                   </div>
@@ -3422,7 +3422,7 @@ class Component extends DCLogic {
     eqAba: 'anun', eqAnun: undefined, eqAnunForm: null, anErro: null, anSalvando: false, anFotosNomes: [], anImportN: 0,
     leadOk: false, leadErro: null, leadEnviando: false, finPct: 80, shareOk: false,
     fichaOn: false, fichaOk: false, fichaErro: null, fichaEnviando: false, fichaConjOn: false, leadDia: null, leadHora: null, detDescExpId: null, calOn: false, calOff: 0, horaOn: false, ecOn: false, fichaEc: null, nascOn: false, nascAno: 1990, nascMes: 0, fichaNasc: null, saraOn: false, saraMsgs: [] };
-  lead = {}; ficha = {}; reset = {}; produtosReq = 0;
+  lead = {}; ficha = {}; reset = {}; produtosReq = 0; fotoPreloads = new Map(); fotoCardReq = new Map(); fotoGaleriaReq = 0;
   SB_URL = 'https://diaegvfveqezispcthwk.supabase.co';
   SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYWVndmZ2ZXFlemlzcGN0aHdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5OTU4MjIsImV4cCI6MjA5ODU3MTgyMn0.312n8BuI-loQrQ20x9j1hNjKZs2UO71ey9gvIo0eY0I';
   auth = {}; form = {}; fotosArq = []; fotosExist = [];
@@ -3452,40 +3452,59 @@ class Component extends DCLogic {
     window.addEventListener('popstate', this.popState);
     setTimeout(() => this.configurarImagens(), 0);
   }
-  componentDidUpdate() {
-    if (window.lucide) { window.lucide.createIcons(); }
-    this.checkPainelDemo();
-    this.syncListaMapa();
-    this.sincronizarFiltrosUrl();
+  componentDidUpdate(prevProps, prevState) {
+    const imageOnlyUpdate = !!prevState && Object.keys(this.state).every(key => key === 'cardGal' || key === 'galIdx' || prevState[key] === this.state[key]);
+    if (!imageOnlyUpdate) {
+      if (window.lucide) { window.lucide.createIcons(); }
+      this.checkPainelDemo();
+      this.syncListaMapa();
+      this.sincronizarFiltrosUrl();
+    }
     this.configurarImagens();
+    if (!prevState || prevState.produtos !== this.state.produtos || prevState.cardGal !== this.state.cardGal || prevState.det !== this.state.det || prevState.galIdx !== this.state.galIdx || prevState.galOn !== this.state.galOn) {
+      this.agendarFotosAdjacentes();
+    }
   }
   configurarImagens() {
     const hero = document.querySelector('.rw-heroimg img');
+    const srcsetSupabase = (img, declarada) => {
+      const src = declarada || img.getAttribute('src') || img.currentSrc || '';
+      const trecho = '/storage/v1/object/public/';
+      if (!src.includes(trecho) || img.dataset.responsiveSrc === src) return;
+      try {
+        const base = new URL(src, location.origin);
+        if (base.origin !== new URL(this.SB_URL).origin) return;
+        const urlLargura = largura => {
+          const modo = img.hasAttribute('data-ape-gallery-main') ? 'contain' : 'cover';
+          return this.fotoRender(base.href, largura, modo) + ' ' + largura + 'w';
+        };
+        const sizes = img === hero
+          ? '(max-width: 880px) 100vw, 50vw'
+          : (img.hasAttribute('data-ape-gallery-main') || img.closest('[data-det-topo], [data-ficha-modal]')
+            ? '(max-width: 880px) 100vw, 66vw'
+            : '(max-width: 700px) calc(100vw - 40px), (max-width: 1100px) 50vw, 384px');
+        img.setAttribute('sizes', sizes);
+        img.setAttribute('srcset', [480, 768, 1200, 1600].map(urlLargura).join(', '));
+        img.dataset.responsiveSrc = src;
+      } catch (e) {}
+    };
     const ativarFonteDeclarativa = img => {
       const src = String(img.getAttribute('data-ape-src') || '').trim();
       if (!src || src.includes('{{') || src.includes('}}') || img.getAttribute('src') === src) return;
       img.removeAttribute('srcset');
       img.removeAttribute('sizes');
       delete img.dataset.responsiveSrc;
+      srcsetSupabase(img, src);
       img.setAttribute('src', src);
     };
-    const srcsetSupabase = img => {
-      const src = img.getAttribute('src') || img.currentSrc || '';
-      const trecho = '/storage/v1/object/public/';
-      if (!src.includes(trecho) || img.dataset.responsiveSrc === src) return;
-      try {
-        const base = new URL(src, location.origin);
-        if (base.origin !== new URL(this.SB_URL).origin) return;
-        base.pathname = base.pathname.replace(trecho, '/storage/v1/render/image/public/');
-        const urlLargura = largura => {
-          const u = new URL(base.href);
-          u.searchParams.set('width', String(largura)); u.searchParams.set('quality', '75'); u.searchParams.set('resize', 'cover');
-          return u.href + ' ' + largura + 'w';
-        };
-        img.setAttribute('srcset', [480, 768, 1200, 1600].map(urlLargura).join(', '));
-        img.setAttribute('sizes', img === hero ? '(max-width: 880px) 100vw, 50vw' : (img.closest('[data-det-topo], [data-ficha-modal]') ? '(max-width: 880px) 100vw, 66vw' : '(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw'));
-        img.dataset.responsiveSrc = src;
-      } catch (e) {}
+    const ativarFundoDeclarativo = el => {
+      const raw = String(el.getAttribute('data-ape-bg') || '').trim();
+      if (!raw || raw.includes('{{') || raw.includes('}}')) return;
+      const largura = Math.max(160, Math.min(1600, Number(el.getAttribute('data-ape-bg-width')) || 640));
+      const src = this.fotoRender(raw, largura, 'cover');
+      if (!src || el.dataset.apeBgApplied === src) return;
+      el.style.backgroundImage = 'url(' + JSON.stringify(src) + ')';
+      el.dataset.apeBgApplied = src;
     };
     const dimensionar = img => {
       if (img === hero) {
@@ -3511,6 +3530,54 @@ class Component extends DCLogic {
         img.addEventListener('load', () => dimensionar(img), { once: true });
       }
     });
+    document.querySelectorAll('[data-ape-bg]').forEach(ativarFundoDeclarativo);
+  }
+  prepararFoto(url, largura, modo) {
+    const src = this.fotoRender(url, largura || 768, modo || 'cover');
+    if (!src) return Promise.resolve(false);
+    if (this.fotoPreloads.has(src)) return this.fotoPreloads.get(src);
+    const pronta = new Promise(resolve => {
+      const imagem = new Image();
+      let terminou = false;
+      const concluir = valor => { if (!terminou) { terminou = true; resolve(valor); } };
+      imagem.decoding = 'async';
+      imagem.onload = () => {
+        if (typeof imagem.decode === 'function') imagem.decode().then(() => concluir(true), () => concluir(true));
+        else concluir(true);
+      };
+      imagem.onerror = () => concluir(false);
+      imagem.src = src;
+      if (imagem.complete) imagem.onload();
+      setTimeout(() => concluir(false), 3500);
+    });
+    this.fotoPreloads.set(src, pronta);
+    return pronta;
+  }
+  agendarFotosAdjacentes() {
+    clearTimeout(this.fotoPrefetchTimer);
+    if (this.fotoPrefetchIdle && window.cancelIdleCallback) window.cancelIdleCallback(this.fotoPrefetchIdle);
+    const preparar = () => {
+      const rows = (this.filtrar().out || []).slice(0, 6);
+      rows.forEach(r => {
+        const fotos = (r.fotos && r.fotos.length ? r.fotos : (r.capa_path ? [r.capa_path] : [])).slice(0, 8);
+        if (fotos.length < 2) return;
+        const atual = Math.min(this.state.cardGal[r.id] || 0, fotos.length - 1);
+        this.prepararFoto(this.fotoUrl(fotos[(atual + 1) % fotos.length]), 768, 'cover');
+      });
+      const det = this.state.det;
+      if (det && this.state.galOn) {
+        const fotos = (det.fotos || []).concat(det.fotos_condominio || []).map(p => this.fotoUrl(p)).filter(Boolean);
+        if (fotos.length > 1) {
+          const atual = Math.min(this.state.galIdx || 0, fotos.length - 1);
+          this.prepararFoto(fotos[(atual + 1) % fotos.length], 1200, 'contain');
+          this.prepararFoto(fotos[(atual - 1 + fotos.length) % fotos.length], 1200, 'contain');
+        }
+      }
+    };
+    this.fotoPrefetchTimer = setTimeout(() => {
+      if (window.requestIdleCallback) this.fotoPrefetchIdle = window.requestIdleCallback(preparar, { timeout: 2200 });
+      else preparar();
+    }, 1200);
   }
   tratarTeclaGlobal(e) {
     const modal = this.state.fichaOn ? document.querySelector('[data-ficha-modal]') : null;
@@ -4276,13 +4343,34 @@ class Component extends DCLogic {
     }
     return out;
   }
+  trocarFotoCard(e, id, fotos, indice) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    if (!fotos.length) return;
+    const req = (this.fotoCardReq.get(id) || 0) + 1;
+    this.fotoCardReq.set(id, req);
+    const aplicar = () => {
+      if (this.fotoCardReq.get(id) !== req) return;
+      this.setState({ cardGal: Object.assign({}, this.state.cardGal, { [id]: indice }) });
+    };
+    const limite = new Promise(resolve => setTimeout(resolve, 900));
+    Promise.race([this.prepararFoto(this.fotoUrl(fotos[indice]), 768, 'cover'), limite]).then(aplicar);
+  }
+  trocarFotoGaleria(e, fotos, indice) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    if (!fotos.length) return;
+    const req = ++this.fotoGaleriaReq;
+    const limite = new Promise(resolve => setTimeout(resolve, 600));
+    Promise.race([this.prepararFoto(fotos[indice], 1200, 'contain'), limite]).then(() => {
+      if (this.fotoGaleriaReq === req) this.setState({ galIdx: indice });
+    });
+  }
   mapProduto(r) {
     const badge = this.badges[r.status] || this.badges.pronto;
     const precoNum = this.precoDe(r);
     const fotos = (r.fotos && r.fotos.length ? r.fotos : (r.capa_path ? [r.capa_path] : [])).slice(0, 8);
     const n = fotos.length;
     const idx = Math.min(this.state.cardGal[r.id] || 0, Math.max(0, n - 1));
-    const setIdx = (e, i) => { e.stopPropagation(); this.setState({ cardGal: Object.assign({}, this.state.cardGal, { [r.id]: i }) }); };
+    const setIdx = (e, i) => this.trocarFotoCard(e, r.id, fotos, i);
     const fav = !!this.state.favs[r.id];
     return {
       foto: n ? this.fotoUrl(fotos[idx]) : false,
@@ -4336,6 +4424,23 @@ class Component extends DCLogic {
     if (/^[a-z][a-z0-9+.-]*:/i.test(raw) || raw.startsWith('//')) return '';
     const path = raw.replace(/^\/+/, '').split('/').map(s => encodeURIComponent(decodeURIComponent(s))).join('/');
     return this.SB_URL + '/storage/v1/object/public/empreendimentos/' + path;
+  }
+  fotoRender(p, largura, modo) {
+    const src = this.fotoUrl(p);
+    if (!src) return '';
+    try {
+      const u = new URL(src);
+      if (u.origin !== new URL(this.SB_URL).origin) return src;
+      const objeto = '/storage/v1/object/public/';
+      const render = '/storage/v1/render/image/public/';
+      if (u.pathname.includes(objeto)) u.pathname = u.pathname.replace(objeto, render);
+      else if (!u.pathname.includes(render)) return src;
+      const width = Math.max(160, Math.min(1600, Math.round(Number(largura) || 768)));
+      u.searchParams.set('width', String(width));
+      u.searchParams.set('quality', '75');
+      u.searchParams.set('resize', modo === 'contain' ? 'contain' : 'cover');
+      return u.href;
+    } catch (e) { return src; }
   }
   tourUrl(v) {
     if (!v) return '';
@@ -4716,6 +4821,8 @@ class Component extends DCLogic {
   componentWillUnmount() {
     clearInterval(this.iconTimer);
     clearTimeout(this.filtroTimer);
+    clearTimeout(this.fotoPrefetchTimer);
+    if (this.fotoPrefetchIdle && window.cancelIdleCallback) window.cancelIdleCallback(this.fotoPrefetchIdle);
     if (this.a11yKeys) window.removeEventListener('keydown', this.a11yKeys);
     if (this.galKeys) window.removeEventListener('keydown', this.galKeys);
     if (this.popState) window.removeEventListener('popstate', this.popState);
@@ -4880,9 +4987,9 @@ class Component extends DCLogic {
       galResumo: fotosPrivativasDet.length + ' foto(s) do imóvel' + (fotosComunsDet.length ? ' · ' + fotosComunsDet.length + ' foto(s) de áreas comuns' : ''),
       galFecha: () => this.setState({ galOn: false }),
       galNada: e => { if (e && e.stopPropagation) e.stopPropagation(); },
-      galPrev: e => { e.stopPropagation(); this.setState({ galIdx: (gi - 1 + fotosDet.length) % fotosDet.length }); },
-      galNext: e => { e.stopPropagation(); this.setState({ galIdx: (gi + 1) % fotosDet.length }); },
-      galThumbs: galeriaDet.map((foto, i) => ({ url: foto.url, grupo: foto.grupo, sel: e => { e.stopPropagation(); this.setState({ galIdx: i }); }, borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' })),
+      galPrev: e => this.trocarFotoGaleria(e, fotosDet, (gi - 1 + fotosDet.length) % fotosDet.length),
+      galNext: e => this.trocarFotoGaleria(e, fotosDet, (gi + 1) % fotosDet.length),
+      galThumbs: galeriaDet.map((foto, i) => ({ url: foto.url, grupo: foto.grupo, sel: e => this.trocarFotoGaleria(e, fotosDet, i), borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' })),
       detDescricao: det && det.descricao,
       detTourOn: !!detTourUrl, detTourUrl,
       detTemDif: !!(det && det.diferenciais && det.diferenciais.length), detDif: (det && det.diferenciais) || [],
