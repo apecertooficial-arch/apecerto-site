@@ -239,6 +239,11 @@ test('Render aguarda CI e envia headers seguros e cache imutavel', async () => {
     'Content-Security-Policy-Report-Only',
   ]) assert.ok(render.includes('name: ' + header), header + ' deve estar no Blueprint');
   assert.match(render, /frame-ancestors 'none'/);
+  assert.doesNotMatch(
+    render,
+    /Content-Security-Policy-Report-Only[\s\S]*upgrade-insecure-requests/,
+    'upgrade-insecure-requests é ignorado em CSP report-only e gera erro no navegador',
+  );
   assert.match(render, /diaegvfveqezispcthwk\.supabase\.co|\*\.supabase\.co/);
   assert.match(render, /googletagmanager\.com/);
   assert.match(render, /connect\.facebook\.net/);
