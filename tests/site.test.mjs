@@ -285,6 +285,45 @@ test('resultado no celular prioriza lista, filtros e alvos de toque confortávei
   assert.match(design, /const vistaEfetiva = mobile && st\.vista === 'dividida' \? 'lista' : st\.vista/);
 });
 
+test('busca entra em modo de resultados focado sem perder o caminho de volta', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /buscaAtiva:\s*false/);
+  assert.match(design, /id="buscar"[^>]*style="[^"]*display:\s*\{\{ heroDisplay \}\}/);
+  assert.match(design, /class="rw-sec \{\{ resultsModeClass \}\}" id="apes"/);
+  assert.match(design, /buscar:\s*\(\)\s*=>\s*this\.setState\(\{\s*buscaAtiva:\s*true/);
+  assert.match(design, /voltarInicio:\s*\(\)\s*=>\s*this\.setState\(\{\s*buscaAtiva:\s*false/);
+  assert.match(design, /Voltar ao início/);
+});
+
+test('cards e mapa se destacam mutuamente sem recriar o catálogo', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /class="rw-card-produto" data-produto-id="\{\{ p\.id \}\}"/);
+  assert.match(design, /listaMapaMarkers\s*=\s*new Map\(\)/);
+  assert.match(design, /grupo\.itens\.forEach\(r\s*=>\s*this\.listaMapaMarkers\.set\(String\(r\.id\),\s*mk\)\)/);
+  assert.match(design, /destacarCardNoMapa\(id\)/);
+  assert.match(design, /closest\('\.rw-card-produto\[data-produto-id\]'\)/);
+});
+
+test('mapa permite aplicar a área visível sem esconder o caminho de limpeza', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /mapaBounds:\s*null/);
+  assert.match(design, /Buscar nesta área/);
+  assert.match(design, /m\.on\('dragend zoomend'/);
+  assert.match(design, /aplicarMapaBounds\(\)/);
+  assert.match(design, /boundsOk\(r\)/);
+  assert.match(design, /mapaBounds:\s*null[\s\S]{0,220}?mapaBuscaPendente:\s*false/);
+});
+
+test('detalhe móvel mantém conversão visível e galeria responde a swipe', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /class="rw-mobile-detail-cta rw-m"/);
+  assert.match(design, /sc-camel-on-click="\{\{ detAgendarVisita \}\}"/);
+  assert.match(design, /detAgendarVisita:\s*\(\)\s*=>\s*this\.focarFormularioVisita\(\)/);
+  assert.match(design, /sc-camel-on-touch-start="\{\{ galTouchStart \}\}"/);
+  assert.match(design, /sc-camel-on-touch-end="\{\{ galTouchEnd \}\}"/);
+  assert.match(design, /Math\.abs\(delta\)\s*<\s*45/);
+});
+
 test('mapa agrupa unidades por empreendimento sem esconder unidades do popup', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const trecho = design.match(/\n  gruposMapa\(rows\) \{([\s\S]*?)\n  \}\n  carregarLeaflet\(\)/);

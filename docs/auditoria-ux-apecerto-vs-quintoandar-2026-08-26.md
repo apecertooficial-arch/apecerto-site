@@ -27,6 +27,39 @@ O P0 foi implementado e validado localmente, sem publicação automática nesta 
 
 As mudanças elevam a experiência estimada para **7,8/10 em relação ao benchmark**, antes de uma nova auditoria completa pós-publicação. Permanecem para as próximas entregas: página exclusiva de resultados, drawer de filtros avançados, “buscar nesta área”, sincronização visual card/marcador, rota de detalhe sem a home montada, CTA móvel persistente, swipe, curadoria editorial automática das fotos e regras de qualidade obrigatórias no ERP.
 
+## Segunda execução e nova comparação — 26/08/2026
+
+Uma segunda rodada foi implementada e comparada no navegador com a busca e a ficha atuais do QuintoAndar, em desktop e em celular 390 × 844.
+
+Entregas novas:
+
+- a busca passa para um modo focado de resultados, retirando o hero institucional e posicionando o catálogo logo abaixo do cabeçalho;
+- existe caminho claro de “Voltar ao início”, e o botão de filtros no celular reabre a busca completa;
+- barra de resultados persistente também no desktop;
+- card e marcador agora se destacam mutuamente ao passar o cursor ou navegar pelo mapa;
+- o mapa mantém as 71 unidades em 50 grupos localizados e apresenta a quantidade de unidades por empreendimento;
+- depois de arrastar ou aproximar o mapa, surge “Buscar nesta área”; ao aplicar, lista, contagem e pins usam o mesmo recorte, com opção de limpar;
+- ficha móvel ganhou barra fixa com `WhatsApp` e `Agendar visita`; o agendamento leva ao formulário e foca o campo de nome;
+- a galeria aceita swipe horizontal no celular, preservando setas e teclado;
+- foram corrigidos no próprio teste visual um salto de rolagem no modo focado e uma posição de template que impedia a barra móvel de renderizar.
+
+**Verificações desta rodada:** build selado; **91 testes automatizados aprovados**; smoke HTTP nas 6 rotas aprovado; nenhum overflow horizontal em 1440 × 900 ou 390 × 844; 50 marcadores renderizados; busca por área aplicada no navegador; CTA móvel e foco no formulário confirmados.
+
+### Nota comparativa atualizada
+
+| Área | Antes | Agora | Evidência atual |
+| --- | ---: | ---: | --- |
+| Identidade visual | 5,0 | 9,2 | Laranja `#FF7000` e roxo `#8B00CC` restaurados; variação escura limitada a contraste. |
+| Entrada e busca | 6,0 | 8,8 | Resultados focados imediatamente após a busca, sem salto de rolagem. |
+| Filtros | 4,8 | 7,4 | Critérios essenciais, URL sincronizada e refinamento pelo mapa; ainda falta drawer avançado. |
+| Cards e fotos | 5,5 | 8,4 | Títulos humanos, zeros/códigos removidos e carrossel mais rápido; qualidade da capa ainda depende do ERP. |
+| Mapa | 6,2 | 9,0 | Agrupamento completo, popup de unidades, card–pin e “Buscar nesta área”. |
+| Ficha e conversão | 6,8 | 8,8 | Título/custos comerciais, CTA móvel persistente e swipe; rota ainda mantém a home montada. |
+| Celular | 5,4 | 8,9 | Lista prioritária, controles de 44 px, sem overflow e ações fixas na ficha. |
+| Desempenho e estabilidade | 9,2 | 9,4 | Pacote inicial de aproximadamente 372 KiB e suíte integral verde. |
+
+**Nota geral atual estimada: 8,8/10 em relação ao benchmark.** A ApêCerto já está competitiva nos fluxos centrais e supera o benchmark em leveza e simplicidade do catálogo local. A nota não deve ser chamada de 10/10 ainda porque faltam três provas materiais: filtros avançados na própria tela de resultados, ficha como rota desmontada da home e garantia editorial/qualidade dos dados originados no ERP. Também é necessário medir Core Web Vitals e conversão depois da publicação, com tráfego real.
+
 O site não é ruim. Ele tem diferenciais valiosos — curadoria local, boa galeria completa, integração com o catálogo, financiamento e contato —, porém tenta ser landing page, catálogo, mapa e institucional ao mesmo tempo. O QuintoAndar trata a busca como o produto principal. Essa diferença de prioridade explica grande parte da sensação de que o site da ApêCerto “não faz o cliente clicar”.
 
 O maior problema não é velocidade técnica. A auditoria anterior registrou Lighthouse móvel entre 91 e 95 e computador em 100. O maior problema atual é **hierarquia comercial, qualidade dos dados/fotos e fluidez do funil de busca**.
