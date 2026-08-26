@@ -1,0 +1,241 @@
+{
+  "exportFormatVersion": 2,
+  "exportTime": "2026-08-20 21:40:00",
+  "containerVersion": {
+    "accountId": "6371729503",
+    "containerId": "261396400",
+    "name": "Tracking 360 — contrato, funil e diagnóstico",
+    "description": "Camada de governança do contrato apecerto_event. Observa e valida sem duplicar GA4, Google Ads, Meta Pixel/CAPI ou Clarity.",
+    "container": {
+      "accountId": "6371729503",
+      "containerId": "261396400",
+      "name": "apecerto.com",
+      "publicId": "GTM-524TZP8X",
+      "usageContext": ["WEB"],
+      "features": {
+        "supportUserPermissions": true,
+        "supportEnvironments": true,
+        "supportWorkspaces": true,
+        "supportGtagConfigs": false,
+        "supportBuiltInVariables": true,
+        "supportClients": false,
+        "supportFolders": true,
+        "supportTags": true,
+        "supportTemplates": true,
+        "supportTriggers": true,
+        "supportVariables": true,
+        "supportVersions": true,
+        "supportZones": true,
+        "supportTransformations": false
+      },
+      "tagIds": ["GTM-524TZP8X"]
+    },
+    "tag": [
+      {
+        "accountId": "6371729503",
+        "containerId": "261396400",
+        "tagId": "3",
+        "name": "ApêCerto — Saúde do GTM",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "html",
+            "value": "<script>setTimeout(function(){if(window.apecertoTrack)window.apecertoTrack('gtm_health',{source:'GTM-524TZP8X'});},0);</script>"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "supportDocumentWrite",
+            "value": "false"
+          }
+        ],
+        "firingTriggerId": ["2147479553"],
+        "tagFiringOption": "ONCE_PER_EVENT",
+        "monitoringMetadata": {"type": "MAP"},
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      },
+      {
+        "accountId": "6371729503",
+        "containerId": "261396400",
+        "tagId": "4",
+        "name": "ApêCerto — Validador do contrato 360",
+        "type": "html",
+        "parameter": [
+          {
+            "type": "TEMPLATE",
+            "key": "html",
+            "value": "<script>(function(){var n='{{DLV — Nome do evento}}';var i='{{DLV — ID do evento}}';var h=window.apecertoGtm360=window.apecertoGtm360||{loaded:true,count:0,byEvent:{},errors:[]};h.count++;h.byEvent[n]=(h.byEvent[n]||0)+1;h.last={name:n,id:i,path:'{{Page Path}}',at:new Date().toISOString()};if(!n||!i){h.errors.push({name:n||null,id:i||null,path:'{{Page Path}}',at:h.last.at});if(h.errors.length>20)h.errors.shift();}})();</script>"
+          },
+          {
+            "type": "BOOLEAN",
+            "key": "supportDocumentWrite",
+            "value": "false"
+          }
+        ],
+        "firingTriggerId": ["201"],
+        "tagFiringOption": "ONCE_PER_EVENT",
+        "monitoringMetadata": {"type": "MAP"},
+        "consentSettings": {"consentStatus": "NOT_SET"}
+      }
+    ],
+    "trigger": [
+      {
+        "accountId": "6371729503",
+        "containerId": "261396400",
+        "triggerId": "201",
+        "name": "CE — Todos os eventos ApêCerto",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {
+            "type": "EQUALS",
+            "parameter": [
+              {"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"},
+              {"type": "TEMPLATE", "key": "arg1", "value": "apecerto_event"}
+            ]
+          }
+        ]
+      },
+      {
+        "accountId": "6371729503",
+        "containerId": "261396400",
+        "triggerId": "202",
+        "name": "CE — Lead enviado",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "apecerto_event"}]}
+        ],
+        "filter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{DLV — Nome do evento}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "generate_lead"}]}
+        ]
+      },
+      {
+        "accountId": "6371729503",
+        "containerId": "261396400",
+        "triggerId": "203",
+        "name": "CE — Clique no WhatsApp",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "apecerto_event"}]}
+        ],
+        "filter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{DLV — Nome do evento}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "whatsapp_click"}]}
+        ]
+      },
+      {
+        "accountId": "6371729503",
+        "containerId": "261396400",
+        "triggerId": "204",
+        "name": "CE — Imóvel visualizado",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "apecerto_event"}]}
+        ],
+        "filter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{DLV — Nome do evento}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "view_item"}]}
+        ]
+      },
+      {
+        "accountId": "6371729503",
+        "containerId": "261396400",
+        "triggerId": "205",
+        "name": "CE — Intenção de proprietário",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "apecerto_event"}]}
+        ],
+        "filter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{DLV — Nome do evento}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "owner_cta_click"}]}
+        ]
+      },
+      {
+        "accountId": "6371729503",
+        "containerId": "261396400",
+        "triggerId": "206",
+        "name": "CE — Agendamento iniciado",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "apecerto_event"}]}
+        ],
+        "filter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{DLV — Nome do evento}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "schedule_start"}]}
+        ]
+      },
+      {
+        "accountId": "6371729503",
+        "containerId": "261396400",
+        "triggerId": "207",
+        "name": "CE — Visita agendada no site",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "apecerto_event"}]}
+        ],
+        "filter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{DLV — Nome do evento}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "schedule_complete"}]}
+        ]
+      },
+      {
+        "accountId": "6371729503",
+        "containerId": "261396400",
+        "triggerId": "208",
+        "name": "CE — Formulário iniciado",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "apecerto_event"}]}
+        ],
+        "filter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{DLV — Nome do evento}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "form_start"}]}
+        ]
+      },
+      {
+        "accountId": "6371729503",
+        "containerId": "261396400",
+        "triggerId": "209",
+        "name": "CE — Erro de formulário",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "apecerto_event"}]}
+        ],
+        "filter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{DLV — Nome do evento}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "form_error"}]}
+        ]
+      },
+      {
+        "accountId": "6371729503",
+        "containerId": "261396400",
+        "triggerId": "210",
+        "name": "CE — Profundidade de rolagem",
+        "type": "CUSTOM_EVENT",
+        "customEventFilter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{_event}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "apecerto_event"}]}
+        ],
+        "filter": [
+          {"type": "EQUALS", "parameter": [{"type": "TEMPLATE", "key": "arg0", "value": "{{DLV — Nome do evento}}"}, {"type": "TEMPLATE", "key": "arg1", "value": "scroll_depth"}]}
+        ]
+      }
+    ],
+    "variable": [
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "101", "name": "DLV — Nome do evento", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "apecerto_event_name"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "102", "name": "DLV — ID do evento", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "apecerto_event_id"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "103", "name": "DLV — ID do imóvel", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "item_id"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "104", "name": "DLV — Nome do imóvel", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "item_name"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "105", "name": "DLV — Sessão ApêCerto", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "apecerto_session_id"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "106", "name": "DLV — GA Client ID", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "ga_client_id"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "107", "name": "DLV — GA Session ID", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "ga_session_id"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "108", "name": "DLV — UTM Campaign Last", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "utm_campaign_last"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "109", "name": "DLV — Page Location", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "page_location"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "110", "name": "DLV — Tipo de lead", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "lead_type"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "111", "name": "DLV — Origem", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "source"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "112", "name": "DLV — Contexto do formulário", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "form_context"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "113", "name": "DLV — Nome do CTA", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "cta_name"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "114", "name": "DLV — Rótulo da ação", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "action_label"}]},
+      {"accountId": "6371729503", "containerId": "261396400", "variableId": "115", "name": "DLV — Percentual rolado", "type": "v", "parameter": [{"type": "INTEGER", "key": "dataLayerVersion", "value": "2"}, {"type": "BOOLEAN", "key": "setDefaultValue", "value": "false"}, {"type": "TEMPLATE", "key": "name", "value": "percent_scrolled"}]}
+    ],
+    "builtInVariable": [
+      {"accountId": "6371729503", "containerId": "261396400", "type": "PAGE_URL", "name": "Page URL"},
+      {"accountId": "6371729503", "containerId": "261396400", "type": "PAGE_HOSTNAME", "name": "Page Hostname"},
+      {"accountId": "6371729503", "containerId": "261396400", "type": "PAGE_PATH", "name": "Page Path"},
+      {"accountId": "6371729503", "containerId": "261396400", "type": "REFERRER", "name": "Referrer"},
+      {"accountId": "6371729503", "containerId": "261396400", "type": "EVENT", "name": "Event"}
+    ]
+  }
+}
