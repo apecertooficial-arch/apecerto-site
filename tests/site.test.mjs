@@ -268,6 +268,44 @@ test('vitrine prioriza decisão do cliente e evita controles ou dados enganosos'
   assert.match(design, /aria-label="Ordenar imóveis"/, 'a ordenação precisa ser acessível');
 });
 
+test('resultados oferecem filtros avancados verdadeiros e compartilháveis', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+
+  assert.match(design, /aria-controls="filtros-avancados"/, 'a barra de resultados deve abrir o painel de filtros');
+  assert.match(design, /id="filtros-avancados"[^>]*role="dialog"/, 'o painel deve ser identificado como dialogo acessível');
+  assert.match(design, /aria-label="Área mínima em metros quadrados"/, 'a área mínima deve ter rótulo acessível');
+  assert.match(design, /aria-label="Área máxima em metros quadrados"/, 'a área máxima deve ter rótulo acessível');
+  assert.match(design, /aria-label="Quantidade mínima de banheiros"/, 'banheiros devem usar um controle explícito');
+  assert.match(design, /aria-label="Quantidade mínima de suítes"/, 'suítes devem usar um controle explícito');
+  assert.match(design, /aria-label="Tipo do imóvel"/, 'o tipo do imóvel deve ser filtrável');
+  assert.match(design, /set\('area_min', st\.fAreaMin \|\| null\)/, 'a área mínima deve ser preservada na URL');
+  assert.match(design, /set\('area_max', st\.fAreaMax \|\| null\)/, 'a área máxima deve ser preservada na URL');
+  assert.match(design, /set\('banheiros', st\.fBanheiros \|\| null\)/, 'banheiros devem ser preservados na URL');
+  assert.match(design, /set\('suites', st\.fSuites \|\| null\)/, 'suítes devem ser preservadas na URL');
+  assert.match(design, /set\('tipo', st\.fTipo \|\| null\)/, 'o tipo deve ser preservado na URL');
+  assert.match(design, /const areaOk = r =>/, 'o mesmo filtro de área deve alimentar lista e mapa');
+  assert.match(design, /const banheirosOk = r =>/, 'o mesmo filtro de banheiros deve alimentar lista e mapa');
+  assert.match(design, /const suitesOk = r =>/, 'o mesmo filtro de suítes deve alimentar lista e mapa');
+  assert.match(design, /const tipoOk = r =>/, 'o mesmo filtro de tipo deve alimentar lista e mapa');
+  assert.match(design, /tipologia:\s*u\.tipologia \|\| r\.tipologia \|\| null/, 'cada unidade precisa preservar a tipologia publicada pelo ERP');
+  assert.match(design, /tipologiaUnidade \? null : r\.dormitorios/, 'uma unidade identificada como apartamento não pode herdar zero dormitórios do agregado do empreendimento');
+  assert.match(design, /const studio = tipologia \? \/studio\/i\.test\(tipologia\)/, 'a tipologia explícita deve prevalecer sobre agregados no filtro de studio');
+  assert.match(design, /min > max \? \{ fAreaMin: String\(max\), fAreaMax: String\(min\) \}/, 'a aplicação deve corrigir uma faixa de área invertida');
+});
+
+test('ficha usa uma experiencia de rota sem manter a home ativa atrás', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+
+  assert.match(design, /data-site-shell=""[^>]*aria-hidden="\{\{ siteShellOculto \}\}"[^>]*style="display: \{\{ siteShellDisplay \}\}/, 'a home deve sair da apresentação enquanto a ficha está ativa');
+  assert.match(design, /data-property-route=""[^>]*role="main"/, 'a ficha deve se apresentar como conteúdo principal da rota');
+  assert.doesNotMatch(design, /data-det-topo=""[^>]*role="dialog"/, 'a página do imóvel não deve continuar se anunciando como modal');
+  assert.match(design, /rotaFichaAtiva/, 'a rota limpa deve controlar a separação entre home e ficha');
+  assert.match(design, /detRouteLoading/, 'a navegação direta deve mostrar carregamento próprio em vez da home');
+  assert.match(design, /detRouteErro/, 'a ficha deve oferecer recuperação se a conexão falhar');
+  assert.match(design, /tentarDetRoute/, 'a falha da ficha deve permitir tentar novamente');
+  assert.match(design, /voltarCatalogoRota/, 'a falha da ficha deve permitir voltar ao catálogo');
+});
+
 test('locação só fica disponível quando a vitrine pública tiver imóveis', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   assert.match(design, /carregarDisponibilidadeAluguel\(\)/);

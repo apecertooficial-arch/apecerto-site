@@ -60,6 +60,41 @@ Entregas novas:
 
 **Nota geral atual estimada: 8,8/10 em relação ao benchmark.** A ApêCerto já está competitiva nos fluxos centrais e supera o benchmark em leveza e simplicidade do catálogo local. A nota não deve ser chamada de 10/10 ainda porque faltam três provas materiais: filtros avançados na própria tela de resultados, ficha como rota desmontada da home e garantia editorial/qualidade dos dados originados no ERP. Também é necessário medir Core Web Vitals e conversão depois da publicação, com tráfego real.
 
+## Terceira execução — filtros, rota da ficha e validação final
+
+Nesta rodada foram concluídos os dois maiores débitos que ainda estavam dentro do repositório do site:
+
+- drawer profissional de filtros avançados, responsivo e acessível, com tipo do imóvel, área mínima/máxima, banheiros e suítes;
+- filtros persistidos na URL, permitindo compartilhar e restaurar a mesma busca;
+- mesma regra de filtro aplicada à lista, à contagem e ao mapa;
+- correção automática quando a área mínima é maior que a máxima;
+- ficha do imóvel transformada em experiência de rota: a home deixa de ser exibida e de participar da árvore acessível enquanto a ficha está aberta;
+- estado próprio de carregamento e recuperação quando a ficha não consegue consultar o catálogo;
+- retorno da ficha restaura resultados e filtros sem perder a busca;
+- correção de integridade entre ERP e vitrine: a tipologia da unidade passa a prevalecer sobre o agregado do empreendimento.
+
+O teste real encontrou e eliminou um erro de classificação: o filtro `Studio` retornava 22 imóveis e incluía um item chamado `Apartamento no AP Moema`. A causa era a unidade herdar `0` dormitórios do agregado de um empreendimento misto. Depois da correção, o mesmo endereço compartilhável retornou 21 studios e nenhum apartamento incorreto.
+
+### Nova comparação prática
+
+| Área | ApêCerto nesta rodada | Referência observada | Nota atual |
+| --- | --- | --- | ---: |
+| Busca e filtros essenciais | Drawer compacto, contagem viva, tipo, área, banheiros, suítes, dormitórios, vagas, preço, bairro, status e URL compartilhável | O QuintoAndar mantém maior amplitude de características, custos e localização livre | 9,1 |
+| Lista e mapa | 71 unidades no mesmo catálogo, agrupamento por empreendimento, card–pin e busca na área visível | O benchmark oferece desenho livre de área e escala nacional | 9,2 |
+| Ficha do imóvel | Rota visual e acessível independente, galeria, custos, visita, WhatsApp e financiamento | O benchmark ainda tem mais informações padronizadas de condomínio e comodidades | 9,4 |
+| Celular | Lista prioritária, drawer de 390 px sem overflow, swipe e CTA persistente | Paridade alta no fluxo central | 9,5 |
+| Identidade e clareza | Tokens originais restaurados e interface mais focada | Linguagem própria preservada, sem copiar a aparência do concorrente | 9,4 |
+| Estabilidade | 93/93 testes, pacote selado e navegação sem erro ou aviso de console | Base menor e tecnicamente mais simples que o benchmark | 9,6 |
+
+**Nota comparativa local após a terceira execução: 9,4/10.** O fluxo central de procurar, filtrar, comparar no mapa, abrir a ficha e voltar à busca está em nível profissional e foi validado em desktop e em celular 390 × 844, sem rolagem lateral.
+
+Os 0,6 pontos restantes não podem ser obtidos honestamente apenas com mais CSS no site. Eles dependem de duas provas operacionais:
+
+1. o ERP bloquear ou sinalizar anúncios abaixo de uma nota mínima de qualidade, especialmente capa, ordem das fotos, coordenadas, descrição, tipologia e custos;
+2. publicar esta versão e medir Core Web Vitals e conversão no domínio real, porque cache, rede e comportamento de usuários não são reproduzidos integralmente no ambiente local.
+
+O QuintoAndar continua com maior quantidade de filtros — custos, metrô, mobiliado, condomínio, comodidades, acessibilidade e desenho de área — porque seu catálogo também possui esses campos padronizados em escala. A ApêCerto não deve exibir controles que o ERP ainda não alimenta com consistência. A próxima evolução correta é ampliar o contrato de Produtos primeiro e só então expor os novos filtros no site.
+
 O site não é ruim. Ele tem diferenciais valiosos — curadoria local, boa galeria completa, integração com o catálogo, financiamento e contato —, porém tenta ser landing page, catálogo, mapa e institucional ao mesmo tempo. O QuintoAndar trata a busca como o produto principal. Essa diferença de prioridade explica grande parte da sensação de que o site da ApêCerto “não faz o cliente clicar”.
 
 O maior problema não é velocidade técnica. A auditoria anterior registrou Lighthouse móvel entre 91 e 95 e computador em 100. O maior problema atual é **hierarquia comercial, qualidade dos dados/fotos e fluidez do funil de busca**.

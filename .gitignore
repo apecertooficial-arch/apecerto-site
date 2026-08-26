@@ -1,3 +1,4 @@
 dist/
+node_modules/
 DIAGNOSTICO.txt
 supabase/.temp/
