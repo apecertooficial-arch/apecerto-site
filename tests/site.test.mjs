@@ -227,6 +227,9 @@ test('Leaflet e tiles só carregam quando um mapa se aproxima da tela', async ()
 
 test('ajustes de acessibilidade mantêm a identidade e resolvem as falhas medidas', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /--ape-orange:\s*#FF7000/i, 'o laranja original da marca deve comandar a interface');
+  assert.match(design, /--ape-purple:\s*#8B00CC/i, 'o roxo original da marca deve permanecer intacto');
+  assert.match(design, /--ape-orange-action:\s*#C04E00/i, 'ações que exigem texto branco devem usar a variação acessível');
   assert.match(design, /--ape-orange-text:\s*#B84B00/i);
   assert.match(design, /--fg-muted:\s*var\(--neutral-500\)/);
   assert.match(design, /<label for="preco-minimo"[^>]*>Mínimo<\/label>[\s\S]{0,300}?<input id="preco-minimo" type="range" class="ape-range"/);
@@ -253,6 +256,33 @@ test('ajustes de acessibilidade mantêm a identidade e resolvem as falhas medida
   assert.match(design, /if \(this\.state\.saraOn\) \{ e\.preventDefault\(\); this\.setState\(\{ saraOn: false \}/, 'a busca da Sara deve fechar por Escape');
   assert.doesNotMatch(design, /<h4[^>]*>\{\{ grupo\.etapa \}\}<\/h4>/);
   assert.match(design, /<h3[^>]*>\{\{ grupo\.etapa \}\}<\/h3>/);
+});
+
+test('vitrine prioriza decisão do cliente e evita controles ou dados enganosos', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /tituloComercial\(r\)/, 'cards e ficha devem usar um título comercial');
+  assert.match(design, /numeroPositivo\(v\)/, 'características zeradas devem ser normalizadas antes de aparecer');
+  assert.match(design, /galOn:\s*n > 1,/, 'o card não pode mostrar carrossel antes de existirem duas fotos reais');
+  assert.match(design, /setTimeout\(resolve, 350\)/, 'a troca de foto não pode ficar presa por quase um segundo');
+  assert.match(design, /ordenarProdutos\(rows, criterio\)/, 'a lista deve permitir ordenação previsível');
+  assert.match(design, /aria-label="Ordenar imóveis"/, 'a ordenação precisa ser acessível');
+});
+
+test('locação só fica disponível quando a vitrine pública tiver imóveis', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /carregarDisponibilidadeAluguel\(\)/);
+  assert.match(design, /site_produtos_catalogo/);
+  assert.match(design, /finalidade\.in\.\(aluguel,alugar,locacao,locação\)/);
+  assert.match(design, /<sc-if value="\{\{ aluguelDisponivel \}\}"/);
+  assert.match(design, /aluguelDisponivel:\s*!!st\.aluguelDisponivel/);
+});
+
+test('resultado no celular prioriza lista, filtros e alvos de toque confortáveis', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /\.rw-dividida\s*\{\s*display:\s*none\s*!important/);
+  assert.match(design, /\.rw-result-tools\s*\{[\s\S]{0,300}?position:\s*sticky/);
+  assert.match(design, /button\[aria-label="Foto anterior"\][\s\S]{0,160}?width:\s*44px\s*!important/);
+  assert.match(design, /const vistaEfetiva = mobile && st\.vista === 'dividida' \? 'lista' : st\.vista/);
 });
 
 test('mapa agrupa unidades por empreendimento sem esconder unidades do popup', async () => {

@@ -552,30 +552,28 @@ design = trocaObrigatoria(
 design = trocaObrigatoria(
   design,
   `      specs: [
-        r.area_util ? Math.round(Number(r.area_util)) + ' m²' : null,
-        r.dormitorios ? r.dormitorios + (r.dormitorios > 1 ? ' dorms' : ' dorm') : null,
-        r.vagas ? r.vagas + (r.vagas > 1 ? ' vagas' : ' vaga') : null,
+        this.numeroPositivo(r.area_util) ? Math.round(this.numeroPositivo(r.area_util)) + ' m²' : null,
+        this.numeroPositivo(r.dormitorios) ? this.numeroPositivo(r.dormitorios) + (this.numeroPositivo(r.dormitorios) > 1 ? ' dorms' : ' dorm') : null,
+        this.numeroPositivo(r.vagas) ? this.numeroPositivo(r.vagas) + (this.numeroPositivo(r.vagas) > 1 ? ' vagas' : ' vaga') : null,
         r.unidades_disponiveis > 0 ? r.unidades_disponiveis + (r.unidades_disponiveis > 1 ? ' unidades disponíveis' : ' unidade disponível') : null
       ].filter(Boolean).join(' · '),
       specIcons: [
-        r.area_util ? { ic: 'scan', v: Math.round(Number(r.area_util)) + ' m²' } : null,
-        r.dormitorios ? { ic: 'bed-double', v: String(r.dormitorios) } : null,
-        r.banheiros ? { ic: 'bath', v: String(r.banheiros) } : null,
-        r.vagas ? { ic: 'car', v: String(r.vagas) } : null
+        this.numeroPositivo(r.area_util) ? { ic: 'scan', v: Math.round(this.numeroPositivo(r.area_util)) + ' m²' } : null,
+        this.numeroPositivo(r.dormitorios) ? { ic: 'bed-double', v: String(this.numeroPositivo(r.dormitorios)) } : null,
+        this.numeroPositivo(r.banheiros) ? { ic: 'bath', v: String(this.numeroPositivo(r.banheiros)) } : null,
+        this.numeroPositivo(r.vagas) ? { ic: 'car', v: String(this.numeroPositivo(r.vagas)) } : null
       ].filter(Boolean),`,
   `      specs: [
-        r.codigo ? 'Cód. ' + r.codigo : null,
-        areaExibida ? Number(areaExibida).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' m²' : null,
-        dormitoriosExibidos != null ? dormitoriosExibidos + (dormitoriosExibidos === 1 ? ' dorm' : ' dorms') : null,
-        vagasExibidas != null ? vagasExibidas + (vagasExibidas === 1 ? ' vaga' : ' vagas') : null,
+        this.numeroPositivo(areaExibida) ? this.numeroPositivo(areaExibida).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' m²' : null,
+        this.numeroPositivo(dormitoriosExibidos) ? this.numeroPositivo(dormitoriosExibidos) + (this.numeroPositivo(dormitoriosExibidos) === 1 ? ' dorm' : ' dorms') : null,
+        this.numeroPositivo(vagasExibidas) ? this.numeroPositivo(vagasExibidas) + (this.numeroPositivo(vagasExibidas) === 1 ? ' vaga' : ' vagas') : null,
         !saraUnidade && r.unidades_disponiveis > 0 ? r.unidades_disponiveis + (r.unidades_disponiveis > 1 ? ' unidades disponíveis' : ' unidade disponível') : null
       ].filter(Boolean).join(' · '),
       specIcons: [
-        r.codigo ? { ic: 'hash', v: String(r.codigo) } : null,
-        areaExibida ? { ic: 'scan', v: Number(areaExibida).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' m²' } : null,
-        dormitoriosExibidos != null ? { ic: 'bed-double', v: String(dormitoriosExibidos) } : null,
-        r.banheiros ? { ic: 'bath', v: String(r.banheiros) } : null,
-        vagasExibidas != null ? { ic: 'car', v: String(vagasExibidas) } : null
+        this.numeroPositivo(areaExibida) ? { ic: 'scan', v: this.numeroPositivo(areaExibida).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' m²' } : null,
+        this.numeroPositivo(dormitoriosExibidos) ? { ic: 'bed-double', v: String(this.numeroPositivo(dormitoriosExibidos)) } : null,
+        this.numeroPositivo(r.banheiros) ? { ic: 'bath', v: String(this.numeroPositivo(r.banheiros)) } : null,
+        this.numeroPositivo(vagasExibidas) ? { ic: 'car', v: String(this.numeroPositivo(vagasExibidas)) } : null
       ].filter(Boolean),`,
   'ficha resumida da unidade encontrada pela Sara',
 );
