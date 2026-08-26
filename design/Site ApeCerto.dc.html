@@ -82,10 +82,11 @@
      BRAND COLORS — Primary
      ============================ */
   --ape-orange-brand:  #FF7000;   /* cor original do logotipo e dos grafismos */
-  --ape-orange:        #C04E00;   /* ação acessível, mesma identidade cromática */
+  --ape-orange:        #FF7000;   /* laranja original, identidade principal */
+  --ape-orange-action: #C04E00;   /* variação acessível para texto branco */
   --ape-orange-text:   #B84B00;   /* texto normal com contraste AA */
-  --ape-orange-600:    #B74700;   /* hover/press acessível */
-  --ape-orange-700:    #9F3F00;   /* active/press deep */
+  --ape-orange-600:    #E66200;   /* hover */
+  --ape-orange-700:    #CC5800;   /* active/press deep */
   --ape-orange-300:    #FF9A4D;   /* hover lighten / illustrative */
   --ape-orange-100:    #FFE4D1;   /* surface tint, badges bg */
   --ape-orange-50:     #FFF3EA;   /* lightest tint, page accents */
@@ -120,7 +121,7 @@
   --fg-3:        var(--neutral-500);   /* tertiary / labels */
   --fg-muted:    var(--neutral-500);   /* placeholder legível em fundo claro */
   --fg-inverse:  var(--neutral-0);     /* text on dark/brand bg */
-  --fg-brand:    var(--ape-orange);    /* default brand fg */
+  --fg-brand:    var(--ape-orange-text); /* default brand fg */
   --fg-accent:   var(--ape-purple);    /* accent brand fg */
 
   --bg-page:     var(--neutral-50);    /* default page bg */
@@ -361,7 +362,7 @@ input.fin-range::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50
 .ape-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 var(--space-2);border-radius:var(--radius-pill);background:var(--neutral-100);color:var(--fg-3);font-size:var(--text-xs);font-weight:var(--weight-semibold);font-variant-numeric:tabular-nums}
 
 /* ---------- Dense button (ERP lists: --shadow-xs or none) ---------- */
-.ape-btn{display:inline-flex;align-items:center;gap:var(--space-1);height:32px;padding:0 var(--space-4);border:none;border-radius:var(--radius-sm);background:var(--ape-orange);color:var(--fg-inverse);font-family:var(--font-body);font-size:var(--text-sm);font-weight:var(--weight-semibold);cursor:pointer;box-shadow:var(--shadow-xs);transition:background var(--dur-fast) var(--ease-out);white-space:nowrap;flex:none}
+.ape-btn{display:inline-flex;align-items:center;gap:var(--space-1);height:32px;padding:0 var(--space-4);border:none;border-radius:var(--radius-sm);background:var(--ape-orange);color:var(--fg-1);font-family:var(--font-body);font-size:var(--text-sm);font-weight:var(--weight-semibold);cursor:pointer;box-shadow:var(--shadow-xs);transition:background var(--dur-fast) var(--ease-out);white-space:nowrap;flex:none}
 .ape-btn:hover{background:var(--ape-orange-600)}
 .ape-btn--secondary{background:var(--bg-surface);color:var(--fg-1);border:1px solid var(--border-default);box-shadow:none}
 .ape-btn--secondary:hover{background:var(--bg-sunken)}
@@ -446,7 +447,7 @@ select.ape-input{appearance:none;background:var(--bg-surface) url("data:image/sv
 .ape-affix{display:flex;align-items:center;padding:0 var(--space-3);background:var(--bg-sunken);color:var(--fg-3);font-size:var(--text-sm)}
 .ape-check{display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--text-sm);color:var(--fg-1);cursor:pointer}
 .ape-check .box{width:16px;height:16px;border-radius:var(--radius-xs);border:1px solid var(--border-default);background:var(--bg-surface);display:inline-flex;align-items:center;justify-content:center;color:transparent;font-size:11px;font-weight:var(--weight-bold);flex:none}
-.ape-check.is-checked .box{background:var(--ape-orange);border-color:var(--ape-orange);color:var(--fg-inverse)}
+.ape-check.is-checked .box{background:var(--ape-orange-action);border-color:var(--ape-orange-action);color:var(--fg-inverse)}
 .ape-check.is-disabled{opacity:0.4;cursor:not-allowed}
 .ape-radio .box{border-radius:var(--radius-pill)}
 .ape-radio.is-checked .box{background:var(--bg-surface);border:4px solid var(--ape-orange);color:transparent}
@@ -630,10 +631,11 @@ select.ape-input{appearance:none;background:var(--bg-surface) url("data:image/sv
      BRAND COLORS — Primary
      ============================ */
   --ape-orange-brand:  #FF7000;   /* cor original do logotipo e dos grafismos */
-  --ape-orange:        #C04E00;   /* ação acessível, mesma identidade cromática */
+  --ape-orange:        #FF7000;   /* laranja original, identidade principal */
+  --ape-orange-action: #C04E00;   /* variação acessível para texto branco */
   --ape-orange-text:   #B84B00;   /* texto normal com contraste AA */
-  --ape-orange-600:    #B74700;   /* hover/press acessível */
-  --ape-orange-700:    #9F3F00;   /* active/press deep */
+  --ape-orange-600:    #E66200;   /* hover */
+  --ape-orange-700:    #CC5800;   /* active/press deep */
   --ape-orange-300:    #FF9A4D;   /* hover lighten / illustrative */
   --ape-orange-100:    #FFE4D1;   /* surface tint, badges bg */
   --ape-orange-50:     #FFF3EA;   /* lightest tint, page accents */
@@ -668,7 +670,7 @@ select.ape-input{appearance:none;background:var(--bg-surface) url("data:image/sv
   --fg-3:        var(--neutral-500);   /* tertiary / labels */
   --fg-muted:    var(--neutral-500);   /* placeholder legível em fundo claro */
   --fg-inverse:  var(--neutral-0);     /* text on dark/brand bg */
-  --fg-brand:    var(--ape-orange);    /* default brand fg */
+  --fg-brand:    var(--ape-orange-text); /* default brand fg */
   --fg-accent:   var(--ape-purple);    /* accent brand fg */
 
   --bg-page:     var(--neutral-50);    /* default page bg */
@@ -904,7 +906,7 @@ code, .mono {
 .ape-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 var(--space-2);border-radius:var(--radius-pill);background:var(--neutral-100);color:var(--fg-3);font-size:var(--text-xs);font-weight:var(--weight-semibold);font-variant-numeric:tabular-nums}
 
 /* ---------- Dense button (ERP lists: --shadow-xs or none) ---------- */
-.ape-btn{display:inline-flex;align-items:center;gap:var(--space-1);height:32px;padding:0 var(--space-4);border:none;border-radius:var(--radius-sm);background:var(--ape-orange);color:var(--fg-inverse);font-family:var(--font-body);font-size:var(--text-sm);font-weight:var(--weight-semibold);cursor:pointer;box-shadow:var(--shadow-xs);transition:background var(--dur-fast) var(--ease-out);white-space:nowrap;flex:none}
+.ape-btn{display:inline-flex;align-items:center;gap:var(--space-1);height:32px;padding:0 var(--space-4);border:none;border-radius:var(--radius-sm);background:var(--ape-orange);color:var(--fg-1);font-family:var(--font-body);font-size:var(--text-sm);font-weight:var(--weight-semibold);cursor:pointer;box-shadow:var(--shadow-xs);transition:background var(--dur-fast) var(--ease-out);white-space:nowrap;flex:none}
 .ape-btn:hover{background:var(--ape-orange-600)}
 .ape-btn--secondary{background:var(--bg-surface);color:var(--fg-1);border:1px solid var(--border-default);box-shadow:none}
 .ape-btn--secondary:hover{background:var(--bg-sunken)}
@@ -989,7 +991,7 @@ select.ape-input{appearance:none;background:var(--bg-surface) url("data:image/sv
 .ape-affix{display:flex;align-items:center;padding:0 var(--space-3);background:var(--bg-sunken);color:var(--fg-3);font-size:var(--text-sm)}
 .ape-check{display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--text-sm);color:var(--fg-1);cursor:pointer}
 .ape-check .box{width:16px;height:16px;border-radius:var(--radius-xs);border:1px solid var(--border-default);background:var(--bg-surface);display:inline-flex;align-items:center;justify-content:center;color:transparent;font-size:11px;font-weight:var(--weight-bold);flex:none}
-.ape-check.is-checked .box{background:var(--ape-orange);border-color:var(--ape-orange);color:var(--fg-inverse)}
+.ape-check.is-checked .box{background:var(--ape-orange-action);border-color:var(--ape-orange-action);color:var(--fg-inverse)}
 .ape-check.is-disabled{opacity:0.4;cursor:not-allowed}
 .ape-radio .box{border-radius:var(--radius-pill)}
 .ape-radio.is-checked .box{background:var(--bg-surface);border:4px solid var(--ape-orange);color:transparent}
@@ -1800,31 +1802,44 @@ svg.leaflet-image-layer.leaflet-interactive path {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
     }
     @media (min-width: 768px) { .rw-m { display: none !important; } }
+    @media (min-width: 768px) {
+      .rw-results-mode .rw-result-tools { position: sticky; top: 72px; z-index: 35; margin-inline: -12px !important; padding: 10px 12px; background: rgba(250, 248, 246, 0.94); border-block: 1px solid var(--border-soft); backdrop-filter: blur(14px); }
+    }
     @media (max-width: 767px) {
       .rw-desk { display: none !important; }
       .rw-m { display: flex; }
+      .rw-dividida { display: none !important; }
       .rw-g1, .rw-vista, .rw-cards { grid-template-columns: 1fr !important; }
       .rw-g2 { grid-template-columns: 1fr 1fr !important; }
-      .rw-hero { grid-template-columns: 1fr !important; padding: 40px 20px 56px !important; gap: 32px !important; }
-      .rw-hero h1 { font-size: 34px !important; }
-      .rw-heroimg { height: 300px !important; }
-      .rw-stats { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 12px !important; }
+      .rw-hero { grid-template-columns: 1fr !important; padding: 28px 20px 40px !important; gap: 24px !important; }
+      .rw-hero h1 { font-size: 32px !important; }
+      .rw-heroimg { display: none !important; }
+      .rw-stats { display: none !important; }
       .rw-stats > div > div:first-child { font-size: 24px !important; }
       .rw-stats > div > div:last-child { font-size: 12px !important; line-height: 1.3; }
       .rw-hero button { min-height: 40px; }
       .rw-hero select { min-width: 0 !important; flex: 1 1 0 !important; }
       button[data-favorito-card] { width: 40px !important; height: 40px !important; }
-      button[aria-label="Foto anterior"], button[aria-label="Próxima foto"] { width: 36px !important; height: 36px !important; }
-      .rw-sec { padding: 56px 20px !important; }
+      button[aria-label="Foto anterior"], button[aria-label="Próxima foto"] { width: 44px !important; height: 44px !important; }
+      .rw-sec { padding: 40px 20px !important; }
+      .rw-results-head { align-items: flex-start !important; flex-direction: column; gap: 16px !important; margin-bottom: 28px !important; }
+      .rw-results-head h2 { max-width: 330px; }
+      .rw-result-tools { position: sticky; top: 72px; z-index: 35; margin: 0 -20px 18px !important; padding: 10px 20px; background: rgba(250, 248, 246, 0.94); border-block: 1px solid var(--border-soft); backdrop-filter: blur(14px); flex-wrap: nowrap !important; justify-content: flex-start !important; overflow-x: auto; scrollbar-width: none; }
+      .rw-result-tools::-webkit-scrollbar { display: none; }
+      .rw-result-tools > * { flex: 0 0 auto; }
+      .rw-card-photo { height: 230px !important; }
       h2 { font-size: 28px; }
-      .rw-portal { padding: 24px 16px 80px !important; }
+      .rw-portal { padding: 24px 16px 124px !important; }
       .rw-portal h1 { font-size: 30px !important; }
       .rw-dethead { padding: 10px 10px !important; flex-wrap: wrap; row-gap: 8px; }
       .rw-dethead button { padding: 8px 10px !important; font-size: 12px !important; }
       .rw-gal { grid-template-columns: 1fr 1fr !important; grid-template-rows: 220px 100px 100px !important; }
       .rw-galmain { grid-row: 1 !important; grid-column: 1 / -1 !important; }
       .rw-sara { width: calc(100vw - 72px) !important; }
+      .rw-map-wrap { position: relative !important; top: auto !important; }
       #lista-mapa { height: 420px !important; position: relative !important; top: auto !important; }
+      .rw-mobile-detail-cta { position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; gap: 10px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: rgba(250, 248, 246, 0.96); border-top: 1px solid var(--border-soft); box-shadow: 0 -8px 24px rgba(31, 28, 26, 0.12); backdrop-filter: blur(14px); }
+      .rw-mobile-detail-cta > * { min-height: 48px; flex: 1; border-radius: var(--radius-pill); display: flex; align-items: center; justify-content: center; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-bold); }
     }
     #lista-mapa .leaflet-control-attribution,
     #det-mapa .leaflet-control-attribution {
@@ -1846,6 +1861,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       font-weight: var(--weight-semibold);
       text-decoration: none;
     }
+    .rw-card-produto.rw-map-active { outline: 3px solid var(--ape-orange); outline-offset: 3px; box-shadow: var(--shadow-md) !important; }
   </style>
 </helmet>
 
@@ -1890,6 +1906,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
             </div>
           </sc-if>
         </div>
+        <sc-if value="{{ aluguelDisponivel }}" hint-placeholder-val="false">
         <div style="position: relative">
           <button sc-camel-on-click="{{ tglMenuAlug }}" aria-expanded="{{ menuAlugOn }}" aria-controls="menu-alugar" style="border: none; background: transparent; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: {{ menuAlugCor }}; display: flex; align-items: center; gap: 6px; padding: 8px 0" style-hover="color: var(--ape-orange)">Alugar <span aria-hidden="true" style="font-size: 10px">{{ menuAlugSeta }}</span></button>
           <sc-if value="{{ menuAlugOn }}" hint-placeholder-val="{{ false }}">
@@ -1900,6 +1917,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
             </div>
           </sc-if>
         </div>
+        </sc-if>
         <a href="/proprietario/cadastre-seu-imovel/" sc-camel-on-click="{{ abreCadastro }}" style="color: var(--fg-2)" style-hover="color: var(--ape-orange)">Anunciar</a>
         <a href="/proprietario/" sc-camel-on-click="{{ abrePortal }}" style="color: var(--fg-2)" style-hover="color: var(--ape-orange)">Entrar</a>
       </nav>
@@ -1912,7 +1930,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <a href="#dicas" sc-camel-on-click="{{ mmFecha }}" style="font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 14px 4px; border-bottom: 1px solid var(--border-soft);">Dicas</a>
           <a href="/proprietario/cadastre-seu-imovel/" sc-camel-on-click="{{ mmCadastro }}" style="font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 14px 4px; border-bottom: 1px solid var(--border-soft);">Anunciar meu apê</a>
           <a href="/proprietario/" sc-camel-on-click="{{ mmPortal }}" style="font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-1); padding: 14px 4px;">Entrar</a>
-          <div style="padding-top: 16px"><button sc-camel-on-click="{{ mmAgendarVisita }}" style="width: 100%; height: 48px; border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-inverse); background: var(--ape-orange); border-radius: var(--radius-pill); box-shadow: var(--shadow-brand)">Agendar visita</button></div>
+          <div style="padding-top: 16px"><button sc-camel-on-click="{{ mmAgendarVisita }}" style="width: 100%; height: 48px; border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--fg-1); background: var(--ape-orange); border-radius: var(--radius-pill); box-shadow: var(--shadow-brand)">Agendar visita</button></div>
         </div>
       </sc-if>
     </div>
@@ -1921,7 +1939,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <main id="conteudo-principal" tabindex="-1">
 
   <!-- ============ HERO ============ -->
-  <section id="buscar" style="position: relative; overflow: hidden">
+  <section id="buscar" style="display: {{ heroDisplay }}; position: relative; overflow: hidden">
     <sc-if value="{{ grafismoOn }}" hint-placeholder-val="{{ true }}">
       <img class="rw-grafismo" src="7c0ea5e0-a948-412d-9180-9335416036e9" alt="" aria-hidden="true" width="760" height="360" loading="eager" fetchpriority="high" decoding="async" style="position: absolute; right: -120px; top: -60px; width: 760px; height: auto; display: block; opacity: 0.5; pointer-events: none">
     </sc-if>
@@ -1936,7 +1954,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <div style="display: flex; gap: 8px">
             <button sc-camel-on-click="{{ setComprar }}" aria-pressed="{{ comprarAtivo }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-weight: var(--weight-semibold); font-size: var(--text-sm); padding: 8px 20px; border-radius: var(--radius-pill); background: {{ compBg }}; color: {{ compFg }}">Comprar</button>
             <button sc-camel-on-click="{{ setLanc }}" aria-pressed="{{ lancAtivo }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-weight: var(--weight-semibold); font-size: var(--text-sm); padding: 8px 20px; border-radius: var(--radius-pill); background: {{ lancBg }}; color: {{ lancFg }}">Lançamentos</button>
-            <button sc-camel-on-click="{{ setAlugar }}" aria-pressed="{{ alugarAtivo }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-weight: var(--weight-semibold); font-size: var(--text-sm); padding: 8px 20px; border-radius: var(--radius-pill); background: {{ alugBg }}; color: {{ alugFg }}">Alugar</button>
+            <sc-if value="{{ aluguelDisponivel }}" hint-placeholder-val="false"><button sc-camel-on-click="{{ setAlugar }}" aria-pressed="{{ alugarAtivo }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-weight: var(--weight-semibold); font-size: var(--text-sm); padding: 8px 20px; border-radius: var(--radius-pill); background: {{ alugBg }}; color: {{ alugFg }}">Alugar</button></sc-if>
           </div>
           <div style="display: flex; gap: 12px">
             <sc-raw-select aria-label="Filtrar por bairro" value="{{ fBairro }}" sc-camel-on-change="{{ setFBairro }}" style="flex: 1.2; border: 1px solid var(--border-default); border-radius: 12px; padding: 0 12px; height: 48px; font-family: var(--font-body); font-size: var(--text-sm); color: var(--fg-1); background: var(--bg-surface); outline: none">
@@ -2040,9 +2058,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
   </section>
 
   <!-- ============ PRODUTOS (Supabase) ============ -->
-  <section class="rw-sec" id="apes" aria-busy="{{ produtosCarregando }}" style="max-width: 1200px; margin: 0 auto; padding: 96px 24px 88px">
-    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 40px">
+  <section class="rw-sec {{ resultsModeClass }}" id="apes" aria-busy="{{ produtosCarregando }}" style="max-width: 1200px; margin: 0 auto; padding: {{ resultsPadding }}">
+    <div class="rw-results-head" style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 40px">
       <div style="display: flex; flex-direction: column; gap: 8px">
+        <sc-if value="{{ resultsModeOn }}" hint-placeholder-val="{{ false }}">
+          <button sc-camel-on-click="{{ voltarInicio }}" style="width: fit-content; border: none; background: transparent; cursor: pointer; color: var(--ape-orange); font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); padding: 0 0 4px">← Voltar ao início</button>
+        </sc-if>
         <div class="eyebrow">Em destaque</div>
         <h2 style="margin: 0">Apês escolhidos um por um</h2>
         <p style="margin: 0; max-width: 560px">Direto do nosso acervo, atualizado em tempo real.</p>
@@ -2082,14 +2103,21 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <button sc-camel-on-click="{{ limparFiltros }}" style="border: none; background: transparent; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--ape-orange); padding: 0" style-hover="color: var(--ape-orange-600)">Limpar filtros</button>
       </div>
     </sc-if>
-    <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap">
+    <div class="rw-result-tools" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; flex-wrap: wrap">
       <button sc-camel-on-click="{{ tglFavs }}" aria-pressed="{{ favsAtivo }}" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); padding: 9px 18px; border-radius: var(--radius-pill); border: 1.5px solid {{ favsChipBorda }}; background: {{ favsChipBg }}; color: {{ favsChipFg }}; transition: all 200ms cubic-bezier(0.2, 0.8, 0.2, 1)">
         <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="{{ favsChipFill }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
         <span>{{ favsChipLabel }}</span>
       </button>
+      <button class="rw-m" sc-camel-on-click="{{ abrirFiltrosMobile }}" style="border: 1.5px solid var(--border-default); background: var(--bg-surface); color: var(--fg-1); min-height: 44px; padding: 0 16px; border-radius: var(--radius-pill); align-items: center; gap: 7px; font-family: var(--font-body); font-weight: var(--weight-semibold)"><i data-lucide="sliders-horizontal" style="width: 16px; height: 16px"></i>Filtros</button>
+      <sc-raw-select aria-label="Ordenar imóveis" value="{{ ordenacao }}" sc-camel-on-change="{{ setOrdenacao }}" style="height: 42px; border: 1px solid var(--border-default); border-radius: var(--radius-pill); padding: 0 34px 0 14px; background: var(--bg-surface); color: var(--fg-1); font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold)">
+        <option value="relevancia">Mais relevantes</option>
+        <option value="menor_preco">Menor preço</option>
+        <option value="maior_preco">Maior preço</option>
+        <option value="maior_area">Maior área</option>
+      </sc-raw-select>
       <div role="group" aria-label="Modo de visualização dos imóveis" style="display: flex; gap: 4px; background: var(--bg-sunken); border-radius: var(--radius-pill); padding: 4px">
         <button sc-camel-on-click="{{ vLista }}" aria-pressed="{{ vListaAtiva }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); padding: 7px 18px; border-radius: var(--radius-pill); background: {{ vLisBg }}; color: {{ vLisFg }}">Lista</button>
-        <button sc-camel-on-click="{{ vDividida }}" aria-pressed="{{ vDivididaAtiva }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); padding: 7px 18px; border-radius: var(--radius-pill); background: {{ vDivBg }}; color: {{ vDivFg }}">Dividida</button>
+        <button class="rw-dividida" sc-camel-on-click="{{ vDividida }}" aria-pressed="{{ vDivididaAtiva }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); padding: 7px 18px; border-radius: var(--radius-pill); background: {{ vDivBg }}; color: {{ vDivFg }}">Dividida</button>
         <button sc-camel-on-click="{{ vMapa }}" aria-pressed="{{ vMapaAtiva }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); padding: 7px 18px; border-radius: var(--radius-pill); background: {{ vMapBg }}; color: {{ vMapFg }}">Mapa</button>
       </div>
     </div>
@@ -2097,8 +2125,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <sc-if value="{{ vistaListaOn }}" hint-placeholder-val="{{ true }}">
     <div class="rw-cards" style="display: grid; grid-template-columns: {{ prodCols }}; gap: 24px">
       <sc-for list="{{ produtos }}" as="p" hint-placeholder-count="6">
-        <div sc-camel-on-click="{{ p.abrir }}" style="cursor: pointer; background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="box-shadow: var(--shadow-md); transform: translateY(-2px)">
-          <div style="position: relative; height: 190px; background: var(--bg-sunken)">
+        <div class="rw-card-produto" data-produto-id="{{ p.id }}" sc-camel-on-click="{{ p.abrir }}" style="cursor: pointer; background: var(--bg-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="box-shadow: var(--shadow-md); transform: translateY(-2px)">
+          <div class="rw-card-photo" style="position: relative; height: 190px; background: var(--bg-sunken)">
             <sc-if value="{{ p.fotoOn }}" hint-placeholder-val="{{ true }}"><img data-ape-src="{{ p.foto }}" alt="{{ p.nome }}" loading="lazy" decoding="async" width="420" height="190" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block"></sc-if>
             <span style="position: absolute; top: 12px; left: 12px; background: {{ p.badgeBg }}; color: var(--fg-inverse); font-size: var(--text-xs); font-weight: var(--weight-semibold); padding: 4px 12px; border-radius: var(--radius-pill)">{{ p.badge }}</span>
             <button data-favorito-card="" sc-camel-on-click="{{ p.favTgl }}" aria-label="{{ p.favLabel }}" aria-pressed="{{ p.fav }}" style="position: absolute; top: 10px; right: 10px; border: none; cursor: pointer; width: 36px; height: 36px; border-radius: var(--radius-pill); background: rgba(250, 248, 246, 0.9); display: flex; align-items: center; justify-content: center; color: {{ p.favCor }}; transition: transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1)" style-hover="transform: scale(1.1)">
@@ -2139,7 +2167,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
     </div>
     </sc-if>
     <sc-if value="{{ vistaMapaOn }}" hint-placeholder-val="{{ false }}">
-      <div id="lista-mapa" role="region" aria-label="Mapa dos imóveis encontrados" style="height: 640px; border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-sm); position: sticky; top: 96px; background: var(--bg-sunken)"></div>
+      <div class="rw-map-wrap" style="position: sticky; top: 96px">
+        <div id="lista-mapa" role="region" aria-label="Mapa dos imóveis encontrados" style="height: 640px; border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-sm); position: relative; background: var(--bg-sunken)"></div>
+        <sc-if value="{{ mapaBuscaPendente }}" hint-placeholder-val="{{ false }}">
+          <button sc-camel-on-click="{{ aplicarMapaBounds }}" style="position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 500; border: 1px solid var(--border-default); background: var(--bg-surface); color: var(--fg-1); box-shadow: var(--shadow-md); border-radius: var(--radius-pill); min-height: 44px; padding: 0 18px; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-bold); white-space: nowrap">Buscar nesta área</button>
+        </sc-if>
+      </div>
     </sc-if>
     </div>
     <sc-if value="{{ verMaisOn }}" hint-placeholder-val="{{ false }}">
@@ -2431,6 +2464,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
           </div>
         </div>
       </div>
+      <div class="rw-mobile-detail-cta rw-m" role="group" aria-label="Ações do imóvel">
+        <a href="{{ zapUrl }}" target="_blank" rel="noopener noreferrer" style="border: 1.5px solid var(--border-default); background: var(--bg-surface); color: var(--fg-1)"><i data-lucide="message-circle" style="width: 18px; height: 18px; margin-right: 7px"></i>WhatsApp</a>
+        <button sc-camel-on-click="{{ detAgendarVisita }}" style="border: none; cursor: pointer; background: var(--ape-orange-action); color: var(--fg-inverse)">Agendar visita</button>
+      </div>
       <div class="rw-portal" style="max-width: 1080px; margin: 0 auto; padding: 32px 24px 96px; display: flex; flex-direction: column; gap: 32px">
         <div style="display: flex; flex-direction: column; gap: 8px">
           <span style="width: fit-content; background: {{ detBadgeBg }}; color: var(--fg-inverse); font-size: var(--text-xs); font-weight: var(--weight-semibold); padding: 4px 14px; border-radius: var(--radius-pill)">{{ detBadge }}</span>
@@ -2535,6 +2572,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
                 <span class="caption" style="text-decoration: line-through">{{ detPrecoAntes }}</span>
               </sc-if>
             </div>
+            <sc-if value="{{ detCustoMensalOn }}" hint-placeholder-val="false">
+              <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: var(--radius-md); background: var(--bg-tint-orange)">
+                <span style="font-size: var(--text-xs); color: var(--fg-3)">Custos mensais estimados<br><small>condomínio + IPTU proporcional</small></span>
+                <strong style="font-size: var(--text-base); color: var(--fg-1); white-space: nowrap">{{ detCustoMensal }}</strong>
+              </div>
+            </sc-if>
             <div style="display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border-soft); padding-top: 16px; font-size: var(--text-sm)">
               <sc-for list="{{ detLinhas }}" as="ln" hint-placeholder-count="0">
                 <div style="display: flex; justify-content: space-between; gap: 12px">
@@ -2771,7 +2814,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   </sc-if>
 
   <!-- ============ FICHA DE FINANCIAMENTO ============ -->
-  <sc-if value="{{ fichaOn }}" hint-placeholder-val="{{ false }}">
+        <sc-if value="{{ fichaOn }}" hint-placeholder-val="{{ false }}">
     <div sc-camel-on-click="{{ fichaFechar }}" style="position: fixed; inset: 0; z-index: 220; background: rgba(31, 28, 26, 0.55); display: flex; align-items: flex-start; justify-content: center; padding: 40px 24px; overflow-y: auto">
       <div data-ficha-modal="" role="dialog" aria-modal="true" aria-labelledby="ficha-titulo" sc-camel-on-click="{{ pararClique }}" style="background: var(--bg-surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); width: 680px; max-width: 100%; padding: 28px; display: flex; flex-direction: column; gap: 18px">
         <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px">
@@ -2912,7 +2955,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </div>
       <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 16px; min-height: 0; padding: 12px 0">
         <button sc-camel-on-click="{{ galPrev }}" aria-label="Foto anterior" style="border: none; cursor: pointer; flex-shrink: 0; width: 48px; height: 48px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.12); color: var(--neutral-0); font-size: 20px; font-family: var(--font-body)" style-hover="background: var(--ape-orange)">‹</button>
-        <img sc-camel-on-click="{{ galNada }}" data-ape-src="{{ galFotoAtual }}" data-ape-gallery-main="true" alt="{{ galFotoAlt }}" decoding="async" width="1200" height="800" style="flex: 1; align-self: stretch; width: 100%; min-width: 0; object-fit: contain; object-position: center; border-radius: var(--radius-lg)">
+        <img sc-camel-on-click="{{ galNada }}" sc-camel-on-touch-start="{{ galTouchStart }}" sc-camel-on-touch-end="{{ galTouchEnd }}" data-ape-src="{{ galFotoAtual }}" data-ape-gallery-main="true" alt="{{ galFotoAlt }}" decoding="async" width="1200" height="800" style="flex: 1; align-self: stretch; width: 100%; min-width: 0; object-fit: contain; object-position: center; border-radius: var(--radius-lg); touch-action: pan-y">
         <button sc-camel-on-click="{{ galNext }}" aria-label="Próxima foto" style="border: none; cursor: pointer; flex-shrink: 0; width: 48px; height: 48px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.12); color: var(--neutral-0); font-size: 20px; font-family: var(--font-body)" style-hover="background: var(--ape-orange)">›</button>
       </div>
       <div sc-camel-on-click="{{ galNada }}" style="display: flex; gap: 8px; justify-content: flex-start; flex-wrap: nowrap; max-height: 76px; overflow-x: auto; overflow-y: hidden; padding-bottom: 4px">
@@ -2991,7 +3034,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <span style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-tint-purple); color: var(--ape-purple); display: flex; align-items: center; justify-content: center"><i data-lucide="shield-check" aria-hidden="true"></i></span>
             <h2 style="margin: 0">Gestão de produtos no ERP</h2>
             <p style="margin: 0; font-size: var(--text-sm)">Aprovação, publicação e edição de imóveis ficam no ambiente seguro da equipe.</p>
-            <a href="https://apecerto-erp.onrender.com/produtos" target="_blank" rel="noopener noreferrer" style="display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 0 24px; border-radius: var(--radius-pill); background: var(--ape-orange); color: var(--fg-inverse); font-weight: var(--weight-semibold); text-decoration: none">Abrir Produtos no ERP</a>
+            <a href="https://apecerto-erp.onrender.com/produtos" target="_blank" rel="noopener noreferrer" style="display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 0 24px; border-radius: var(--radius-pill); background: var(--ape-orange); color: var(--fg-1); font-weight: var(--weight-semibold); text-decoration: none">Abrir Produtos no ERP</a>
           </div>
         </sc-if>
 
@@ -3443,7 +3486,7 @@ class Component extends DCLogic {
   state = { aba: null, mmOn: false, produtos: undefined, totalApes: null, totalCatalogo: null, totalFiltrado: null, dbErro: false, rotaImovelNaoEncontrado: false, produtosEmpCarregados: 0, produtosTotalEmp: null, produtosTemMais: false, produtosCarregandoMais: false, produtosRefiltrando: false,
     portalOn: false, tela: 'auth', rotaPendente: null, authModo: 'entrar', authErro: null, authMsg: null, recMsg: null, recErro: null, resetErro: null, recoveryToken: null, redefinindo: false, zapHeroVisivel: true,
     sess: null, caps: undefined, capsErro: null, passo: 1, wizErro: null, fotosNomes: [], enviando: false, editId: null,
-    fBairro: '', fStatus: '', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, fVagas: '', det: null, galIdx: 0, galOn: false, cardGal: {}, favs: {}, vista: 'dividida', soFavs: false,
+    fBairro: '', fStatus: '', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, fVagas: '', det: null, galIdx: 0, galOn: false, cardGal: {}, favs: {}, vista: 'dividida', ordenacao: 'relevancia', soFavs: false, aluguelDisponivel: false, buscaAtiva: false, mapaBounds: null, mapaBuscaPendente: false,
     eqAba: 'anun', eqAnun: undefined, eqAnunForm: null, anErro: null, anSalvando: false, anFotosNomes: [], anImportN: 0,
     leadOk: false, leadErro: null, leadEnviando: false, finPct: 80, shareOk: false,
     fichaOn: false, fichaOk: false, fichaErro: null, fichaEnviando: false, fichaConjOn: false, leadDia: null, leadHora: null, detDescExpId: null, detalheErroEmpId: null, calOn: false, calOff: 0, horaOn: false, ecOn: false, fichaEc: null, nascOn: false, nascAno: 1990, nascMes: 0, fichaNasc: null, saraOn: false, saraMsgs: [] };
@@ -3452,13 +3495,15 @@ class Component extends DCLogic {
   SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYWVndmZ2ZXFlemlzcGN0aHdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5OTU4MjIsImV4cCI6MjA5ODU3MTgyMn0.312n8BuI-loQrQ20x9j1hNjKZs2UO71ey9gvIo0eY0I';
   CATALOGO_VIEW = 'site_produtos_catalogo';
   catalogoLeveDisponivel = true; detalhesCarregados = new Set(); detalhesEmVoo = new Map(); detalhesCache = new Map();
+  listaMapaMarkers = new Map(); galTouchX = null;
   auth = {}; form = {}; fotosArq = []; fotosExist = [];
   anForm = {}; anArq = []; anFotosBase = [];
   componentDidMount() {
     this.iconTimer = setInterval(() => { if (window.lucide) { window.lucide.createIcons(); } }, 400); setTimeout(() => clearInterval(this.iconTimer), 4000);
     this.carregarTotalCatalogo();
+    this.carregarDisponibilidadeAluguel();
     const filtrosUrl = this.filtrosDaUrl();
-    if (Object.keys(filtrosUrl).length) this.setState(filtrosUrl, () => this.carregarProdutos());
+    if (Object.keys(filtrosUrl).length) this.setState(Object.assign({ buscaAtiva: true }, filtrosUrl), () => this.carregarProdutos());
     else this.carregarProdutos();
     this.checkDemo();
     try { this.setState({ favs: JSON.parse(localStorage.getItem('apecerto_favs')) || {} }); } catch (e) {}
@@ -3486,6 +3531,11 @@ class Component extends DCLogic {
       if (hidratacao) ['pointerover', 'touchstart', 'focusin'].forEach(tipo => document.removeEventListener(tipo, this.catalogoIntent));
     };
     ['pointerover', 'touchstart', 'focusin'].forEach(tipo => document.addEventListener(tipo, this.catalogoIntent, { passive: true }));
+    this.catalogoMapaIntent = e => {
+      const card = e.target && e.target.closest && e.target.closest('.rw-card-produto[data-produto-id]');
+      if (card) this.destacarCardNoMapa(card.getAttribute('data-produto-id'));
+    };
+    ['pointerover', 'focusin'].forEach(tipo => document.addEventListener(tipo, this.catalogoMapaIntent, { passive: true }));
     const hero = document.getElementById('buscar');
     if (hero && 'IntersectionObserver' in window) {
       this.heroObserver = new IntersectionObserver(entries => {
@@ -3765,10 +3815,10 @@ class Component extends DCLogic {
   }
   syncListaMapa() {
     const el = document.getElementById('lista-mapa');
-    if (!el) { if (this.listaMapa) { this.listaMapa.remove(); this.listaMapa = null; this.listaMapaSig = ''; } return; }
+    if (!el) { if (this.listaMapa) { this.listaMapa.remove(); this.listaMapa = null; this.listaMapaSig = ''; } this.listaMapaMarkers.clear(); return; }
     if (!window.L) { this.observarMapa(el, () => this.syncListaMapa()); return; }
     const grupos = this.gruposMapa(this.filtrar().out);
-    const sig = this.state.vista + '|' + grupos.map(grupo => [
+    const sig = this.state.vista + '|' + JSON.stringify(this.state.mapaBounds || null) + '|' + grupos.map(grupo => [
       grupo.id,
       grupo.ll.join(','),
       grupo.itens.length,
@@ -3776,6 +3826,7 @@ class Component extends DCLogic {
     ].join('#')).join('|');
     if (this.listaMapa && this.listaMapaSig === sig && el.childElementCount) return;
     if (this.listaMapa) { this.listaMapa.remove(); this.listaMapa = null; }
+    this.listaMapaMarkers.clear();
     this.listaMapaSig = sig;
     if (!grupos.length) return;
     const m = window.L.map(el, { scrollWheelZoom: true });
@@ -3790,6 +3841,9 @@ class Component extends DCLogic {
       const unidadeLabel = qtd === 1 ? '1 unidade disponível' : qtd + ' unidades disponíveis';
       const ariaLabel = grupo.nome + ', ' + unidadeLabel + '. Abrir lista.';
       const mk = window.L.marker(grupo.ll, { icon: this.pinIcon(34, qtd), keyboard: true, title: ariaLabel, riseOnHover: true }).addTo(m);
+      grupo.itens.forEach(r => this.listaMapaMarkers.set(String(r.id), mk));
+      mk.on('mouseover', () => this.destacarCardsCatalogo(grupo.itens.map(r => r.id)));
+      mk.on('mouseout', () => this.destacarCardsCatalogo([]));
 
       const tooltip = document.createElement('div');
       tooltip.style.cssText = 'min-width:180px;font-family:Quicksand,sans-serif;padding:2px';
@@ -3872,6 +3926,40 @@ class Component extends DCLogic {
     });
     m.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
     this.listaMapa = m;
+    setTimeout(() => {
+      if (this.listaMapa !== m) return;
+      m.on('dragend zoomend', () => {
+        const b = m.getBounds();
+        this.listaMapaBoundsPendente = [b.getSouth(), b.getWest(), b.getNorth(), b.getEast()];
+        if (!this.state.mapaBuscaPendente) this.setState({ mapaBuscaPendente: true });
+      });
+    }, 250);
+  }
+  aplicarMapaBounds() {
+    if (!Array.isArray(this.listaMapaBoundsPendente)) return;
+    this.setState({ mapaBounds: this.listaMapaBoundsPendente.slice(), mapaBuscaPendente: false, mostrarTodos: true });
+  }
+  destacarCardsCatalogo(ids) {
+    document.querySelectorAll('.rw-card-produto.rw-map-active').forEach(card => card.classList.remove('rw-map-active'));
+    (ids || []).forEach(id => {
+      const seguro = String(id).replace(/"/g, '');
+      const card = document.querySelector('.rw-card-produto[data-produto-id="' + seguro + '"]');
+      if (card) card.classList.add('rw-map-active');
+    });
+  }
+  destacarCardNoMapa(id) {
+    const marker = this.listaMapaMarkers.get(String(id));
+    if (!marker || !this.listaMapa) return;
+    if (this.listaMapaMarkerAtivo && this.listaMapaMarkerAtivo !== marker) {
+      if (this.listaMapaMarkerAtivo.setZIndexOffset) this.listaMapaMarkerAtivo.setZIndexOffset(0);
+      if (this.listaMapaMarkerAtivo.closeTooltip) this.listaMapaMarkerAtivo.closeTooltip();
+    }
+    this.listaMapaMarkerAtivo = marker;
+    if (marker.setZIndexOffset) marker.setZIndexOffset(1000);
+    if (marker.openTooltip) marker.openTooltip();
+    const ll = marker.getLatLng && marker.getLatLng();
+    const bounds = this.listaMapa.getBounds && this.listaMapa.getBounds();
+    if (ll && bounds && !bounds.contains(ll)) this.listaMapa.panTo(ll, { animate: true });
   }
   checkDemo() {
     const quer = this.props.verWizardSemLogin;
@@ -4227,7 +4315,7 @@ class Component extends DCLogic {
       this.carregarCaps();
     } catch (e) { this.registrarErro((e.message || '').startsWith('upload ') ? 'captacao_upload' : (this.state.editId ? 'captacao_editar' : 'captacao_criar'), e, e.status); this.setState({ enviando: false, wizErro: 'Sem conexão agora. Suas respostas seguem aqui — tenta de novo.' }); }
   }
-  badges = { pronto: { label: 'Pronto pra morar', bg: 'var(--ape-orange)' }, em_obras: { label: 'Em obras', bg: 'var(--ape-purple)' }, lancamento: { label: 'Lançamento', bg: 'var(--ape-purple)' } };
+  badges = { pronto: { label: 'Pronto pra morar', bg: 'var(--ape-orange-action)' }, em_obras: { label: 'Em obras', bg: 'var(--ape-purple)' }, lancamento: { label: 'Lançamento', bg: 'var(--ape-purple)' } };
   fmtR$(n) { const v = this.valorNumerico(n); return v ? 'R$ ' + Math.round(v).toLocaleString('pt-BR') : null; }
   fmtMi(n) {
     if (n >= 1000000) { const mi = n / 1000000; return 'R$ ' + (mi % 1 === 0 ? mi : mi.toFixed(mi < 10 ? 2 : 1).replace('.', ',')) + ' mi'; }
@@ -4354,6 +4442,19 @@ class Component extends DCLogic {
         setTimeout(() => this.carregarTotalCatalogo(tentativa + 1), 600);
       }
     });
+  }
+  carregarDisponibilidadeAluguel() {
+    const params = new URLSearchParams({ select: 'id', limit: '1' });
+    params.append('or', '(finalidade.in.(aluguel,alugar,locacao,locação),finalidade.eq.ambos)');
+    fetch(this.SB_URL + '/rest/v1/' + this.CATALOGO_VIEW + '?' + params.toString(), {
+      headers: { apikey: this.SB_KEY, Authorization: 'Bearer ' + this.SB_KEY }
+    }).then(r => r.ok ? r.json() : []).then(rows => {
+      const aluguelDisponivel = Array.isArray(rows) && rows.length > 0;
+      if (!aluguelDisponivel && this.state.fFinalidade === 'aluguel') {
+        this.aplicarFiltros({ aba: 'comprar', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null });
+      }
+      this.setState({ aluguelDisponivel });
+    }).catch(() => this.setState({ aluguelDisponivel: false }));
   }
   carregarProdutos(mais, procurar, tentativa) {
     tentativa = Number(tentativa || 0);
@@ -4578,7 +4679,7 @@ class Component extends DCLogic {
       if (this.fotoCardReq.get(id) !== req) return;
       this.setState({ cardGal: Object.assign({}, this.state.cardGal, { [id]: indice }) });
     };
-    const limite = new Promise(resolve => setTimeout(resolve, 900));
+    const limite = new Promise(resolve => setTimeout(resolve, 350));
     Promise.race([this.prepararFoto(this.fotoUrl(fotos[indice]), 768, 'cover'), limite]).then(aplicar);
   }
   trocarFotoGaleria(e, fotos, indice) {
@@ -4590,6 +4691,22 @@ class Component extends DCLogic {
       if (this.fotoGaleriaReq === req) this.setState({ galIdx: indice });
     });
   }
+  galTouchStart(e) {
+    const toque = e && e.touches && e.touches[0];
+    this.galTouchX = toque ? toque.clientX : null;
+  }
+  galTouchEnd(e) {
+    const toque = e && e.changedTouches && e.changedTouches[0];
+    if (this.galTouchX == null || !toque) return;
+    const delta = toque.clientX - this.galTouchX;
+    this.galTouchX = null;
+    if (Math.abs(delta) < 45) return;
+    const atual = this.state.det || {};
+    const fotos = (atual.fotos || []).concat(atual.fotos_condominio || []).map(p => this.fotoUrl(p));
+    if (fotos.length < 2) return;
+    const indice = delta < 0 ? (this.state.galIdx + 1) % fotos.length : (this.state.galIdx - 1 + fotos.length) % fotos.length;
+    this.trocarFotoGaleria(e, fotos, indice);
+  }
   mapProduto(r) {
     const badge = this.badges[r.status] || this.badges.pronto;
     const precoNum = this.precoDe(r);
@@ -4597,7 +4714,7 @@ class Component extends DCLogic {
     const n = fotos.length;
     const galeriaPendente = !!r._catalogo_leve;
     const idx = Math.min(this.state.cardGal[r.id] || 0, Math.max(0, n - 1));
-    const nome = this.nomePublico(r);
+    const nome = this.tituloComercial(r);
     const href = '/imovel/' + encodeURIComponent(this.slugParte(r.slug || r.codigo || r.id)) + '/';
     const setIdx = (e, i) => {
       if (!galeriaPendente) return this.trocarFotoCard(e, r.id, fotos, i);
@@ -4611,12 +4728,13 @@ class Component extends DCLogic {
     };
     const fav = !!this.state.favs[r.id];
     return {
+      id: String(r.id),
       foto: n ? this.fotoUrl(fotos[idx]) : false,
       fotoOn: n > 0,
-      galOn: n > 1 || galeriaPendente,
+      galOn: n > 1,
       fPrev: e => setIdx(e, galeriaPendente ? -1 : (n ? (idx - 1 + n) % n : -1)),
       fNext: e => setIdx(e, galeriaPendente ? 1 : (n ? (idx + 1) % n : 1)),
-      dots: (galeriaPendente && n < 2 ? [0, 1] : fotos).map((_, i) => ({ cor: i === idx ? 'var(--neutral-0)' : 'rgba(250, 248, 246, 0.55)' })),
+      dots: fotos.map((_, i) => ({ cor: i === idx ? 'var(--neutral-0)' : 'rgba(250, 248, 246, 0.55)' })),
       favTgl: e => {
         e.stopPropagation();
         const favs = Object.assign({}, this.state.favs);
@@ -4632,16 +4750,16 @@ class Component extends DCLogic {
       endereco: (r.bairro || 'Moema') + ', ' + (r.cidade || 'São Paulo'),
       badge: badge.label, badgeBg: badge.bg,
       specs: [
-        r.area_util ? Math.round(Number(r.area_util)) + ' m²' : null,
-        r.dormitorios ? r.dormitorios + (r.dormitorios > 1 ? ' dorms' : ' dorm') : null,
-        r.vagas ? r.vagas + (r.vagas > 1 ? ' vagas' : ' vaga') : null,
+        this.numeroPositivo(r.area_util) ? Math.round(this.numeroPositivo(r.area_util)) + ' m²' : null,
+        this.numeroPositivo(r.dormitorios) ? this.numeroPositivo(r.dormitorios) + (this.numeroPositivo(r.dormitorios) > 1 ? ' dorms' : ' dorm') : null,
+        this.numeroPositivo(r.vagas) ? this.numeroPositivo(r.vagas) + (this.numeroPositivo(r.vagas) > 1 ? ' vagas' : ' vaga') : null,
         r.unidades_disponiveis > 0 ? r.unidades_disponiveis + (r.unidades_disponiveis > 1 ? ' unidades disponíveis' : ' unidade disponível') : null
       ].filter(Boolean).join(' · '),
       specIcons: [
-        r.area_util ? { ic: 'scan', v: Math.round(Number(r.area_util)) + ' m²' } : null,
-        r.dormitorios ? { ic: 'bed-double', v: String(r.dormitorios) } : null,
-        r.banheiros ? { ic: 'bath', v: String(r.banheiros) } : null,
-        r.vagas ? { ic: 'car', v: String(r.vagas) } : null
+        this.numeroPositivo(r.area_util) ? { ic: 'scan', v: Math.round(this.numeroPositivo(r.area_util)) + ' m²' } : null,
+        this.numeroPositivo(r.dormitorios) ? { ic: 'bed-double', v: String(this.numeroPositivo(r.dormitorios)) } : null,
+        this.numeroPositivo(r.banheiros) ? { ic: 'bath', v: String(this.numeroPositivo(r.banheiros)) } : null,
+        this.numeroPositivo(r.vagas) ? { ic: 'car', v: String(this.numeroPositivo(r.vagas)) } : null
       ].filter(Boolean),
       tags: (r.lazer || []).slice(0, 3),
       preco: this.fmtR$(precoNum) || 'sob consulta',
@@ -4653,6 +4771,21 @@ class Component extends DCLogic {
     };
   }
   nomePublico(r) { return (r && (r.titulo || r.nome)) || ''; }
+  numeroPositivo(v) {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+  tituloComercial(r) {
+    if (!r) return '';
+    const base = String(r.empreendimento_nome || r.nome || '').replace(/\s*·\s*Un\..*$/i, '').trim();
+    const dorms = this.numeroPositivo(r.dormitorios);
+    const studio = r.dormitorios != null && r.dormitorios !== '' && Number(r.dormitorios) === 0;
+    let titulo = studio ? 'Studio' : 'Apartamento';
+    if (dorms) titulo += ' de ' + dorms + (dorms === 1 ? ' dormitório' : ' dormitórios');
+    if (base) titulo += ' no ' + base;
+    else if (r.bairro) titulo += ' em ' + r.bairro;
+    return titulo;
+  }
   precoDe(r) {
     if (!r) return 0;
     const bruto = r.preco_promo != null && this.valorNumerico(r.preco_promo) > 0 ? r.preco_promo : (r.preco_min != null ? r.preco_min : r.preco);
@@ -4746,6 +4879,10 @@ class Component extends DCLogic {
     const aba = this.state.aba || this.props.abaInicial || 'comprar';
     const dormOk = r => !fDorms || (fDorms === 'd1' ? (r.dormitorios || 0) <= 1 : fDorms === 'd2' ? r.dormitorios === 2 : (r.dormitorios || 0) >= 3);
     const vagasOk = r => !fVagas || (fVagas === 'v1' ? (r.vagas || 0) >= 1 : (r.vagas || 0) >= 2);
+    const boundsOk = r => {
+      const b = this.state.mapaBounds, ll = this.coordenadas(r);
+      return !Array.isArray(b) || (!!ll && ll[0] >= b[0] && ll[0] <= b[2] && ll[1] >= b[1] && ll[1] <= b[3]);
+    };
     const finalidade = fFinalidade || (aba === 'alugar' ? 'aluguel' : 'venda');
     const finalidadeOk = r => this.finalidadeDe(r) === 'ambos' || this.finalidadeDe(r) === finalidade;
     const baseFinalidade = rows.filter(finalidadeOk);
@@ -4756,14 +4893,17 @@ class Component extends DCLogic {
       (!fStatus || r.status === fStatus) &&
       dormOk(r) &&
       vagasOk(r) &&
+      boundsOk(r) &&
       (fPrecoMin == null || fPrecoMin <= piso || !this.precoDe(r) || this.precoDe(r) >= fPrecoMin) &&
       (fPreco == null || fPreco >= teto || !this.precoDe(r) || this.precoDe(r) <= fPreco));
     let nota = null;
-    const ativos = fBairro || fStatus || fDorms || fVagas || aba === 'lancamentos' || (this.state.precoTocado && ((fPreco != null && fPreco < teto) || (fPrecoMin != null && fPrecoMin > piso)));
+    const ativos = fBairro || fStatus || fDorms || fVagas || this.state.mapaBounds || aba === 'lancamentos' || (this.state.precoTocado && ((fPreco != null && fPreco < teto) || (fPrecoMin != null && fPrecoMin > piso)));
     if (this.state.soFavs && !out.length) {
       return { out: [], nota: Object.keys(this.state.favs).length ? 'Nenhum favorito bate com os filtros.' : 'Você ainda não favoritou nenhum apê — toca no coração dos cards. 🔑' };
     }
-    if (!out.length && baseFinalidade.length) {
+    if (!out.length && this.state.mapaBounds && !Array.isArray(this.state.saraIds)) {
+      nota = 'Nenhum apê publicado aparece nesta área do mapa. Amplie o mapa ou limpe os filtros.';
+    } else if (!out.length && baseFinalidade.length) {
       const alvo = ((fPrecoMin != null ? fPrecoMin : piso) + (fPreco != null ? fPreco : teto)) / 2;
       out = baseFinalidade.slice().sort((a, b) => Math.abs(this.precoDe(a) - alvo) - Math.abs(this.precoDe(b) - alvo)).slice(0, 3);
       nota = 'Nenhum apê bate exatamente com esses filtros — estes são os mais parecidos:';
@@ -4773,6 +4913,13 @@ class Component extends DCLogic {
       nota = out.length + (out.length > 1 ? ' apês encontrados' : ' apê encontrado') + (this.state.produtosTemMais ? ' entre os anúncios carregados' : '');
     }
     return { out, nota };
+  }
+  ordenarProdutos(rows, criterio) {
+    const lista = (rows || []).slice();
+    if (criterio === 'menor_preco') return lista.sort((a, b) => (this.precoDe(a) || Infinity) - (this.precoDe(b) || Infinity));
+    if (criterio === 'maior_preco') return lista.sort((a, b) => this.precoDe(b) - this.precoDe(a));
+    if (criterio === 'maior_area') return lista.sort((a, b) => this.numeroPositivo(b.area_util) - this.numeroPositivo(a.area_util));
+    return lista;
   }
   precoMinimo() { return this.finalidadeDe({ finalidade: this.state.fFinalidade }) === 'aluguel' ? 500 : 100000; }
   fmtFaixaPreco(n) {
@@ -4950,6 +5097,11 @@ class Component extends DCLogic {
     const el = document.querySelector('[data-lead-form] input[name="nome"]');
     if (el) { el.scrollIntoView({ behavior: this.movimentoScroll(), block: 'center' }); setTimeout(() => el.focus(), 250); }
   }
+  rolarPagina(top, behavior) {
+    const opcoes = { top: Math.max(0, Number(top) || 0), behavior: behavior || this.movimentoScroll() };
+    window.scrollTo(opcoes);
+    if (document.body && document.body.scrollTo) document.body.scrollTo(opcoes);
+  }
   agendarVisita() {
     if (this.state.det) return this.focarFormularioVisita();
     const primeiro = this.filtrar().out[0];
@@ -5097,6 +5249,7 @@ class Component extends DCLogic {
     if (this.galKeys) window.removeEventListener('keydown', this.galKeys);
     if (this.popState) window.removeEventListener('popstate', this.popState);
     if (this.catalogoIntent) ['pointerover', 'touchstart', 'focusin'].forEach(tipo => document.removeEventListener(tipo, this.catalogoIntent));
+    if (this.catalogoMapaIntent) ['pointerover', 'focusin'].forEach(tipo => document.removeEventListener(tipo, this.catalogoMapaIntent));
     if (this.heroObserver) this.heroObserver.disconnect();
     if (this.mapaObservados) this.mapaObservados.forEach(observer => observer && observer.disconnect && observer.disconnect());
     if (this.mapa) this.mapa.remove();
@@ -5104,7 +5257,7 @@ class Component extends DCLogic {
   }
   renderVals() {
     const aba = this.state.aba || this.props.abaInicial || 'comprar';
-    const on = { bg: 'var(--ape-orange)', fg: '#fff' };
+    const on = { bg: 'var(--ape-orange)', fg: 'var(--fg-1)' };
     const off = { bg: 'var(--bg-sunken)', fg: 'var(--fg-2)' };
     const comprar = aba === 'comprar';
     const lancamentos = aba === 'lancamentos';
@@ -5126,10 +5279,13 @@ class Component extends DCLogic {
       editar: () => this.editarCap(c),
       excluir: () => this.excluirCap(c)
     }));
-    const { out: filtradosAll, nota: buscaNota } = this.filtrar();
+    const { out: filtradosBase, nota: buscaNota } = this.filtrar();
+    const filtradosAll = this.ordenarProdutos(filtradosBase, st.ordenacao);
+    const mobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const vistaEfetiva = mobile && st.vista === 'dividida' ? 'lista' : st.vista;
     const dest = (st.produtos || []).find(r => r.destaque && r.capa_path) || (st.produtos || [])[0];
     const piso = this.precoMinimo();
-    const filtrosAtivos = !!(st.fBairro || st.fStatus || st.fDorms || st.fVagas || (st.precoTocado && ((st.fPrecoMax != null && st.fPrecoMax < this.tetoPreco()) || (st.fPrecoMin != null && st.fPrecoMin > piso))));
+    const filtrosAtivos = !!(st.fBairro || st.fStatus || st.fDorms || st.fVagas || st.mapaBounds || (st.precoTocado && ((st.fPrecoMax != null && st.fPrecoMax < this.tetoPreco()) || (st.fPrecoMin != null && st.fPrecoMin > piso))));
     const mostrarTodos = st.mostrarTodos || filtrosAtivos;
     const filtrados = mostrarTodos ? filtradosAll : filtradosAll.slice(0, 6);
     const escondidos = filtradosAll.length - filtrados.length;
@@ -5147,6 +5303,11 @@ class Component extends DCLogic {
     const galThumbsDet = galeriaDet.slice(galThumbInicio, galThumbInicio + 9);
     const detBadge = det ? (this.badges[det.status] || this.badges.pronto) : null;
     return {
+      heroDisplay: st.buscaAtiva ? 'none' : 'block',
+      resultsModeOn: !!st.buscaAtiva,
+      resultsModeClass: st.buscaAtiva ? 'rw-results-mode' : '',
+      resultsPadding: st.buscaAtiva ? '40px 24px 88px' : '96px 24px 88px',
+      voltarInicio: () => this.setState({ buscaAtiva: false }, () => this.rolarPagina(0, 'auto')),
       produtos: this.state.produtos === undefined ? undefined : filtrados.map(r => this.mapProduto(r)),
       produtosCarregando: this.state.produtos === undefined || !!st.produtosRefiltrando,
       produtosCarregandoMais: !!st.produtosCarregandoMais,
@@ -5163,7 +5324,7 @@ class Component extends DCLogic {
       tglTodosLabel: mostrarTodos ? 'Mostrar menos' : 'Ver todos os ' + filtradosAll.length + ' apês →',
       verMaisOn: escondidos > 0,
       verMaisLabel: 'Ver mais ' + escondidos + (escondidos > 1 ? ' apês' : ' apê'),
-      limparFiltros: () => this.aplicarFiltros({ fBairro: '', fStatus: '', fDorms: '', fVagas: '', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, saraIds: null }),
+      limparFiltros: () => this.aplicarFiltros({ fBairro: '', fStatus: '', fDorms: '', fVagas: '', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, mapaBounds: null, mapaBuscaPendente: false, saraIds: null }),
       ...(() => {
         const rows = Array.isArray(st.produtos) ? st.produtos : [];
         const mini = r => ({
@@ -5185,19 +5346,24 @@ class Component extends DCLogic {
           recsTitulo: favRows.length >= 2 ? 'Recomendados pelos seus favoritos' : 'Recomendados pra você'
         };
       })(),
-      vistaListaOn: st.vista !== 'mapa',
-      vistaMapaOn: st.vista !== 'lista',
-      vistaCols: st.vista === 'dividida' ? '1fr 1fr' : '1fr',
-      prodCols: st.vista === 'dividida' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+      vistaListaOn: vistaEfetiva !== 'mapa',
+      vistaMapaOn: vistaEfetiva !== 'lista',
+      mapaBuscaPendente: !!st.mapaBuscaPendente,
+      aplicarMapaBounds: () => this.aplicarMapaBounds(),
+      vistaCols: vistaEfetiva === 'dividida' ? '1fr 1fr' : '1fr',
+      prodCols: vistaEfetiva === 'dividida' ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
       vLista: () => this.setState({ vista: 'lista' }),
       vDividida: () => this.setState({ vista: 'dividida' }),
       vMapa: () => this.setState({ vista: 'mapa' }),
-      vListaAtiva: st.vista === 'lista',
-      vDivididaAtiva: st.vista === 'dividida',
-      vMapaAtiva: st.vista === 'mapa',
-      vLisBg: st.vista === 'lista' ? 'var(--ape-orange)' : 'transparent', vLisFg: st.vista === 'lista' ? '#fff' : 'var(--fg-2)',
-      vDivBg: st.vista === 'dividida' ? 'var(--ape-orange)' : 'transparent', vDivFg: st.vista === 'dividida' ? '#fff' : 'var(--fg-2)',
-      vMapBg: st.vista === 'mapa' ? 'var(--ape-orange)' : 'transparent', vMapFg: st.vista === 'mapa' ? '#fff' : 'var(--fg-2)',
+      vListaAtiva: vistaEfetiva === 'lista',
+      vDivididaAtiva: vistaEfetiva === 'dividida',
+      vMapaAtiva: vistaEfetiva === 'mapa',
+      vLisBg: vistaEfetiva === 'lista' ? 'var(--ape-orange)' : 'transparent', vLisFg: vistaEfetiva === 'lista' ? 'var(--fg-1)' : 'var(--fg-2)',
+      vDivBg: vistaEfetiva === 'dividida' ? 'var(--ape-orange)' : 'transparent', vDivFg: vistaEfetiva === 'dividida' ? 'var(--fg-1)' : 'var(--fg-2)',
+      vMapBg: vistaEfetiva === 'mapa' ? 'var(--ape-orange)' : 'transparent', vMapFg: vistaEfetiva === 'mapa' ? 'var(--fg-1)' : 'var(--fg-2)',
+      ordenacao: st.ordenacao || 'relevancia',
+      setOrdenacao: e => this.setState({ ordenacao: e.target.value }),
+      abrirFiltrosMobile: () => this.setState({ buscaAtiva: false }, () => { const el = document.getElementById('buscar'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: this.movimentoScroll() }); }),
       tglFavs: () => this.setState({ soFavs: !st.soFavs }),
       favsAtivo: !!st.soFavs,
       favsChipLabel: 'Favoritos' + (Object.keys(st.favs).length ? ' (' + Object.keys(st.favs).length + ')' : ''),
@@ -5206,6 +5372,7 @@ class Component extends DCLogic {
       favsChipBorda: st.soFavs ? 'var(--ape-orange)' : 'var(--border-default)',
       favsChipFill: st.soFavs ? 'var(--ape-orange)' : 'none',
       bairroOpts: this.bairrosUnicos(),
+      aluguelDisponivel: !!st.aluguelDisponivel,
       fBairro: st.fBairro || '', fStatus: st.fStatus || '', fFinalidade: st.fFinalidade || 'venda',
       setFBairro: e => this.aplicarFiltros({ fBairro: e.target.value, saraIds: null }),
       setFStatus: e => this.aplicarFiltros({ fStatus: e.target.value, saraIds: null }),
@@ -5229,13 +5396,13 @@ class Component extends DCLogic {
       precoFillBg: (() => { const pctMin = st.fPrecoMinT != null ? st.fPrecoMinT : this.tDePreco(fPrecoMin); const pctMax = st.fPrecoMaxT != null ? st.fPrecoMaxT : this.tDePreco(fPrecoMax); return 'linear-gradient(to right, #EFE9E3 0%, #EFE9E3 ' + pctMin + '%, #FF7000 ' + pctMin + '%, #FF7000 ' + pctMax + '%, #EFE9E3 ' + pctMax + '%, #EFE9E3 100%)'; })(),
       setFPrecoMin: e => { const maxT = st.fPrecoMaxT != null ? st.fPrecoMaxT : this.tDePreco(fPrecoMax); const t = Math.min(Number(e.target.value), maxT); this.aplicarFiltros({ fPrecoMinT: t, fPrecoMin: t <= 0 ? null : this.precoDeT(t), precoTocado: true, saraIds: null }); },
       setFPrecoMax: e => { const minT = st.fPrecoMinT != null ? st.fPrecoMinT : this.tDePreco(fPrecoMin); const t = Math.max(Number(e.target.value), minT); const v = t >= 100 ? null : this.precoDeT(t); this.aplicarFiltros({ fPrecoMaxT: t, fPrecoMax: v, fPreco: v, fPrecoT: t, precoTocado: true, saraIds: null }); },
-      buscar: () => { const el = document.getElementById('apes'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: this.movimentoScroll() }); },
+      buscar: () => this.setState({ buscaAtiva: true }, () => this.rolarPagina(0, 'auto')),
       detOn: !!det,
       detDetalhesCarregando: !!(det && det._catalogo_leve && st.detalheErroEmpId !== this.empreendimentoId(det)),
       detDetalhesErro: !!(det && st.detalheErroEmpId === this.empreendimentoId(det)),
       tentarDetalhes: () => { const id = this.empreendimentoId(this.state.det); if (!id) return; this.detalhesCarregados.delete(id); this.detalhesCache.delete(id); this.setState({ detalheErroEmpId: null }, () => this.hidratarEmpreendimentos([id])); },
       fecharDet: () => this.fecharDetalhe(),
-      detNome: det ? this.nomePublico(det) : '',
+      detNome: det ? this.tituloComercial(det) : '',
       detBadge: detBadge ? detBadge.label : '', detBadgeBg: detBadge ? detBadge.bg : '',
       detEndereco: det ? [det.endereco, det.bairro, det.cidade || 'São Paulo', det.uf].filter(Boolean).join(' · ') : '',
       detSlogan: det && det.slogan,
@@ -5274,6 +5441,8 @@ class Component extends DCLogic {
       galResumo: fotosPrivativasDet.length + ' foto(s) do imóvel' + (fotosComunsDet.length ? ' · ' + fotosComunsDet.length + ' foto(s) de áreas comuns' : ''),
       galFecha: () => this.fecharGaleria(),
       galNada: e => { if (e && e.stopPropagation) e.stopPropagation(); },
+      galTouchStart: e => this.galTouchStart(e),
+      galTouchEnd: e => this.galTouchEnd(e),
       galPrev: e => this.trocarFotoGaleria(e, fotosDet, (gi - 1 + fotosDet.length) % fotosDet.length),
       galNext: e => this.trocarFotoGaleria(e, fotosDet, (gi + 1) % fotosDet.length),
       galThumbs: galThumbsDet.map((foto, pos) => { const i = galThumbInicio + pos; return { url: foto.url, grupo: foto.grupo, label: 'Ver foto ' + (i + 1) + ' de ' + fotosDet.length + ' — ' + foto.grupo, atual: i === gi, sel: e => this.trocarFotoGaleria(e, fotosDet, i), borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' }; }),
@@ -5283,7 +5452,10 @@ class Component extends DCLogic {
       detTemLazer: !!(det && det.lazer && det.lazer.length), detLazer: (det && det.lazer) || [],
       detPreco: det ? (this.fmtR$(this.precoDe(det)) || 'sob consulta') : '',
       detPrecoAntes: det && det.preco_promo && Number(det.preco) > Number(det.preco_promo) ? this.fmtR$(det.preco) : false,
+      detCustoMensalOn: !!(det && (this.numeroPositivo(det.condominio_valor) || this.numeroPositivo(det.iptu))),
+      detCustoMensal: det ? this.fmtR$(this.numeroPositivo(det.condominio_valor) + this.numeroPositivo(det.iptu) / 12) : '',
       detFavTgl: () => { const d = this.state.det; if (!d) return; const favs = Object.assign({}, this.state.favs); if (favs[d.id]) delete favs[d.id]; else favs[d.id] = true; try { localStorage.setItem('apecerto_favs', JSON.stringify(favs)); } catch (err) {} this.setState({ favs }); },
+      detAgendarVisita: () => this.focarFormularioVisita(),
       detFavCor: det && st.favs[det.id] ? 'var(--ape-orange)' : 'var(--fg-2)',
       detFavFill: det && st.favs[det.id] ? 'var(--ape-orange)' : 'none',
       detFavLabel: det && st.favs[det.id] ? 'Salvo' : 'Salvar',
@@ -5368,12 +5540,12 @@ class Component extends DCLogic {
       leadHoras: (() => { const hs = []; for (let h = 8; h <= 19; h++) { hs.push(String(h).padStart(2, '0') + ':00'); if (h < 19) hs.push(String(h).padStart(2, '0') + ':30'); } return hs; })().map(h => ({ label: h, sel: () => this.setState({ leadHora: h, horaOn: false }), bg: st.leadHora === h ? 'var(--bg-tint-orange)' : 'var(--bg-surface)', fg: st.leadHora === h ? 'var(--ape-orange-700)' : 'var(--fg-2)', bd: st.leadHora === h ? 'var(--ape-orange)' : 'var(--border-soft)' })),
       finZapUrl: det ? 'https://wa.me/55' + String(this.props.whatsappNumero || '').replace(/\D/g, '') + '?text=' + encodeURIComponent('Oi! Quero simular o financiamento do ' + this.nomePublico(det) + (det.codigo ? ' (cód. ' + det.codigo + ')' : '') + ': ' + st.finPct + '% financiado (' + (this.fmtR$(this.precoDe(det) * st.finPct / 100) || '') + ') com entrada de ' + (this.fmtR$(this.precoDe(det) * (100 - st.finPct) / 100) || '')) : '#',
       detLinhas: det ? [
-        det.area_util ? { k: 'Área útil', v: Math.round(Number(det.area_util)) + ' m²' } : null,
-        det.dormitorios ? { k: 'Dormitórios', v: String(det.dormitorios) + (det.suites ? ' (' + det.suites + (det.suites > 1 ? ' suítes)' : ' suíte)') : '') } : null,
-        det.banheiros ? { k: 'Banheiros', v: String(det.banheiros) } : null,
-        det.vagas ? { k: 'Vagas', v: String(det.vagas) } : null,
-        det.condominio_valor ? { k: 'Condomínio', v: this.fmtR$(det.condominio_valor) + '/mês' } : null,
-        det.iptu ? { k: 'IPTU', v: this.fmtR$(det.iptu) + '/ano' } : null,
+        this.numeroPositivo(det.area_util) ? { k: 'Área útil', v: Math.round(this.numeroPositivo(det.area_util)) + ' m²' } : null,
+        this.numeroPositivo(det.dormitorios) ? { k: 'Dormitórios', v: String(this.numeroPositivo(det.dormitorios)) + (this.numeroPositivo(det.suites) ? ' (' + this.numeroPositivo(det.suites) + (this.numeroPositivo(det.suites) > 1 ? ' suítes)' : ' suíte)') : '') } : null,
+        this.numeroPositivo(det.banheiros) ? { k: 'Banheiros', v: String(this.numeroPositivo(det.banheiros)) } : null,
+        this.numeroPositivo(det.vagas) ? { k: 'Vagas', v: String(this.numeroPositivo(det.vagas)) } : null,
+        this.numeroPositivo(det.condominio_valor) ? { k: 'Condomínio', v: this.fmtR$(this.numeroPositivo(det.condominio_valor)) + '/mês' } : null,
+        this.numeroPositivo(det.iptu) ? { k: 'IPTU', v: this.fmtR$(this.numeroPositivo(det.iptu)) + '/ano' } : null,
         det.entrega ? { k: 'Entrega', v: det.entrega } : null
       ].filter(Boolean) : [],
       detMapaOn: !!(det && this.coordenadas(det)),
