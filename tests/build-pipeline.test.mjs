@@ -223,12 +223,12 @@ test('Render aguarda CI e envia headers seguros e cache imutavel', async () => {
   assert.match(localServer, /public, max-age=31536000, immutable/, 'a medição local deve espelhar o cache de assets do Render');
   assert.match(localServer, /public, max-age=0, must-revalidate/, 'documentos locais devem revalidar sem bloquear o bfcache');
   assert.match(render, /source: \/imovel\/\*/);
-  assert.match(render, /destination: \/index\.html/);
+  assert.match(render, /source: \/imovel\/\*\s+destination: https:\/\/diaegvfveqezispcthwk\.supabase\.co\/functions\/v1\/site-seo\/imovel\/\*/);
   assert.match(render, /source: \/sitemap-catalogo\.xml\s+destination: https:\/\/diaegvfveqezispcthwk\.supabase\.co\/functions\/v1\/site-seo\/sitemap\.xml/);
   assert.doesNotMatch(render, /source: \/sitemap\.xml\s+destination:/);
   assert.match(render, /path: \/sitemap\.xml\s+name: Content-Type\s+value: application\/xml; charset=utf-8/);
   assert.match(render, /path: \/sitemap-catalogo\.xml\s+name: Content-Type\s+value: application\/xml; charset=utf-8/);
-  assert.doesNotMatch(render, /source: \/imovel\/\*[\s\S]{0,160}destination: https:\/\/[^/]+\.supabase\.co/);
+  assert.match(render, /path: \/imovel\/\*\s+name: Content-Type\s+value: text\/html; charset=utf-8/);
   assert.match(render, /Cache-Control[\s\S]*max-age=31536000, immutable/);
   for (const header of [
     'Strict-Transport-Security',

@@ -10,6 +10,7 @@
     "scripts/build-site.mjs",
     "scripts/rotas.mjs",
     "scripts/site-build-lib.mjs",
+    "scripts/smoke-seo-proxy.mjs",
     "supabase/config.toml",
     "supabase/functions/site-seo",
     "site.deploy.json",
@@ -31,8 +32,10 @@
     "propertyPath": "/imovel/*",
     "propertyLocalDestination": "/index.html",
     "propertyEdgeDestinationPrepared": "https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/imovel/*",
-    "propertyEdgeEnabled": false,
-    "propertyEdgeRequiresCustomDomain": true
+    "propertyEdgeEnabled": true,
+    "propertyEdgeRequiresCustomDomain": false,
+    "propertyContentType": "text/html; charset=utf-8",
+    "propertyPreviewProofRequired": true
   },
   "versionedAssets": [
     "assets/analytics.js",

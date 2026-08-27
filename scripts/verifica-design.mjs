@@ -240,9 +240,16 @@ export async function verifySite({
     }
   }
   const propertyDestination = rewriteDestination(render, seo.propertyPath || '/imovel/*');
-  if (propertyDestination !== (seo.propertyLocalDestination || '/index.html')) errors.push('rota de imovel deve permanecer no shell estatico ate existir custom domain da Edge');
-  if (seo.propertyEdgeEnabled !== false || seo.propertyEdgeRequiresCustomDomain !== true) errors.push('gate de HTML da Edge deve permanecer desativado e exigir custom domain');
-  if (/^https:\/\/[^/]+\.supabase\.co\//i.test(propertyDestination || '')) errors.push('URL padrao do Supabase nao pode servir o HTML das fichas como rewrite');
+  if (seo.propertyEdgeEnabled === true) {
+    if (propertyDestination !== seo.propertyEdgeDestinationPrepared) errors.push('rewrite das fichas divergiu do endpoint SEO preparado');
+    if (seo.propertyEdgeRequiresCustomDomain !== false) errors.push('configuracao ativa das fichas nao pode declarar dependencia de custom domain inexistente');
+    if (seo.propertyPreviewProofRequired !== true) errors.push('ativacao do SEO deve exigir prova HTTP em preview antes do merge');
+    if (headerValue(render, seo.propertyPath || '/imovel/*', 'Content-Type') !== (seo.propertyContentType || 'text/html; charset=utf-8')) {
+      errors.push('header HTML ausente no proxy das fichas');
+    }
+  } else if (propertyDestination !== (seo.propertyLocalDestination || '/index.html')) {
+    errors.push('rota de imovel desativada deve permanecer no shell estatico');
+  }
 
   for (const route of config.disabledRoutes || []) {
     const relative = route.replace(/^\/+|\/+$/g, '');

@@ -9,9 +9,10 @@
     "build": "node scripts/build-site.mjs && node scripts/rotas.mjs && node scripts/verifica-design.mjs",
     "verify": "node scripts/verifica-design.mjs",
     "smoke": "node scripts/smoke-site.mjs",
+    "smoke:seo": "node scripts/smoke-seo-proxy.mjs",
     "serve": "node scripts/serve-dist.mjs",
     "smoke:tracking:live": "node scripts/smoke-tracking-live.mjs",
-    "ci": "npm test && npm run smoke",
+    "ci": "npm test && npm run smoke && npm run smoke:seo",
     "pretest": "npm run build",
     "extract-design": "node scripts/extract-design.mjs",
     "test": "node --test tests/*.test.mjs"

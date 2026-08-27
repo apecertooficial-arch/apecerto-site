@@ -55,16 +55,19 @@ caminho impediria o rewrite dinâmico. O `robots.txt` aponta para o índice púb
 `https://apecerto.com/sitemap.xml`, e o Blueprint solicita o Content-Type XML
 tanto no índice quanto no catálogo.
 
-O handler também já sabe montar as páginas `/imovel/<slug>/` com title,
-canonical, descrição, Open Graph e JSON-LD, além de 404 com `noindex`. Esse
-rewrite HTML permanece deliberadamente desativado: a URL padrão de Edge
-Functions do Supabase transforma respostas HTML em `text/plain`. Ele só pode ser
-ativado depois de configurar um custom domain compatível; os testes e o
-verificador bloqueiam a ativação acidental pela URL `*.supabase.co`.
+O handler também monta as páginas `/imovel/<slug>/` com title, canonical,
+descrição, Open Graph, Twitter Card e JSON-LD, além de 404 com `noindex`. O
+Blueprint prepara um rewrite externo para esse handler e fixa o `Content-Type`
+final como `text/html; charset=utf-8`, preservando a URL pública da ficha. Como
+o site continua estático, essa integração precisa ser comprovada em um Preview
+do Render antes do merge: duas fichas devem responder HTML específico via HTTP
+direto, e uma ficha inexistente deve responder 404 com `noindex`. O verificador
+bloqueia divergências entre o endpoint, o rewrite e o header.
 
-Ordem de publicação: primeiro publicar `site-seo` com `verify_jwt = false` e
-confirmar que a URL direta de `/sitemap.xml` da função responde `200` com XML
-íntegro. Depois do deploy do Render, validar o índice público em
+Ordem de publicação: primeiro confirmar que `site-seo`, já publicado com
+`verify_jwt = false`, responde `200` com XML íntegro e HTML específico. Depois,
+validar o Preview do PR por requisição HTTP direta antes de autorizar o merge.
+Somente após essa prova, validar o índice público em
 `https://apecerto.com/sitemap.xml` e o catálogo em
 `https://apecerto.com/sitemap-catalogo.xml`. O índice físico deve responder
 `Content-Type: application/xml; charset=utf-8`. O gateway padrão do Supabase
