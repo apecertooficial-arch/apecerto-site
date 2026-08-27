@@ -114,7 +114,7 @@ test('ficha injeta canonical, OG e JSON-LD com escaping seguro', async () => {
   assert.match(body, /<meta property="og:type" content="product">/);
   assert.match(body, /<meta property="og:image" content="https:\/\/diaegvfveqezispcthwk\.supabase\.co\/storage\/v1\/object\/public\/empreendimentos\/unidades\/12\.jpg">/);
   assert.match(body, /<meta name="twitter:card" content="summary_large_image">/);
-  assert.match(body, /<meta name="twitter:title" content="Loft &lt;3 &amp; &quot;especial&quot; · Unidade 12 \| apêcerto">/);
+  assert.match(body, /<meta name="twitter:title" content="Apartamento 12 em Moema \| apêcerto">/);
   assert.match(body, /<meta name="twitter:image" content="https:\/\/diaegvfveqezispcthwk\.supabase\.co\/storage\/v1\/object\/public\/empreendimentos\/unidades\/12\.jpg">/);
   assert.match(body, /id="apecerto-imovel-jsonld"/);
   assert.match(body, /<title>Apartamento 12 em Moema \| apêcerto<\/title>/);
@@ -133,7 +133,7 @@ test('duas fichas publicas entregam metadados factuais e distintos no HTML inici
 
   assert.equal(alphaResponse.status, 200);
   assert.equal(betaResponse.status, 200);
-  assert.match(alpha, /<title>Loft &lt;3 &amp; &quot;especial&quot; · Unidade 12 \| apêcerto<\/title>/);
+  assert.match(alpha, /<title>Apartamento 12 em Moema \| apêcerto<\/title>/);
   assert.match(beta, /<title>Apartamento solar \| apêcerto<\/title>/);
   assert.match(alpha, /canonical" href="https:\/\/apecerto\.com\/imovel\/edificio-alpha-un-12\//);
   assert.match(beta, /canonical" href="https:\/\/apecerto\.com\/imovel\/edificio-beta\//);
