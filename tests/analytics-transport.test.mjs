@@ -31,7 +31,7 @@ function element() {
   };
 }
 
-async function analyticsRuntime({ marketing }) {
+async function analyticsRuntime({ marketing, page = 'https://apecerto.com/?utm_source=qa' }) {
   const source = await readFile('static/assets/analytics.js', 'utf8');
   const local = storage({
     [consentKey]: JSON.stringify({ analytics: marketing, marketing }),
@@ -57,8 +57,9 @@ async function analyticsRuntime({ marketing }) {
     getElementById() { return null; },
     getElementsByTagName() { return [firstScript]; },
   };
-  const pageUrl = new URL('https://apecerto.com/?utm_source=qa');
+  const pageUrl = new URL(page);
   let gtmRequests = 0;
+  const requests = [];
   const timers = [];
   const window = {
     document,
@@ -84,7 +85,10 @@ async function analyticsRuntime({ marketing }) {
     const payload = args[2];
     if (payload && typeof payload.event_callback === 'function') payload.event_callback();
   };
-  const fetch = async () => ({ ok: true, status: 200, json: async () => ({}) });
+  const fetch = async (url, options = {}) => {
+    requests.push({ url: String(url), options });
+    return { ok: true, status: 200, json: async () => ({}) };
+  };
   const context = vm.createContext({
     window,
     document,
@@ -118,6 +122,7 @@ async function analyticsRuntime({ marketing }) {
   return {
     window,
     gtmRequests: () => gtmRequests,
+    requests,
   };
 }
 
@@ -134,4 +139,50 @@ test('conversão crítica confirma o acionamento idempotente do transporte Googl
     lead_type: 'financiamento',
   });
   assert.equal(runtime.gtmRequests(), requestsBeforeLead + 1);
+});
+
+test('evento consentido mantém paridade de event_id e isola PII em user_data', async () => {
+  const eventId = '33333333-3333-4333-8333-333333333333';
+  const runtime = await analyticsRuntime({
+    marketing: true,
+    page: 'https://apecerto.com/imovel/123?utm_source=meta&email=vazamento%40exemplo.com#lead',
+  });
+  runtime.window.apecertoTrack('generate_lead', {
+    event_id: eventId,
+    lead_type: 'comprador',
+    email: 'nao-deve-ir-em-parametros@exemplo.com',
+    phone_number: '11999999999',
+    __identity: {
+      email: ' CLIENTE@EXEMPLO.COM ',
+      phone: '(11) 98015-4312',
+    },
+  });
+
+  const capiRequest = runtime.requests.find((request) => {
+    if (!request.url.includes('/functions/v1/meta-capi') || !request.options.body) return false;
+    return JSON.parse(request.options.body).event_name === 'generate_lead';
+  });
+  assert.ok(capiRequest);
+  const capiBody = JSON.parse(capiRequest.options.body);
+  assert.equal(capiBody.event_id, eventId);
+  assert.equal(capiBody.email, 'cliente@exemplo.com');
+  assert.equal(capiBody.phone, '+5511980154312');
+  assert.equal(capiBody.event_source_url, 'https://apecerto.com/imovel/123?utm_source=meta');
+  assert.equal(capiBody.custom_data.email, undefined);
+  assert.equal(capiBody.custom_data.phone_number, undefined);
+
+  const dataLayerEvent = runtime.window.dataLayer.find((entry) => entry && entry.apecerto_event_id === eventId);
+  assert.ok(dataLayerEvent);
+  assert.equal(dataLayerEvent.event_id, eventId);
+  assert.equal(dataLayerEvent.email, undefined);
+  assert.equal(dataLayerEvent.phone_number, undefined);
+  assert.equal(dataLayerEvent.page_location, 'https://apecerto.com/imovel/123?utm_source=meta');
+});
+
+test('sem consentimento não envia identidade nem evento à Meta', async () => {
+  const runtime = await analyticsRuntime({ marketing: false });
+  runtime.window.apecertoTrack('generate_lead', {
+    __identity: { email: 'cliente@exemplo.com', phone: '11980154312' },
+  });
+  assert.equal(runtime.requests.some((request) => request.url.includes('/functions/v1/meta-capi')), false);
 });

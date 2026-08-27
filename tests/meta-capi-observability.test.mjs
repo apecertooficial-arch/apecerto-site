@@ -6,6 +6,7 @@ const migration = await readFile(new URL("../supabase/migrations/20260820182000_
 const funnelMigration = await readFile(new URL("../supabase/migrations/20260820200546_meta_capi_funil_qualidade.sql", import.meta.url), "utf8");
 const crmCapi = await readFile(new URL("../supabase/functions/crm-capi/index.ts", import.meta.url), "utf8");
 const metaCapi = await readFile(new URL("../supabase/functions/meta-capi/index.ts", import.meta.url), "utf8");
+const identity = await readFile(new URL("../supabase/functions/_shared/meta-identity.ts", import.meta.url), "utf8");
 const historicalRepair = await readFile(new URL("../supabase/migrations/20260821235500_tracking_360_historical_repair.sql", import.meta.url), "utf8");
 
 test("conversões offline usam fatos canônicos e outbox idempotente", () => {
@@ -40,6 +41,8 @@ test("crm-capi versionada resolve visita, proposta e venda e registra recibo", (
   assert.match(crmCapi, /funnel_stage/);
   assert.match(crmCapi, /stage_rank/);
   assert.match(crmCapi, /capi_token_missing" }, 503/);
+  assert.match(crmCapi, /user_data_signals: Object\.keys\(userData\)/);
+  assert.doesNotMatch(crmCapi, /if \(dryRun\) return json\([^;]*payload/);
 });
 
 test("funil de qualidade usa fatos reais, sem chamar Em atendimento de qualificado", () => {
@@ -59,6 +62,18 @@ test("meta-capi do navegador também deixa trilha de entrega", () => {
   assert.match(metaCapi, /channel: "meta_browser"/);
   assert.match(metaCapi, /status: "delivered"/);
   assert.match(metaCapi, /body\?\.test_mode === true/);
+  assert.match(metaCapi, /body\?\.consent_marketing !== true/);
+  assert.match(metaCapi, /hashedEmail/);
+  assert.match(metaCapi, /hashedBrazilPhone/);
+  assert.match(metaCapi, /safeEventSourceUrl/);
+  assert.match(metaCapi, /sanitizeMetaCustomData/);
+});
+
+test("contrato compartilhado impede PII crua em URL e custom_data", () => {
+  assert.match(identity, /SENSITIVE_QUERY_KEYS/);
+  assert.match(identity, /PII_CUSTOM_DATA_KEYS/);
+  assert.doesNotMatch(metaCapi, /console\.(?:log|info|warn|error)\([^)]*(?:email|phone|body|payload)/i);
+  assert.doesNotMatch(crmCapi, /console\.(?:log|info|warn|error)\([^)]*(?:email|phone|body|payload)/i);
 });
 
 test("reparo histórico usa contratos canônicos sem automação oculta", () => {
