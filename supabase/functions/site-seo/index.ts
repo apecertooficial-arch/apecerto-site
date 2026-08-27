@@ -188,7 +188,7 @@ export async function fetchCatalog({ fetchImpl, env, pageSize = PAGE_SIZE }) {
   throw new Error("catalog_too_large");
 }
 
-function catalogEntities(rows) {
+export function catalogEntities(rows) {
   const entities = [];
   for (const row of rows) {
     if (!row || typeof row !== "object") continue;

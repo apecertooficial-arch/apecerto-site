@@ -41,39 +41,31 @@ rota para o shell da aplicação sem transformar a navegação em erro 404.
 
 ## SEO dinâmico do catálogo
 
-A função pública `supabase/functions/site-seo/index.ts` lê somente a view
-aprovada `site_produtos`. O build publica `/sitemap.xml` como um sitemap index
-físico e estável, contendo uma única referência para `/sitemap-catalogo.xml`.
-Somente essa segunda rota é reescrita pelo Render para a função, que reúne as
-seis rotas fixas, os empreendimentos e cada unidade publicada. Essa separação
-impede que um sitemap estático antigo esconda o catálogo atual por precedência
-de arquivo no host.
+A função pública `supabase/functions/site-seo/index.ts` e o build leem somente
+a view aprovada `site_produtos`, usando a mesma URL e chave pública já presentes
+no frontend. O build publica `/sitemap.xml` como índice físico, gera
+`/sitemap-catalogo.xml` a partir do mesmo snapshot validado e pré-renderiza cada
+slug canônico em `dist/imovel/<slug>/index.html`. O corpo continua sendo a mesma
+aplicação dinâmica, alimentada pelo feed público; apenas os metadados iniciais
+são congelados no momento do build.
 
 `dist/sitemap-static.xml` continua sendo o gate determinístico das seis rotas
-fixas. Já `dist/sitemap-catalogo.xml` é proibido, pois um arquivo físico nesse
-caminho impediria o rewrite dinâmico. O `robots.txt` aponta para o índice público
+fixas. `dist/sitemap-catalogo.xml` contém essas rotas e todas as fichas válidas
+do snapshot. O `robots.txt` aponta para o índice público
 `https://apecerto.com/sitemap.xml`, e o Blueprint solicita o Content-Type XML
 tanto no índice quanto no catálogo.
 
-O handler também monta as páginas `/imovel/<slug>/` com title, canonical,
-descrição, Open Graph, Twitter Card e JSON-LD, além de 404 com `noindex`. O
-Blueprint prepara um rewrite externo para esse handler e fixa o `Content-Type`
-final como `text/html; charset=utf-8`, preservando a URL pública da ficha. Como
-o site continua estático, essa integração precisa ser comprovada em um Preview
-do Render antes do merge: duas fichas devem responder HTML específico via HTTP
-direto, e uma ficha inexistente deve responder 404 com `noindex`. O verificador
-bloqueia divergências entre o endpoint, o rewrite e o header.
+Cada ficha pré-renderizada recebe title, canonical, descrição, Open Graph,
+Twitter Card e JSON-LD factuais e escapados. Registros sem identidade ou
+metadados mínimos fazem o build falhar; slugs inexistentes usam o `404.html`
+noindex do host estático. O build também registra data e hash não pessoal do
+catálogo em `version.json` e falha se a visão pública estiver indisponível.
 
-Ordem de publicação: primeiro confirmar que `site-seo`, já publicado com
-`verify_jwt = false`, responde `200` com XML íntegro e HTML específico. Depois,
-validar o Preview do PR por requisição HTTP direta antes de autorizar o merge.
-Somente após essa prova, validar o índice público em
-`https://apecerto.com/sitemap.xml` e o catálogo em
-`https://apecerto.com/sitemap-catalogo.xml`. O índice físico deve responder
-`Content-Type: application/xml; charset=utf-8`. O gateway padrão do Supabase
-pode expor o catálogo dinâmico como `text/plain` mesmo com o header XML pedido
-ao Render; nesse caso o corpo ainda precisa ser XML íntegro e conter o catálogo
-completo. O repositório não executa essas duas publicações durante o build.
+Antes do merge, o Preview do Render deve comprovar duas fichas distintas com
+`Content-Type: text/html`, uma rota inexistente com 404/noindex, sitemap e assets.
+Não há rewrite de ficha ou sitemap para o gateway compartilhado do Supabase.
+Como os metadados são snapshot do build, um imóvel recém-publicado no ERP entra
+imediatamente no corpo dinâmico, mas sua página SEO inicial exige novo build.
 
 ## Orçamento de desempenho
 

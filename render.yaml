@@ -5,13 +5,6 @@ services:
     buildCommand: npm run ci
     staticPublishPath: ./dist
     autoDeployTrigger: checksPass
-    routes:
-      - type: rewrite
-        source: /sitemap-catalogo.xml
-        destination: https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/sitemap.xml
-      - type: rewrite
-        source: /imovel/*
-        destination: https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/imovel/*
     headers:
       - path: /sitemap.xml
         name: Content-Type
@@ -19,9 +12,6 @@ services:
       - path: /sitemap-catalogo.xml
         name: Content-Type
         value: application/xml; charset=utf-8
-      - path: /imovel/*
-        name: Content-Type
-        value: text/html; charset=utf-8
       - path: /assets/*
         name: Cache-Control
         value: public, max-age=31536000, immutable

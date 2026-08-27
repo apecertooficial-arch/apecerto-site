@@ -9,6 +9,7 @@
     "static",
     "scripts/build-site.mjs",
     "scripts/rotas.mjs",
+    "scripts/prerender-properties.mjs",
     "scripts/site-build-lib.mjs",
     "scripts/smoke-seo-proxy.mjs",
     "supabase/config.toml",
@@ -20,7 +21,9 @@
   "requiredFiles": [
     "robots.txt",
     "sitemap.xml",
+    "sitemap-catalogo.xml",
     "sitemap-static.xml",
+    "404.html",
     "version.json"
   ],
   "seo": {
@@ -28,14 +31,9 @@
     "sitemapIndexFile": "sitemap.xml",
     "sitemapCatalogPath": "/sitemap-catalogo.xml",
     "sitemapStaticGateFile": "sitemap-static.xml",
-    "sitemapEdgeDestination": "https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/sitemap.xml",
     "propertyPath": "/imovel/*",
-    "propertyLocalDestination": "/index.html",
-    "propertyEdgeDestinationPrepared": "https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/imovel/*",
-    "propertyEdgeEnabled": true,
-    "propertyEdgeRequiresCustomDomain": false,
-    "propertyContentType": "text/html; charset=utf-8",
-    "propertyPreviewProofRequired": true
+    "propertyPrerenderEnabled": true,
+    "property404File": "404.html"
   },
   "versionedAssets": [
     "assets/analytics.js",
@@ -47,7 +45,7 @@
     "maxHtmlGzipBytes": 30000,
     "maxTemplateBytes": 500000,
     "maxInitialTransferBytes": 500000,
-    "maxTotalBytes": 6000000,
+    "maxTotalBytes": 12000000,
     "maxSingleAssetBytes": 2000000,
     "maxInlineImageBytes": 32768,
     "maxGzipRatio": 0.75
@@ -135,17 +133,7 @@
       ]
     }
   ],
-  "dynamicRoutes": [
-    {
-      "pattern": "/imovel/*",
-      "destination": "/index.html",
-      "smokePath": "/imovel/ap-teste-smoke/",
-      "requiredMarkers": [
-        "location.pathname",
-        "/imovel/"
-      ]
-    }
-  ],
+  "dynamicRoutes": [],
   "disabledRoutes": [
     "/diagnostico/"
   ],
