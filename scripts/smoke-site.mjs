@@ -46,8 +46,9 @@ const server = createServer(async (request, response) => {
       response.end(body);
     }
   } catch {
-    response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
-    response.end('Not found');
+    const body = await readFile(safeDistPath(distDir, config.seo?.property404File || '404.html')).catch(() => Buffer.from('Not found'));
+    response.writeHead(404, { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex, nofollow' });
+    response.end(body);
   }
 });
 
@@ -73,10 +74,13 @@ try {
   if (sitemapIndexResponse.status !== 200) errors.push('/sitemap.xml respondeu ' + sitemapIndexResponse.status);
   if (!sitemapIndexResponse.headers.get('content-type')?.startsWith('application/xml')) errors.push('/sitemap.xml respondeu content-type incorreto');
   if (!/<sitemapindex\b/i.test(sitemapIndex) || /<urlset\b/i.test(sitemapIndex) || !sitemapIndex.includes('<loc>' + expectedCatalogUrl + '</loc>')) {
-    errors.push('/sitemap.xml nao respondeu o indice do catalogo dinamico');
+    errors.push('/sitemap.xml nao respondeu o indice do catalogo pre-renderizado');
   }
   const localCatalog = await fetch(base + (config.seo?.sitemapCatalogPath || '/sitemap-catalogo.xml'), { signal: AbortSignal.timeout(5000) });
-  if (localCatalog.status !== 404) errors.push('catalogo dinamico nao pode existir como arquivo fisico no pacote');
+  const localCatalogBody = await localCatalog.text();
+  if (localCatalog.status !== 200 || !/<urlset\b/i.test(localCatalogBody)) errors.push('catalogo pre-renderizado deve existir como sitemap fisico');
+  const propertyUrls = [...localCatalogBody.matchAll(/<loc>https:\/\/apecerto\.com(\/imovel\/[^<]+)<\/loc>/g)].map(match => match[1]);
+  if (!version?.catalog?.pages || propertyUrls.length !== version.catalog.pages) errors.push('sitemap local divergiu do manifesto de fichas');
 
   const budgets = config.budgets || {};
   const totalBytes = (version?.artifacts || []).reduce((sum, artifact) => sum + Number(artifact.bytes || 0), 0);
@@ -142,6 +146,17 @@ try {
     if (!/^<!doctype html>/i.test(body.trimStart())) errors.push(route.smokePath + ' nao recebeu o shell da aplicacao');
     if (version?.version && !body.includes('name="apecerto-version" content="' + version.version + '"')) errors.push(route.smokePath + ' recebeu versao divergente');
   }
+
+  for (const path of propertyUrls.slice(0, 2)) {
+    const response = await fetch(base + path, { signal: AbortSignal.timeout(5000) });
+    const body = await response.text();
+    if (response.status !== 200 || !response.headers.get('content-type')?.startsWith('text/html')) errors.push('ficha pre-renderizada falhou: ' + path);
+    if (!body.includes('<link rel="canonical" href="' + config.origin + path + '">')) errors.push('canonical pre-renderizada divergiu: ' + path);
+    if (!body.includes('name="twitter:title"') || !body.includes('id="apecerto-imovel-jsonld"')) errors.push('SEO pre-renderizado incompleto: ' + path);
+  }
+  const missingProperty = await fetch(base + '/imovel/codex-slug-inexistente/', { signal: AbortSignal.timeout(5000), redirect: 'manual' });
+  const missingPropertyBody = await missingProperty.text();
+  if (missingProperty.status !== 404 || !missingPropertyBody.includes('noindex,nofollow')) errors.push('slug inexistente deve responder 404 HTML noindex');
 
   const missing = await fetch(base + '/__apecerto_smoke_missing__', { signal: AbortSignal.timeout(5000), redirect: 'manual' });
   if (missing.status !== 404) errors.push('caminho inexistente respondeu ' + missing.status);

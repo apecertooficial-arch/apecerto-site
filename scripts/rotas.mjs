@@ -10,6 +10,7 @@ import {
   sha256,
   sourceVersion,
 } from './site-build-lib.mjs';
+import { prerenderProperties } from './prerender-properties.mjs';
 
 const root = process.cwd();
 const distDir = resolve(root, process.env.APECERTO_DIST_DIR || 'dist');
@@ -126,6 +127,8 @@ for (const route of config.routes) {
   await writeFile(file, selar(await readFile(file, 'utf8'), route.file));
 }
 
+const catalog = await prerenderProperties({ root, distDir, config });
+
 const urls = config.routes.map(route => [
   '  <url>',
   '    <loc>' + escapeXml(route.canonical) + '</loc>',
@@ -145,6 +148,23 @@ const sitemapStaticFile = seo.sitemapStaticGateFile || 'sitemap-static.xml';
 const sitemapIndexFile = seo.sitemapIndexFile || 'sitemap.xml';
 const sitemapCatalogPath = seo.sitemapCatalogPath || '/sitemap-catalogo.xml';
 const sitemapCatalogUrl = new URL(sitemapCatalogPath, config.origin).href;
+const catalogUrls = [
+  ...config.routes.map(route => route.canonical),
+  ...catalog.urls,
+].map(url => [
+  '  <url>',
+  '    <loc>' + escapeXml(url) + '</loc>',
+  '    <changefreq>daily</changefreq>',
+  '    <priority>' + (url.includes('/imovel/') ? '0.8' : '0.9') + '</priority>',
+  '  </url>',
+].join('\n'));
+const sitemapCatalog = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  ...catalogUrls,
+  '</urlset>',
+  '',
+].join('\n');
 const sitemapIndex = [
   '<?xml version="1.0" encoding="UTF-8"?>',
   '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
@@ -156,6 +176,7 @@ const sitemapIndex = [
 ].join('\n');
 await writeFile(safeDistPath(distDir, sitemapStaticFile.replace(/^\/+/, '')), sitemapStatic);
 await writeFile(safeDistPath(distDir, sitemapIndexFile.replace(/^\/+/, '')), sitemapIndex);
+await writeFile(safeDistPath(distDir, sitemapCatalogPath.replace(/^\/+/, '')), sitemapCatalog);
 
 const artifacts = await artifactManifest(distDir);
 const version = {
@@ -168,6 +189,12 @@ const version = {
   assetMap: Object.fromEntries(assetMap),
   templatePath,
   initialAssets,
+  catalog: {
+    generatedAt: catalog.generatedAt,
+    hash: catalog.hash,
+    rows: catalog.rows,
+    pages: catalog.pages,
+  },
   inputs: source.inputs,
   artifacts: artifacts.files,
 };

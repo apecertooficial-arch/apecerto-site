@@ -86,6 +86,7 @@ test('imagens críticas e galerias usam prioridade, dimensões e preparação pr
   );
   assert.ok(design.includes('(max-width: 1100px) 50vw, 384px'), 'cards desktop devem limitar a largura solicitada à largura real');
   assert.ok(design.includes('agendarFotosAdjacentes'), 'o carrossel deve preparar somente as próximas fotos necessárias');
+  assert.doesNotMatch(design, /prepararFoto\(fotos\[\(atual - 1 \+ fotos\.length\)/, 'a galeria não deve baixar também a foto anterior em segundo plano');
   assert.ok(design.includes('typeof imagem.decode === \'function\''), 'a próxima foto deve ser decodificada antes da troca');
   assert.ok(design.includes('.slice(0, 6)'), 'a preparação automática deve ficar limitada aos seis cards visíveis');
   assert.match(design, /if \(det\) \{[\s\S]*?if \(this\.state\.galOn\)[\s\S]*?return;[\s\S]*?const rows =/, 'uma galeria aberta deve ter prioridade sobre fotos invisíveis dos cards');
@@ -183,7 +184,7 @@ test('grafismos da marca preservam a proporcao depois da externalizacao das imag
 
 test('mapa ignora coordenadas ausentes ou impossiveis antes de calcular o enquadramento', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
-  const trecho = design.match(/\n  coordenadas\(r\) \{([\s\S]*?)\n  \}\n  saraBuscar\(txt\)/);
+  const trecho = design.match(/\n  coordenadas\(r\) \{([\s\S]*?)\n  \}\n  contarResultadosSemCoordenadas\(rows\)/);
   assert.ok(trecho, 'a validação de coordenadas deve continuar isolada e testável');
   const coordenadas = new Function('r', trecho[1]);
 
@@ -197,6 +198,34 @@ test('mapa ignora coordenadas ausentes ou impossiveis antes de calcular o enquad
     [-23.603, -46.667],
     'uma coordenada válida de São Paulo deve continuar no mapa',
   );
+});
+
+test('aviso do mapa conta dinamicamente somente resultados sem coordenadas válidas', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const coordenadasTrecho = design.match(/\n  coordenadas\(r\) \{([\s\S]*?)\n  \}\n  contarResultadosSemCoordenadas\(rows\)/);
+  const contadorTrecho = design.match(/\n  contarResultadosSemCoordenadas\(rows\) \{([\s\S]*?)\n  \}\n  saraBuscar\(txt\)/);
+  assert.ok(coordenadasTrecho && contadorTrecho, 'validação e contador devem permanecer isolados e testáveis');
+  const coordenadas = new Function('r', coordenadasTrecho[1]);
+  const contar = new Function('rows', contadorTrecho[1]);
+  const contexto = { coordenadas };
+
+  const validosMesmoEmpreendimento = [
+    { id: 'u1', empreendimento_id: 'e1', latitude: -23.60, longitude: -46.66 },
+    { id: 'u2', empreendimento_id: 'e1', latitude: '-23.60', longitude: '-46.66' },
+  ];
+  assert.equal(contar.call(contexto, validosMesmoEmpreendimento), 0, 'unidades agrupadas com localização não são omissões');
+  assert.equal(contar.call(contexto, validosMesmoEmpreendimento.concat([
+    { id: 'u3', latitude: null, longitude: null },
+    { id: 'u4', latitude: 'abc', longitude: '-46.66' },
+    { id: 'u5', latitude: '0', longitude: '0' },
+    { id: 'u6', latitude: '-22.9', longitude: '-43.2' },
+  ])), 4);
+  assert.equal(contar.call(contexto, [validosMesmoEmpreendimento[0]]), 0, 'a contagem deve reagir ao conjunto filtrado atual');
+  assert.equal(contar.call(contexto, []), 0);
+  assert.equal(contar.call(contexto, null), 0);
+  assert.match(design, /data-map-location-notice=""[^>]*role="status"[^>]*aria-live="polite"|role="status"[^>]*aria-live="polite"[^>]*data-map-location-notice=""/);
+  assert.match(design, /const mapaSemLocalizacao = this\.contarResultadosSemCoordenadas\(filtradosAll\)/, 'o aviso deve acompanhar filtros e ordenação atuais');
+  assert.doesNotMatch(design, /latitude[^\n]{0,80}=\s*-23\.5|longitude[^\n]{0,80}=\s*-46\.6/, 'o site não pode fabricar coordenada substituta');
 });
 
 test('mapa carrega o catalogo atual sem limite de preco ou paginacao escondida', async () => {
@@ -266,6 +295,46 @@ test('vitrine prioriza decisão do cliente e evita controles ou dados enganosos'
   assert.match(design, /setTimeout\(resolve, 350\)/, 'a troca de foto não pode ficar presa por quase um segundo');
   assert.match(design, /ordenarProdutos\(rows, criterio\)/, 'a lista deve permitir ordenação previsível');
   assert.match(design, /aria-label="Ordenar imóveis"/, 'a ordenação precisa ser acessível');
+});
+
+test('resultados oferecem filtros avancados verdadeiros e compartilháveis', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+
+  assert.match(design, /aria-controls="filtros-avancados"/, 'a barra de resultados deve abrir o painel de filtros');
+  assert.match(design, /id="filtros-avancados"[^>]*role="dialog"/, 'o painel deve ser identificado como dialogo acessível');
+  assert.match(design, /aria-label="Área mínima em metros quadrados"/, 'a área mínima deve ter rótulo acessível');
+  assert.match(design, /aria-label="Área máxima em metros quadrados"/, 'a área máxima deve ter rótulo acessível');
+  assert.match(design, /aria-label="Quantidade mínima de banheiros"/, 'banheiros devem usar um controle explícito');
+  assert.match(design, /aria-label="Quantidade mínima de suítes"/, 'suítes devem usar um controle explícito');
+  assert.match(design, /aria-label="Tipo do imóvel"/, 'o tipo do imóvel deve ser filtrável');
+  assert.match(design, /set\('area_min', st\.fAreaMin \|\| null\)/, 'a área mínima deve ser preservada na URL');
+  assert.match(design, /set\('area_max', st\.fAreaMax \|\| null\)/, 'a área máxima deve ser preservada na URL');
+  assert.match(design, /set\('banheiros', st\.fBanheiros \|\| null\)/, 'banheiros devem ser preservados na URL');
+  assert.match(design, /set\('suites', st\.fSuites \|\| null\)/, 'suítes devem ser preservadas na URL');
+  assert.match(design, /set\('tipo', st\.fTipo \|\| null\)/, 'o tipo deve ser preservado na URL');
+  assert.match(design, /const areaOk = r =>/, 'o mesmo filtro de área deve alimentar lista e mapa');
+  assert.match(design, /const banheirosOk = r =>/, 'o mesmo filtro de banheiros deve alimentar lista e mapa');
+  assert.match(design, /const suitesOk = r =>/, 'o mesmo filtro de suítes deve alimentar lista e mapa');
+  assert.match(design, /const tipoOk = r =>/, 'o mesmo filtro de tipo deve alimentar lista e mapa');
+  assert.match(design, /tipologia:\s*u\.tipologia \|\| r\.tipologia \|\| null/, 'cada unidade precisa preservar a tipologia publicada pelo ERP');
+  assert.match(design, /tipologiaUnidade \? null : r\.dormitorios/, 'uma unidade identificada como apartamento não pode herdar zero dormitórios do agregado do empreendimento');
+  assert.match(design, /const studio = tipologia \? \/studio\/i\.test\(tipologia\)/, 'a tipologia explícita deve prevalecer sobre agregados no filtro de studio');
+  assert.match(design, /min > max \? \{ fAreaMin: String\(max\), fAreaMax: String\(min\) \}/, 'a aplicação deve corrigir uma faixa de área invertida');
+});
+
+test('ficha usa uma experiencia de rota sem manter a home ativa atrás', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+
+  assert.match(design, /<sc-if value="\{\{ siteShellOn \}\}"[^>]*>[\s\S]{0,80}<div data-site-shell="">/, 'a home deve ser desmontada, não apenas escondida, enquanto a ficha está ativa');
+  assert.match(design, /siteShellOn:\s*!rotaFichaAtiva/, 'a rota deve controlar a montagem exclusiva da home');
+  assert.doesNotMatch(design, /siteShellDisplay|siteShellOculto/, 'a implementação não pode voltar a manter o catálogo oculto por CSS');
+  assert.match(design, /data-property-route=""[^>]*role="main"/, 'a ficha deve se apresentar como conteúdo principal da rota');
+  assert.doesNotMatch(design, /data-det-topo=""[^>]*role="dialog"/, 'a página do imóvel não deve continuar se anunciando como modal');
+  assert.match(design, /rotaFichaAtiva/, 'a rota limpa deve controlar a separação entre home e ficha');
+  assert.match(design, /detRouteLoading/, 'a navegação direta deve mostrar carregamento próprio em vez da home');
+  assert.match(design, /detRouteErro/, 'a ficha deve oferecer recuperação se a conexão falhar');
+  assert.match(design, /tentarDetRoute/, 'a falha da ficha deve permitir tentar novamente');
+  assert.match(design, /voltarCatalogoRota/, 'a falha da ficha deve permitir voltar ao catálogo');
 });
 
 test('locação só fica disponível quando a vitrine pública tiver imóveis', async () => {
@@ -613,12 +682,15 @@ test('build publica landings, privacidade e arquivos de busca', async () => {
     'dist/privacidade/index.html',
     'dist/robots.txt',
     'dist/sitemap.xml',
+    'dist/sitemap-catalogo.xml',
     'dist/sitemap-static.xml',
+    'dist/404.html',
   ]) assert.ok(await existe(path), path + ' deve existir');
   const sitemapIndex = await readFile('dist/sitemap.xml', 'utf8');
   assert.ok(sitemapIndex.includes('<sitemapindex'), 'o sitemap publico deve ser um indice fisico');
-  assert.ok(sitemapIndex.includes('<loc>https://apecerto.com/sitemap-catalogo.xml</loc>'), 'o indice deve apontar para o catalogo dinamico');
-  assert.equal(await existe('dist/sitemap-catalogo.xml'), false, 'o arquivo fisico impediria o rewrite do catalogo dinamico');
+  assert.ok(sitemapIndex.includes('<loc>https://apecerto.com/sitemap-catalogo.xml</loc>'), 'o indice deve apontar para o catalogo pre-renderizado');
+  const catalog = await readFile('dist/sitemap-catalogo.xml', 'utf8');
+  assert.ok(catalog.includes('<urlset'), 'o catalogo pre-renderizado deve ser um sitemap fisico');
 });
 
 test('rota de campanha abre a landing de captacao, nao a home', async () => {

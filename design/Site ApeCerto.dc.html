@@ -1862,10 +1862,19 @@ svg.leaflet-image-layer.leaflet-interactive path {
       text-decoration: none;
     }
     .rw-card-produto.rw-map-active { outline: 3px solid var(--ape-orange); outline-offset: 3px; box-shadow: var(--shadow-md) !important; }
+    .rw-filter-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(31, 28, 26, 0.42); display: flex; justify-content: flex-end; }
+    .rw-filter-drawer { width: min(460px, 100%); height: 100%; overflow-y: auto; background: var(--bg-page); box-shadow: -16px 0 48px rgba(31, 28, 26, 0.2); display: flex; flex-direction: column; }
+    .rw-filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .rw-filter-field { display: flex; flex-direction: column; gap: 7px; }
+    .rw-filter-field label { color: var(--fg-2); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+    .rw-filter-control { box-sizing: border-box; width: 100%; min-height: 46px; border: 1px solid var(--border-default); border-radius: 12px; background: var(--bg-surface); color: var(--fg-1); padding: 0 13px; font: inherit; }
+    @media (max-width: 520px) { .rw-filter-grid { grid-template-columns: 1fr; } }
   </style>
 </helmet>
 
 <div style="font-family: var(--font-body); color: var(--fg-1); background: var(--bg-page); min-height: 100vh">
+  <sc-if value="{{ siteShellOn }}" hint-placeholder-val="{{ true }}">
+  <div data-site-shell="">
   <a class="rw-skip" href="#conteudo-principal">Pular para o conteúdo</a>
 
   <!-- ============ NAV ============ -->
@@ -2108,7 +2117,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="{{ favsChipFill }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
         <span>{{ favsChipLabel }}</span>
       </button>
-      <button class="rw-m" sc-camel-on-click="{{ abrirFiltrosMobile }}" style="border: 1.5px solid var(--border-default); background: var(--bg-surface); color: var(--fg-1); min-height: 44px; padding: 0 16px; border-radius: var(--radius-pill); align-items: center; gap: 7px; font-family: var(--font-body); font-weight: var(--weight-semibold)"><i data-lucide="sliders-horizontal" style="width: 16px; height: 16px"></i>Filtros</button>
+      <button sc-camel-on-click="{{ abrirFiltros }}" aria-expanded="{{ filtrosOn }}" aria-controls="filtros-avancados" style="border: 1.5px solid {{ filtrosBorda }}; background: {{ filtrosBg }}; color: {{ filtrosFg }}; min-height: 44px; padding: 0 16px; border-radius: var(--radius-pill); display: flex; align-items: center; gap: 7px; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); cursor: pointer"><i data-lucide="sliders-horizontal" style="width: 16px; height: 16px"></i>{{ filtrosLabel }}</button>
       <sc-raw-select aria-label="Ordenar imóveis" value="{{ ordenacao }}" sc-camel-on-change="{{ setOrdenacao }}" style="height: 42px; border: 1px solid var(--border-default); border-radius: var(--radius-pill); padding: 0 34px 0 14px; background: var(--bg-surface); color: var(--fg-1); font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold)">
         <option value="relevancia">Mais relevantes</option>
         <option value="menor_preco">Menor preço</option>
@@ -2121,6 +2130,67 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <button sc-camel-on-click="{{ vMapa }}" aria-pressed="{{ vMapaAtiva }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); padding: 7px 18px; border-radius: var(--radius-pill); background: {{ vMapBg }}; color: {{ vMapFg }}">Mapa</button>
       </div>
     </div>
+    <sc-if value="{{ mapaSemLocalizacaoOn }}" hint-placeholder-val="{{ false }}">
+      <div role="status" aria-live="polite" data-map-location-notice="" style="display: flex; align-items: flex-start; gap: 10px; margin: -8px 0 20px; padding: 12px 16px; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--fg-2); font-size: var(--text-sm); line-height: var(--leading-normal)">
+        <i data-lucide="map-pin-off" aria-hidden="true" style="width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; color: var(--ape-purple)"></i>
+        <span>{{ mapaSemLocalizacaoLabel }}</span>
+      </div>
+    </sc-if>
+    <sc-if value="{{ filtrosOn }}" hint-placeholder-val="{{ false }}">
+      <div class="rw-filter-overlay" sc-camel-on-click="{{ fecharFiltros }}">
+        <aside id="filtros-avancados" class="rw-filter-drawer" role="dialog" aria-modal="true" aria-labelledby="filtros-titulo" sc-camel-on-click="{{ pararClique }}">
+          <div style="position: sticky; top: 0; z-index: 2; background: rgba(250, 248, 246, 0.96); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border-soft); padding: 20px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px">
+            <div>
+              <div class="eyebrow">Refine sua busca</div>
+              <h2 id="filtros-titulo" style="margin: 4px 0 0; font-size: var(--text-xl)">Mais filtros</h2>
+            </div>
+            <button sc-camel-on-click="{{ fecharFiltros }}" aria-label="Fechar filtros" style="border: none; background: var(--bg-sunken); color: var(--fg-1); width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 24px">×</button>
+          </div>
+          <div style="padding: 24px 22px; display: flex; flex-direction: column; gap: 22px; flex: 1">
+            <div class="rw-filter-field">
+              <label for="filtro-tipo">Tipo do imóvel</label>
+              <sc-raw-select id="filtro-tipo" class="rw-filter-control" aria-label="Tipo do imóvel" value="{{ fTipo }}" sc-camel-on-change="{{ setFTipo }}">
+                <option value="">Todos os tipos</option>
+                <option value="studio">Studio</option>
+                <option value="apartamento">Apartamento</option>
+              </sc-raw-select>
+            </div>
+            <div class="rw-filter-grid">
+              <div class="rw-filter-field">
+                <label for="filtro-area-min">Área mínima</label>
+                <input id="filtro-area-min" class="rw-filter-control" type="number" min="0" step="5" inputmode="numeric" aria-label="Área mínima em metros quadrados" value="{{ fAreaMin }}" sc-camel-on-change="{{ setFAreaMin }}" placeholder="Ex.: 40">
+              </div>
+              <div class="rw-filter-field">
+                <label for="filtro-area-max">Área máxima</label>
+                <input id="filtro-area-max" class="rw-filter-control" type="number" min="0" step="5" inputmode="numeric" aria-label="Área máxima em metros quadrados" value="{{ fAreaMax }}" sc-camel-on-change="{{ setFAreaMax }}" placeholder="Ex.: 120">
+              </div>
+              <div class="rw-filter-field">
+                <label for="filtro-banheiros">Banheiros</label>
+                <sc-raw-select id="filtro-banheiros" class="rw-filter-control" aria-label="Quantidade mínima de banheiros" value="{{ fBanheiros }}" sc-camel-on-change="{{ setFBanheiros }}">
+                  <option value="">Qualquer quantidade</option>
+                  <option value="1">1+</option>
+                  <option value="2">2+</option>
+                  <option value="3">3+</option>
+                </sc-raw-select>
+              </div>
+              <div class="rw-filter-field">
+                <label for="filtro-suites">Suítes</label>
+                <sc-raw-select id="filtro-suites" class="rw-filter-control" aria-label="Quantidade mínima de suítes" value="{{ fSuites }}" sc-camel-on-change="{{ setFSuites }}">
+                  <option value="">Qualquer quantidade</option>
+                  <option value="1">1+</option>
+                  <option value="2">2+</option>
+                  <option value="3">3+</option>
+                </sc-raw-select>
+              </div>
+            </div>
+          </div>
+          <div style="position: sticky; bottom: 0; background: var(--bg-surface); border-top: 1px solid var(--border-soft); padding: 16px 22px calc(16px + env(safe-area-inset-bottom)); display: flex; gap: 10px">
+            <button sc-camel-on-click="{{ limparFiltrosAvancados }}" style="min-height: 48px; padding: 0 18px; border: 1.5px solid var(--border-default); border-radius: var(--radius-pill); background: var(--bg-surface); color: var(--fg-1); font-family: var(--font-body); font-weight: var(--weight-semibold); cursor: pointer">Limpar</button>
+            <button sc-camel-on-click="{{ aplicarFiltrosAvancados }}" style="min-height: 48px; flex: 1; border: none; border-radius: var(--radius-pill); background: var(--ape-orange-action); color: var(--fg-inverse); font-family: var(--font-body); font-weight: var(--weight-bold); cursor: pointer">Ver {{ filtrosResultadoLabel }}</button>
+          </div>
+        </aside>
+      </div>
+    </sc-if>
     <div class="rw-vista" style="display: grid; grid-template-columns: {{ vistaCols }}; gap: 24px; align-items: start">
     <sc-if value="{{ vistaListaOn }}" hint-placeholder-val="{{ true }}">
     <div class="rw-cards" style="display: grid; grid-template-columns: {{ prodCols }}; gap: 24px">
@@ -2450,10 +2520,35 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </div>
     </div>
   </footer>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ detRouteLoading }}" hint-placeholder-val="{{ false }}">
+    <main role="main" aria-busy="true" style="min-height: 100vh; display: grid; place-items: center; padding: 24px">
+      <div role="status" aria-live="polite" style="display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--fg-2)">
+        <img src="b886aa71-fb4e-41f7-ba33-960f77a5ca3c" alt="apêcerto" style="height: 36px; width: auto; flex-shrink: 0; display: block">
+        <span style="font-size: var(--text-sm); font-weight: var(--weight-semibold)">Carregando detalhes do imóvel…</span>
+      </div>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ detRouteErro }}" hint-placeholder-val="{{ false }}">
+    <main role="main" style="min-height: 100vh; display: grid; place-items: center; padding: 24px">
+      <div role="alert" style="width: min(100%, 520px); background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); padding: 32px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center">
+        <img src="b886aa71-fb4e-41f7-ba33-960f77a5ca3c" alt="apêcerto" style="height: 36px; width: auto; flex-shrink: 0; display: block">
+        <h1 style="margin: 4px 0 0; font-size: var(--text-2xl)">Não conseguimos abrir este imóvel agora</h1>
+        <p style="margin: 0; max-width: 420px; color: var(--fg-3); line-height: 1.55">A conexão falhou por alguns instantes. Você pode tentar novamente ou voltar ao catálogo sem perder sua busca.</p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 8px">
+          <button sc-camel-on-click="{{ tentarDetRoute }}" style="min-height: 46px; border: none; border-radius: var(--radius-pill); padding: 0 20px; background: var(--ape-orange-action); color: var(--fg-inverse); font-family: var(--font-body); font-weight: var(--weight-bold); cursor: pointer">Tentar novamente</button>
+          <button sc-camel-on-click="{{ voltarCatalogoRota }}" style="min-height: 46px; border: 1.5px solid var(--border-default); border-radius: var(--radius-pill); padding: 0 20px; background: var(--bg-surface); color: var(--fg-1); font-family: var(--font-body); font-weight: var(--weight-semibold); cursor: pointer">Ver catálogo</button>
+        </div>
+      </div>
+    </main>
+  </sc-if>
 
   <!-- ============ DETALHE DO APÊ ============ -->
   <sc-if value="{{ detOn }}" hint-placeholder-val="{{ false }}">
-    <div data-det-topo="" tabindex="-1" role="dialog" aria-modal="true" aria-label="Detalhes do imóvel" style="position: fixed; inset: 0; z-index: 110; background: var(--bg-page); overflow-y: auto">
+    <div data-property-route="" data-det-topo="" tabindex="-1" role="main" aria-label="Detalhes do imóvel" style="position: relative; min-height: 100vh; background: var(--bg-page)">
       <div style="position: sticky; top: 0; z-index: 10; background: rgba(250, 248, 246, 0.78); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-soft)">
         <div class="rw-dethead" style="max-width: 1080px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px">
           <img src="b886aa71-fb4e-41f7-ba33-960f77a5ca3c" alt="apêcerto" style="height: 32px; width: auto; flex-shrink: 0; display: block">
@@ -3486,7 +3581,7 @@ class Component extends DCLogic {
   state = { aba: null, mmOn: false, produtos: undefined, totalApes: null, totalCatalogo: null, totalFiltrado: null, dbErro: false, rotaImovelNaoEncontrado: false, produtosEmpCarregados: 0, produtosTotalEmp: null, produtosTemMais: false, produtosCarregandoMais: false, produtosRefiltrando: false,
     portalOn: false, tela: 'auth', rotaPendente: null, authModo: 'entrar', authErro: null, authMsg: null, recMsg: null, recErro: null, resetErro: null, recoveryToken: null, redefinindo: false, zapHeroVisivel: true,
     sess: null, caps: undefined, capsErro: null, passo: 1, wizErro: null, fotosNomes: [], enviando: false, editId: null,
-    fBairro: '', fStatus: '', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, fVagas: '', det: null, galIdx: 0, galOn: false, cardGal: {}, favs: {}, vista: 'dividida', ordenacao: 'relevancia', soFavs: false, aluguelDisponivel: false, buscaAtiva: false, mapaBounds: null, mapaBuscaPendente: false,
+    fBairro: '', fStatus: '', fFinalidade: 'venda', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, fVagas: '', fTipo: '', fAreaMin: '', fAreaMax: '', fBanheiros: '', fSuites: '', filtrosOn: false, det: null, galIdx: 0, galOn: false, cardGal: {}, favs: {}, vista: 'dividida', ordenacao: 'relevancia', soFavs: false, aluguelDisponivel: false, buscaAtiva: false, mapaBounds: null, mapaBuscaPendente: false,
     eqAba: 'anun', eqAnun: undefined, eqAnunForm: null, anErro: null, anSalvando: false, anFotosNomes: [], anImportN: 0,
     leadOk: false, leadErro: null, leadEnviando: false, finPct: 80, shareOk: false,
     fichaOn: false, fichaOk: false, fichaErro: null, fichaEnviando: false, fichaConjOn: false, leadDia: null, leadHora: null, detDescExpId: null, detalheErroEmpId: null, calOn: false, calOff: 0, horaOn: false, ecOn: false, fichaEc: null, nascOn: false, nascAno: 1990, nascMes: 0, fichaNasc: null, saraOn: false, saraMsgs: [] };
@@ -3495,7 +3590,7 @@ class Component extends DCLogic {
   SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYWVndmZ2ZXFlemlzcGN0aHdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5OTU4MjIsImV4cCI6MjA5ODU3MTgyMn0.312n8BuI-loQrQ20x9j1hNjKZs2UO71ey9gvIo0eY0I';
   CATALOGO_VIEW = 'site_produtos_catalogo';
   catalogoLeveDisponivel = true; detalhesCarregados = new Set(); detalhesEmVoo = new Map(); detalhesCache = new Map();
-  listaMapaMarkers = new Map(); galTouchX = null;
+  listaMapaMarkers = new Map(); galTouchX = null; filtrosFocusOrigin = null;
   auth = {}; form = {}; fotosArq = []; fotosExist = [];
   anForm = {}; anArq = []; anFotosBase = [];
   componentDidMount() {
@@ -3678,7 +3773,6 @@ class Component extends DCLogic {
           if (fotos.length > 1) {
             const atual = Math.min(this.state.galIdx || 0, fotos.length - 1);
             this.prepararFoto(fotos[(atual + 1) % fotos.length], 1200, 'contain');
-            this.prepararFoto(fotos[(atual - 1 + fotos.length) % fotos.length], 1200, 'contain');
           }
         }
         return;
@@ -3697,7 +3791,9 @@ class Component extends DCLogic {
     }, 1200);
   }
   tratarTeclaGlobal(e) {
-    const modal = this.state.fichaOn
+    const modal = this.state.filtrosOn
+      ? document.querySelector('#filtros-avancados')
+      : this.state.fichaOn
       ? document.querySelector('[data-ficha-modal]')
       : this.state.galOn
         ? document.querySelector('[data-gallery-modal]')
@@ -3707,6 +3803,7 @@ class Component extends DCLogic {
             ? document.querySelector('[data-portal-modal]')
             : null;
     if (e.key === 'Escape') {
+      if (this.state.filtrosOn) { e.preventDefault(); this.setState({ filtrosOn: false }, () => { if (this.filtrosFocusOrigin && this.filtrosFocusOrigin.focus) this.filtrosFocusOrigin.focus(); }); return; }
       if (this.state.fichaOn) { e.preventDefault(); this.fecharFicha(); return; }
       if (this.state.galOn) { e.preventDefault(); this.fecharGaleria(); return; }
       if (this.state.det) { e.preventDefault(); this.fecharDetalhe(); return; }
@@ -4332,6 +4429,11 @@ class Component extends DCLogic {
       const status = q.get('status'); if (['pronto', 'em_obras', 'lancamento'].includes(status)) out.fStatus = status;
       const dorms = q.get('dormitorios'); if (['d1', 'd2', 'd3'].includes(dorms)) out.fDorms = dorms;
       const vagas = q.get('vagas'); if (['v1', 'v2'].includes(vagas)) out.fVagas = vagas;
+      const tipo = q.get('tipo'); if (['studio', 'apartamento'].includes(tipo)) out.fTipo = tipo;
+      const areaMin = Number(q.get('area_min')); if (Number.isFinite(areaMin) && areaMin > 0) out.fAreaMin = String(Math.round(areaMin));
+      const areaMax = Number(q.get('area_max')); if (Number.isFinite(areaMax) && areaMax > 0) out.fAreaMax = String(Math.round(areaMax));
+      const banheiros = Number(q.get('banheiros')); if ([1, 2, 3].includes(banheiros)) out.fBanheiros = String(banheiros);
+      const suites = Number(q.get('suites')); if ([1, 2, 3].includes(suites)) out.fSuites = String(suites);
       const precoMin = Number(q.get('preco_min'));
       const precoMax = Number(q.get('preco_max') || q.get('preco'));
       const precoMinimo = out.fFinalidade === 'aluguel' ? 500 : 100000;
@@ -4348,6 +4450,9 @@ class Component extends DCLogic {
       set('modo', (st.aba || this.props.abaInicial) === 'lancamentos' ? 'lancamentos' : null);
       set('bairro', st.fBairro || null); set('status', st.fStatus || null);
       set('dormitorios', st.fDorms || null); set('vagas', st.fVagas || null);
+      set('area_min', st.fAreaMin || null); set('area_max', st.fAreaMax || null);
+      set('banheiros', st.fBanheiros || null); set('suites', st.fSuites || null);
+      set('tipo', st.fTipo || null);
       const piso = this.precoMinimo();
       const maximo = st.fPrecoMax != null ? st.fPrecoMax : st.fPreco;
       set('preco_min', st.precoTocado && st.fPrecoMin > piso ? Math.round(st.fPrecoMin) : null);
@@ -4363,6 +4468,7 @@ class Component extends DCLogic {
       finalidade: st.fFinalidade || ((st.aba || this.props.abaInicial) === 'alugar' ? 'aluguel' : 'venda'),
       modo: (st.aba || this.props.abaInicial) === 'lancamentos' ? 'lancamentos' : '',
       bairro: st.fBairro || '', status: st.fStatus || '', dorms: st.fDorms || '', vagas: st.fVagas || '',
+      tipo: st.fTipo || '', areaMin: st.fAreaMin || '', areaMax: st.fAreaMax || '', banheiros: st.fBanheiros || '', suites: st.fSuites || '',
       precoMin: st.precoTocado && st.fPrecoMin ? Math.round(st.fPrecoMin) : null,
       precoMax: st.precoTocado && (st.fPrecoMax != null ? st.fPrecoMax : st.fPreco) ? Math.round(st.fPrecoMax != null ? st.fPrecoMax : st.fPreco) : null,
       sara: Array.isArray(st.saraEmpreendimentoIds) ? st.saraEmpreendimentoIds.slice().map(String).sort().join(',') : null
@@ -4412,6 +4518,10 @@ class Component extends DCLogic {
       if (st.fDorms === 'd3') params.append('or', '(dormitorios_max_disponiveis.gte.3,and(dormitorios_max_disponiveis.is.null,dormitorios.gte.3))');
       if (st.fVagas === 'v1') params.append('or', '(vagas_max_disponiveis.gte.1,and(vagas_max_disponiveis.is.null,vagas.gte.1))');
       if (st.fVagas === 'v2') params.append('or', '(vagas_max_disponiveis.gte.2,and(vagas_max_disponiveis.is.null,vagas.gte.2))');
+      if (st.fAreaMin) params.append('or', '(area_max_disponivel.gte.' + Math.round(Number(st.fAreaMin)) + ',and(area_max_disponivel.is.null,area_util.gte.' + Math.round(Number(st.fAreaMin)) + '))');
+      if (st.fAreaMax) params.append('or', '(area_min_disponivel.lte.' + Math.round(Number(st.fAreaMax)) + ',and(area_min_disponivel.is.null,area_util.lte.' + Math.round(Number(st.fAreaMax)) + '))');
+      if (st.fBanheiros) params.set('banheiros', 'gte.' + Number(st.fBanheiros));
+      if (st.fSuites) params.set('suites', 'gte.' + Number(st.fSuites));
     }
     const recurso = this.catalogoLeveDisponivel ? this.CATALOGO_VIEW : 'site_produtos';
     return this.SB_URL + '/rest/v1/' + recurso + '?' + params.toString();
@@ -4634,8 +4744,9 @@ class Component extends DCLogic {
       if (!uns.length) { if (r && r.status !== 'pronto') out.push(r); continue; }
       for (const u of uns) {
         const unNum = u.numero == null ? 's/n' : String(u.numero).replace(/\.0+$/, '');
-        const dm = String(u.tipologia || '').match(/^\s*(\d+)/);
-        const dorm = /studio/i.test(u.tipologia || '') ? 0 : dm ? Number(dm[1]) : r.dormitorios;
+        const tipologiaUnidade = String(u.tipologia || '').trim();
+        const dm = tipologiaUnidade.match(/^\s*(\d+)/);
+        const dorm = /studio/i.test(tipologiaUnidade) ? 0 : dm ? Number(dm[1]) : (tipologiaUnidade ? null : r.dormitorios);
         const unidadeId = this.uuidValido(u.id || u.unidade_id) ? (u.id || u.unidade_id) : null;
         const unidadeRef = u.codigo || u.numero || String(out.length + 1);
         const fotosUnidade = Array.isArray(u.fotos_meta) && u.fotos_meta.length ? u.fotos_meta.slice() : (Array.isArray(u.fotos) ? u.fotos.slice() : []);
@@ -4662,6 +4773,7 @@ class Component extends DCLogic {
           capa_path: capaUnidade,
           fotos: galeriaUnidade,
           area_util: u.area_m2 || r.area_util,
+          tipologia: u.tipologia || r.tipologia || null,
           vagas: u.vagas != null ? u.vagas : r.vagas,
           dormitorios: dorm,
           unidades_disponiveis: 1,
@@ -4841,6 +4953,9 @@ class Component extends DCLogic {
     const dentroDaGrandeSaoPaulo = lat >= -24.2 && lat <= -23.2 && lng >= -47.2 && lng <= -46.0;
     return Number.isFinite(lat) && Number.isFinite(lng) && dentroDaGrandeSaoPaulo ? [lat, lng] : null;
   }
+  contarResultadosSemCoordenadas(rows) {
+    return (Array.isArray(rows) ? rows : []).reduce((total, row) => total + (this.coordenadas(row) ? 0 : 1), 0);
+  }
   saraBuscar(txt) {
     const t = txt.toLowerCase();
     const querAlugar = /alug|loca[cç][aã]o/.test(t);
@@ -4886,6 +5001,18 @@ class Component extends DCLogic {
     const aba = this.state.aba || this.props.abaInicial || 'comprar';
     const dormOk = r => !fDorms || (fDorms === 'd1' ? (r.dormitorios || 0) <= 1 : fDorms === 'd2' ? r.dormitorios === 2 : (r.dormitorios || 0) >= 3);
     const vagasOk = r => !fVagas || (fVagas === 'v1' ? (r.vagas || 0) >= 1 : (r.vagas || 0) >= 2);
+    const areaOk = r => {
+      const area = this.numeroPositivo(r.area_util), min = Number(this.state.fAreaMin) || 0, max = Number(this.state.fAreaMax) || 0;
+      return (!min || area >= min) && (!max || area <= max);
+    };
+    const banheirosOk = r => !this.state.fBanheiros || this.numeroPositivo(r.banheiros) >= Number(this.state.fBanheiros);
+    const suitesOk = r => !this.state.fSuites || this.numeroPositivo(r.suites) >= Number(this.state.fSuites);
+    const tipoOk = r => {
+      if (!this.state.fTipo) return true;
+      const tipologia = String(r.tipologia || '').trim();
+      const studio = tipologia ? /studio/i.test(tipologia) : (Number(r.dormitorios) === 0 || /studio/i.test(String(r.titulo || r.nome || '')));
+      return this.state.fTipo === 'studio' ? studio : !studio;
+    };
     const boundsOk = r => {
       const b = this.state.mapaBounds, ll = this.coordenadas(r);
       return !Array.isArray(b) || (!!ll && ll[0] >= b[0] && ll[0] <= b[2] && ll[1] >= b[1] && ll[1] <= b[3]);
@@ -4900,11 +5027,15 @@ class Component extends DCLogic {
       (!fStatus || r.status === fStatus) &&
       dormOk(r) &&
       vagasOk(r) &&
+      areaOk(r) &&
+      banheirosOk(r) &&
+      suitesOk(r) &&
+      tipoOk(r) &&
       boundsOk(r) &&
       (fPrecoMin == null || fPrecoMin <= piso || !this.precoDe(r) || this.precoDe(r) >= fPrecoMin) &&
       (fPreco == null || fPreco >= teto || !this.precoDe(r) || this.precoDe(r) <= fPreco));
     let nota = null;
-    const ativos = fBairro || fStatus || fDorms || fVagas || this.state.mapaBounds || aba === 'lancamentos' || (this.state.precoTocado && ((fPreco != null && fPreco < teto) || (fPrecoMin != null && fPrecoMin > piso)));
+    const ativos = fBairro || fStatus || fDorms || fVagas || this.state.fTipo || this.state.fAreaMin || this.state.fAreaMax || this.state.fBanheiros || this.state.fSuites || this.state.mapaBounds || aba === 'lancamentos' || (this.state.precoTocado && ((fPreco != null && fPreco < teto) || (fPrecoMin != null && fPrecoMin > piso)));
     if (this.state.soFavs && !out.length) {
       return { out: [], nota: Object.keys(this.state.favs).length ? 'Nenhum favorito bate com os filtros.' : 'Você ainda não favoritou nenhum apê — toca no coração dos cards. 🔑' };
     }
@@ -5292,13 +5423,16 @@ class Component extends DCLogic {
     const vistaEfetiva = mobile && st.vista === 'dividida' ? 'lista' : st.vista;
     const dest = (st.produtos || []).find(r => r.destaque && r.capa_path) || (st.produtos || [])[0];
     const piso = this.precoMinimo();
-    const filtrosAtivos = !!(st.fBairro || st.fStatus || st.fDorms || st.fVagas || st.mapaBounds || (st.precoTocado && ((st.fPrecoMax != null && st.fPrecoMax < this.tetoPreco()) || (st.fPrecoMin != null && st.fPrecoMin > piso))));
+    const filtrosAtivos = !!(st.fBairro || st.fStatus || st.fDorms || st.fVagas || st.fTipo || st.fAreaMin || st.fAreaMax || st.fBanheiros || st.fSuites || st.mapaBounds || (st.precoTocado && ((st.fPrecoMax != null && st.fPrecoMax < this.tetoPreco()) || (st.fPrecoMin != null && st.fPrecoMin > piso))));
     const mostrarTodos = st.mostrarTodos || filtrosAtivos;
     const filtrados = mostrarTodos ? filtradosAll : filtradosAll.slice(0, 6);
     const escondidos = filtradosAll.length - filtrados.length;
     const teto = this.tetoPreco();
     const fPrecoMin = st.fPrecoMin != null ? st.fPrecoMin : piso; const fPrecoMax = st.fPrecoMax != null ? st.fPrecoMax : (st.fPreco != null ? st.fPreco : teto);
     const det = st.det;
+    const rotaFichaAtiva = !!(det || (this.slugImovelDaRota() && !st.rotaImovelNaoEncontrado));
+    const mapaSemLocalizacao = this.contarResultadosSemCoordenadas(filtradosAll);
+    const filtrosAvancadosQtd = [st.fTipo, st.fAreaMin, st.fAreaMax, st.fBanheiros, st.fSuites].filter(Boolean).length;
     const detTourUrl = det ? this.tourUrl(det.tour_url) : '';
     const fotosPrivativasFonte = det && det.fotos && det.fotos.length ? det.fotos : (det && det.capa_path ? [det.capa_path] : []);
     const fotosPrivativasDet = fotosPrivativasFonte.map(p => ({ url: this.fotoUrl(p), grupo: 'Fotos do imóvel', alt: this.fotoAlt(p, 'Foto do imóvel') }));
@@ -5310,6 +5444,14 @@ class Component extends DCLogic {
     const galThumbsDet = galeriaDet.slice(galThumbInicio, galThumbInicio + 9);
     const detBadge = det ? (this.badges[det.status] || this.badges.pronto) : null;
     return {
+      rotaFichaAtiva,
+      siteShellOn: !rotaFichaAtiva,
+      detRouteLoading: rotaFichaAtiva && !det && !st.dbErro,
+      detRouteErro: rotaFichaAtiva && !det && !!st.dbErro,
+      tentarDetRoute: () => {
+        this.setState({ dbErro: false, produtos: undefined }, () => this.carregarProdutos(false));
+      },
+      voltarCatalogoRota: () => this.marcarImovelNaoEncontrado(),
       heroDisplay: st.buscaAtiva ? 'none' : 'block',
       resultsModeOn: !!st.buscaAtiva,
       resultsModeClass: st.buscaAtiva ? 'rw-results-mode' : '',
@@ -5331,7 +5473,7 @@ class Component extends DCLogic {
       tglTodosLabel: mostrarTodos ? 'Mostrar menos' : 'Ver todos os ' + filtradosAll.length + ' apês →',
       verMaisOn: escondidos > 0,
       verMaisLabel: 'Ver mais ' + escondidos + (escondidos > 1 ? ' apês' : ' apê'),
-      limparFiltros: () => this.aplicarFiltros({ fBairro: '', fStatus: '', fDorms: '', fVagas: '', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, mapaBounds: null, mapaBuscaPendente: false, saraIds: null }),
+      limparFiltros: () => this.aplicarFiltros({ fBairro: '', fStatus: '', fDorms: '', fVagas: '', fTipo: '', fAreaMin: '', fAreaMax: '', fBanheiros: '', fSuites: '', fPreco: null, fPrecoT: null, fPrecoMin: null, fPrecoMax: null, fPrecoMinT: null, fPrecoMaxT: null, precoTocado: false, mapaBounds: null, mapaBuscaPendente: false, saraIds: null }),
       ...(() => {
         const rows = Array.isArray(st.produtos) ? st.produtos : [];
         const mini = r => ({
@@ -5370,7 +5512,34 @@ class Component extends DCLogic {
       vMapBg: vistaEfetiva === 'mapa' ? 'var(--ape-orange)' : 'transparent', vMapFg: vistaEfetiva === 'mapa' ? 'var(--fg-1)' : 'var(--fg-2)',
       ordenacao: st.ordenacao || 'relevancia',
       setOrdenacao: e => this.setState({ ordenacao: e.target.value }),
-      abrirFiltrosMobile: () => this.setState({ buscaAtiva: false }, () => { const el = document.getElementById('buscar'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: this.movimentoScroll() }); }),
+      abrirFiltros: e => {
+        this.filtrosFocusOrigin = (e && e.currentTarget) || document.activeElement;
+        this.setState({ filtrosOn: true }, () => setTimeout(() => { const el = document.querySelector('#filtros-avancados select, #filtros-avancados input'); if (el) el.focus(); }, 30));
+      },
+      fecharFiltros: () => this.setState({ filtrosOn: false }, () => { if (this.filtrosFocusOrigin && this.filtrosFocusOrigin.focus) this.filtrosFocusOrigin.focus(); }),
+      aplicarFiltrosAvancados: () => {
+        const min = Math.max(0, Number(st.fAreaMin) || 0);
+        const max = Math.max(0, Number(st.fAreaMax) || 0);
+        const areaOrdenada = min && max && min > max ? { fAreaMin: String(max), fAreaMax: String(min) } : {};
+        this.setState(Object.assign({ filtrosOn: false, buscaAtiva: true, mostrarTodos: true }, areaOrdenada), () => this.rolarPagina(0, 'auto'));
+      },
+      limparFiltrosAvancados: () => this.aplicarFiltros({ fTipo: '', fAreaMin: '', fAreaMax: '', fBanheiros: '', fSuites: '' }),
+      filtrosOn: !!st.filtrosOn,
+      filtrosLabel: filtrosAvancadosQtd ? 'Filtros (' + filtrosAvancadosQtd + ')' : 'Mais filtros',
+      filtrosBg: filtrosAvancadosQtd ? 'var(--bg-tint-orange)' : 'var(--bg-surface)',
+      filtrosFg: filtrosAvancadosQtd ? 'var(--ape-orange-700)' : 'var(--fg-1)',
+      filtrosBorda: filtrosAvancadosQtd ? 'var(--ape-orange)' : 'var(--border-default)',
+      filtrosResultadoLabel: filtradosAll.length + (filtradosAll.length === 1 ? ' apê' : ' apês'),
+      mapaSemLocalizacaoOn: mapaSemLocalizacao > 0,
+      mapaSemLocalizacaoLabel: mapaSemLocalizacao === 1
+        ? '1 resultado continua na lista, mas não aparece no mapa porque ainda não tem localização cadastrada.'
+        : mapaSemLocalizacao + ' resultados continuam na lista, mas não aparecem no mapa porque ainda não têm localização cadastrada.',
+      fTipo: st.fTipo || '', fAreaMin: st.fAreaMin || '', fAreaMax: st.fAreaMax || '', fBanheiros: st.fBanheiros || '', fSuites: st.fSuites || '',
+      setFTipo: e => this.aplicarFiltros({ fTipo: e.target.value, saraIds: null }),
+      setFAreaMin: e => this.aplicarFiltros({ fAreaMin: String(Math.max(0, Number(e.target.value) || 0) || ''), saraIds: null }),
+      setFAreaMax: e => this.aplicarFiltros({ fAreaMax: String(Math.max(0, Number(e.target.value) || 0) || ''), saraIds: null }),
+      setFBanheiros: e => this.aplicarFiltros({ fBanheiros: e.target.value, saraIds: null }),
+      setFSuites: e => this.aplicarFiltros({ fSuites: e.target.value, saraIds: null }),
       tglFavs: () => this.setState({ soFavs: !st.soFavs }),
       favsAtivo: !!st.soFavs,
       favsChipLabel: 'Favoritos' + (Object.keys(st.favs).length ? ' (' + Object.keys(st.favs).length + ')' : ''),

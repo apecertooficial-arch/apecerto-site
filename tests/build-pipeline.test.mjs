@@ -95,7 +95,7 @@ test('verificador encerra com codigo diferente de zero para link local quebrado'
   assert.match(result.stderr, /link local quebrado/);
 });
 
-test('build publica sitemap index e reserva o catalogo para a Edge', async () => {
+test('build publica sitemap index, catalogo e fichas pre-renderizadas', async () => {
   const config = JSON.parse(await readFile(join(root, 'site.deploy.json'), 'utf8'));
   const sitemapIndex = await readFile(join(root, 'dist/sitemap.xml'), 'utf8');
   assert.match(sitemapIndex, /<sitemapindex\b[^>]*xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9"/);
@@ -106,21 +106,27 @@ test('build publica sitemap index e reserva o catalogo para a Edge', async () =>
   );
   assert.equal(config.seo.sitemapIndexFile, 'sitemap.xml');
   assert.equal(config.seo.sitemapCatalogPath, '/sitemap-catalogo.xml');
-  await assert.rejects(readFile(join(root, 'dist/sitemap-catalogo.xml')), /ENOENT/);
+  const catalog = await readFile(join(root, 'dist/sitemap-catalogo.xml'), 'utf8');
+  assert.match(catalog, /<urlset\b/);
+  assert.match(catalog, /https:\/\/apecerto\.com\/imovel\/my-one-campo-belo-un-ap0152-/);
+  const version = JSON.parse(await readFile(join(root, 'dist/version.json'), 'utf8'));
+  assert.ok(version.catalog.pages > 2);
+  assert.match(version.catalog.hash, /^[a-f0-9]{64}$/);
+  assert.ok(await access(join(root, 'dist/404.html')).then(() => true, () => false));
 });
 
-test('verificador rejeita sitemap antigo e arquivo que sombreia o catalogo dinamico', async () => {
+test('verificador rejeita sitemap index antigo e catalogo pre-renderizado invalido', async () => {
   const antigo = await cloneDist();
   await writeFile(join(antigo, 'sitemap.xml'), '<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://apecerto.com/</loc></url></urlset>');
   let result = cliVerify(antigo);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /sitemap\.xml deve ser um indice fisico/);
 
-  const sombreado = await cloneDist();
-  await writeFile(join(sombreado, 'sitemap-catalogo.xml'), '<?xml version="1.0"?><urlset/>');
-  result = cliVerify(sombreado);
+  const invalido = await cloneDist();
+  await writeFile(join(invalido, 'sitemap-catalogo.xml'), '<?xml version="1.0"?><sitemapindex/>');
+  result = cliVerify(invalido);
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /sitemap-catalogo\.xml fisico bloquearia o rewrite/);
+  assert.match(result.stderr, /sitemap-catalogo\.xml deve ser um urlset fisico/);
 });
 
 test('build de producao nao executa payload ou download mutavel', async () => {
@@ -222,13 +228,11 @@ test('Render aguarda CI e envia headers seguros e cache imutavel', async () => {
   assert.match(render, /autoDeployTrigger: checksPass/);
   assert.match(localServer, /public, max-age=31536000, immutable/, 'a medição local deve espelhar o cache de assets do Render');
   assert.match(localServer, /public, max-age=0, must-revalidate/, 'documentos locais devem revalidar sem bloquear o bfcache');
-  assert.match(render, /source: \/imovel\/\*/);
-  assert.match(render, /destination: \/index\.html/);
-  assert.match(render, /source: \/sitemap-catalogo\.xml\s+destination: https:\/\/diaegvfveqezispcthwk\.supabase\.co\/functions\/v1\/site-seo\/sitemap\.xml/);
+  assert.doesNotMatch(render, /source: \/imovel\/\*/);
+  assert.doesNotMatch(render, /source: \/sitemap-catalogo\.xml/);
   assert.doesNotMatch(render, /source: \/sitemap\.xml\s+destination:/);
   assert.match(render, /path: \/sitemap\.xml\s+name: Content-Type\s+value: application\/xml; charset=utf-8/);
   assert.match(render, /path: \/sitemap-catalogo\.xml\s+name: Content-Type\s+value: application\/xml; charset=utf-8/);
-  assert.doesNotMatch(render, /source: \/imovel\/\*[\s\S]{0,160}destination: https:\/\/[^/]+\.supabase\.co/);
   assert.match(render, /Cache-Control[\s\S]*max-age=31536000, immutable/);
   for (const header of [
     'Strict-Transport-Security',

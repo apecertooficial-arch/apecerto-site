@@ -46,6 +46,19 @@ const catalog = [{
     seo_descricao: 'Apartamento 12 com 74 m², duas suítes e uma vaga em Moema.',
     fotos: ['unidades/12.jpg'],
   }],
+}, {
+  id: '8d5df891-e63e-4b9f-8b11-7965d5f39b17',
+  slug: 'edificio-beta',
+  nome: 'Edifício Beta',
+  titulo: 'Apartamento solar',
+  descricao: 'Vista aberta em Campo Belo.',
+  bairro: 'Campo Belo',
+  endereco: 'Rua Pública, 20',
+  cidade: 'São Paulo',
+  uf: 'SP',
+  preco: 780000,
+  capa_path: 'https://images.example.com/beta.jpg',
+  unidades_site: [],
 }];
 
 function testHandler(rows = catalog) {
@@ -77,7 +90,7 @@ test('sitemap publico inclui as seis rotas fixas, empreendimentos e unidades', a
   assert.match(response.headers.get('content-type') || '', /^application\/xml; charset=utf-8$/);
   assert.match(response.headers.get('cache-control') || '', /s-maxage=300/);
   assert.match(response.headers.get('etag') || '', /^"[a-f0-9]{64}"$/);
-  assert.equal([...body.matchAll(/<loc>/g)].length, 8);
+  assert.equal([...body.matchAll(/<loc>/g)].length, 9);
   for (const route of seo.FIXED_ROUTES) assert.ok(body.includes(new URL(route.path, seo.SITE_ORIGIN).href));
   assert.ok(body.includes('https://apecerto.com/imovel/edificio-alpha/'));
   assert.ok(body.includes('https://apecerto.com/imovel/edificio-alpha-un-12/'));
@@ -100,12 +113,53 @@ test('ficha injeta canonical, OG e JSON-LD com escaping seguro', async () => {
   assert.match(body, /<link rel="canonical" href="https:\/\/apecerto\.com\/imovel\/edificio-alpha-un-12\/">/);
   assert.match(body, /<meta property="og:type" content="product">/);
   assert.match(body, /<meta property="og:image" content="https:\/\/diaegvfveqezispcthwk\.supabase\.co\/storage\/v1\/object\/public\/empreendimentos\/unidades\/12\.jpg">/);
+  assert.match(body, /<meta name="twitter:card" content="summary_large_image">/);
+  assert.match(body, /<meta name="twitter:title" content="Apartamento 12 em Moema \| apêcerto">/);
+  assert.match(body, /<meta name="twitter:image" content="https:\/\/diaegvfveqezispcthwk\.supabase\.co\/storage\/v1\/object\/public\/empreendimentos\/unidades\/12\.jpg">/);
   assert.match(body, /id="apecerto-imovel-jsonld"/);
   assert.match(body, /<title>Apartamento 12 em Moema \| apêcerto<\/title>/);
   assert.match(body, /Apartamento 12 com 74 m², duas suítes e uma vaga em Moema\./);
   assert.match(body, /\\u003c3/);
   assert.doesNotMatch(body, /<title>[^<]*<3/);
   assert.doesNotMatch(body, /<script>alert/);
+});
+
+test('duas fichas publicas entregam metadados factuais e distintos no HTML inicial', async () => {
+  const { handler } = testHandler();
+  const alphaResponse = await handler(new Request('https://project.supabase.co/functions/v1/site-seo/imovel/edificio-alpha-un-12/'));
+  const betaResponse = await handler(new Request('https://project.supabase.co/functions/v1/site-seo/imovel/edificio-beta/'));
+  const alpha = await alphaResponse.text();
+  const beta = await betaResponse.text();
+
+  assert.equal(alphaResponse.status, 200);
+  assert.equal(betaResponse.status, 200);
+  assert.match(alpha, /<title>Apartamento 12 em Moema \| apêcerto<\/title>/);
+  assert.match(beta, /<title>Apartamento solar \| apêcerto<\/title>/);
+  assert.match(alpha, /canonical" href="https:\/\/apecerto\.com\/imovel\/edificio-alpha-un-12\//);
+  assert.match(beta, /canonical" href="https:\/\/apecerto\.com\/imovel\/edificio-beta\//);
+  assert.notEqual(alpha, beta);
+  assert.doesNotMatch(alpha, /canonical" href="https:\/\/apecerto\.com\/"/);
+  assert.doesNotMatch(beta, /canonical" href="https:\/\/apecerto\.com\/"/);
+  assert.match(beta, /Vista aberta em Campo Belo\./);
+  assert.doesNotMatch(beta, /Alameda dos Testes|A12|975000/);
+  assert.doesNotThrow(() => JSON.parse(beta.match(/id="apecerto-imovel-jsonld"[^>]*>([^<]+)<\/script>/)[1]));
+});
+
+test('imagem ausente ou insegura não vaza OG nem Twitter inválido', async () => {
+  const rows = [{
+    ...catalog[1],
+    slug: 'sem-foto',
+    capa_path: 'javascript:alert(1)',
+    fotos: ['//host-inseguro.test/foto.jpg', 'arquivo\\invalido.jpg'],
+  }];
+  const { handler } = testHandler(rows);
+  const response = await handler(new Request('https://project.supabase.co/functions/v1/site-seo/imovel/sem-foto/'));
+  const body = await response.text();
+  assert.equal(response.status, 200);
+  assert.match(body, /<meta name="twitter:card" content="summary">/);
+  assert.doesNotMatch(body, /property="og:image"/);
+  assert.doesNotMatch(body, /name="twitter:image"/);
+  assert.doesNotMatch(body, /javascript:|host-inseguro|arquivo\\invalido/);
 });
 
 test('slug inexistente responde 404 e noindex sem expor catalogo interno', async () => {
@@ -116,6 +170,32 @@ test('slug inexistente responde 404 e noindex sem expor catalogo interno', async
   assert.equal(response.headers.get('x-robots-tag'), 'noindex, nofollow');
   assert.match(body, /<meta name="robots" content="noindex,nofollow">/);
   assert.doesNotMatch(body, /Alameda dos Testes/);
+});
+
+test('slug malicioso ou inválido nunca herda a home indexável', async () => {
+  const { handler } = testHandler();
+  for (const slug of ['%3Cscript%3Ealert(1)%3C%2Fscript%3E', 'edificio--alpha', '%00alpha']) {
+    const response = await handler(new Request('https://project.supabase.co/functions/v1/site-seo/imovel/' + slug + '/'));
+    const body = await response.text();
+    assert.equal(response.status, 404);
+    assert.equal(response.headers.get('x-robots-tag'), 'noindex, nofollow');
+    assert.match(body, /<meta name="robots" content="noindex,nofollow">/);
+    assert.doesNotMatch(body, /<link rel="canonical" href="https:\/\/apecerto\.com\/">/);
+    assert.doesNotMatch(body, /<script>alert/);
+  }
+});
+
+test('indisponibilidade da origem responde 503 sem servir cópia indexável da home', async () => {
+  const handler = seo.createSiteSeoHandler({
+    fetchImpl: async () => new Response('indisponível', { status: 503 }),
+    env: { get: (name) => name === 'SUPABASE_URL' ? 'https://diaegvfveqezispcthwk.supabase.co' : 'sb_publishable_test_only' },
+  });
+  const response = await handler(new Request('https://project.supabase.co/functions/v1/site-seo/imovel/edificio-beta/'));
+  const body = await response.text();
+  assert.equal(response.status, 503);
+  assert.equal(response.headers.get('x-robots-tag'), 'noindex, nofollow');
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.doesNotMatch(body, /canonical" href="https:\/\/apecerto\.com\/"/);
 });
 
 test('handler aceita HEAD, rejeita escrita e nunca aceita secret key', async () => {

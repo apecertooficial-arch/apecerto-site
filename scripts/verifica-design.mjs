@@ -113,6 +113,7 @@ async function validateLinks({ config, distDir, routeDocuments, errors }) {
         if (!(await existe(safeDistPath(distDir, dynamic.destination.replace(/^\/+/, ''))))) errors.push('destino da rota dinamica ausente: ' + dynamic.pattern);
         continue;
       }
+      if (config.seo?.propertyPrerenderEnabled === true && url.pathname === '/imovel/') continue;
 
       let relative = decodeURIComponent(url.pathname).replace(/^\/+/, '');
       if (!relative || url.pathname.endsWith('/')) relative += 'index.html';
@@ -223,8 +224,12 @@ export async function verifySite({
       || JSON.stringify(indexUrls) !== JSON.stringify([sitemapCatalogUrl])) {
     errors.push('sitemap.xml deve ser um indice fisico com referencia unica ao catalogo dinamico');
   }
-  if (await existe(safeDistPath(absoluteDist, sitemapCatalogPath.replace(/^\/+/, '')))) {
-    errors.push('sitemap-catalogo.xml fisico bloquearia o rewrite dinamico do Render');
+  let sitemapCatalog = '';
+  try { sitemapCatalog = await readFile(safeDistPath(absoluteDist, sitemapCatalogPath.replace(/^\/+/, '')), 'utf8'); }
+  catch (error) { errors.push(sitemapCatalogPath + ' ilegivel: ' + error.message); }
+  const catalogUrls = [...sitemapCatalog.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1]);
+  if (!/<urlset\b[^>]*xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9"/i.test(sitemapCatalog)) {
+    errors.push('sitemap-catalogo.xml deve ser um urlset fisico');
   }
 
   const robots = await readFile(safeDistPath(absoluteDist, 'robots.txt'), 'utf8').catch(() => '');
@@ -232,17 +237,31 @@ export async function verifySite({
 
   const render = await readFile(resolve(root, 'render.yaml'), 'utf8').catch(() => '');
   if (rewriteDestination(render, sitemapIndexPath)) errors.push('sitemap index fisico nao pode ter rewrite no Render');
-  const sitemapDestination = rewriteDestination(render, sitemapCatalogPath);
-  if (sitemapDestination !== seo.sitemapEdgeDestination) errors.push('rewrite do catalogo dinamico divergiu do contrato de deploy');
+  if (rewriteDestination(render, sitemapCatalogPath)) errors.push('catalogo pre-renderizado nao pode ter rewrite no Render');
   for (const path of [sitemapIndexPath, sitemapCatalogPath]) {
     if (headerValue(render, path, 'Content-Type') !== 'application/xml; charset=utf-8') {
       errors.push('header XML ausente no Render: ' + path);
     }
   }
   const propertyDestination = rewriteDestination(render, seo.propertyPath || '/imovel/*');
-  if (propertyDestination !== (seo.propertyLocalDestination || '/index.html')) errors.push('rota de imovel deve permanecer no shell estatico ate existir custom domain da Edge');
-  if (seo.propertyEdgeEnabled !== false || seo.propertyEdgeRequiresCustomDomain !== true) errors.push('gate de HTML da Edge deve permanecer desativado e exigir custom domain');
-  if (/^https:\/\/[^/]+\.supabase\.co\//i.test(propertyDestination || '')) errors.push('URL padrao do Supabase nao pode servir o HTML das fichas como rewrite');
+  if (seo.propertyPrerenderEnabled !== true) errors.push('pre-renderizacao das fichas deve permanecer habilitada');
+  if (propertyDestination) errors.push('fichas pre-renderizadas nao podem depender de rewrite no Render');
+  const propertyUrls = catalogUrls.filter(url => url.startsWith(config.origin + '/imovel/'));
+  if (!version?.catalog?.pages || propertyUrls.length !== version.catalog.pages) errors.push('sitemap e manifesto divergem na quantidade de fichas pre-renderizadas');
+  if (!/^[a-f0-9]{64}$/.test(version?.catalog?.hash || '')) errors.push('hash do catalogo ausente ou invalido');
+  for (const url of propertyUrls) {
+    const slug = new URL(url).pathname.match(/^\/imovel\/([a-z0-9-]+)\/$/)?.[1];
+    if (!slug) { errors.push('URL de ficha invalida no sitemap: ' + url); continue; }
+    const file = safeDistPath(absoluteDist, 'imovel/' + slug + '/index.html');
+    const html = await readFile(file, 'utf8').catch(() => '');
+    if (!html) { errors.push('ficha pre-renderizada ausente: ' + slug); continue; }
+    if (!html.includes('<link rel="canonical" href="' + url + '">')) errors.push('canonical da ficha divergiu: ' + slug);
+    for (const marker of ['property="og:title"', 'name="twitter:title"', 'id="apecerto-imovel-jsonld"']) {
+      if (!html.includes(marker)) errors.push('metadado da ficha ausente: ' + slug + ' -> ' + marker);
+    }
+  }
+  const notFoundHtml = await readFile(safeDistPath(absoluteDist, seo.property404File || '404.html'), 'utf8').catch(() => '');
+  if (!notFoundHtml.includes('name="robots" content="noindex,nofollow"')) errors.push('404 de ficha deve ser noindex');
 
   for (const route of config.disabledRoutes || []) {
     const relative = route.replace(/^\/+|\/+$/g, '');
@@ -276,7 +295,10 @@ export async function verifySite({
     if (version.artifactFingerprint !== artifacts.fingerprint) errors.push('SHA dos artefatos divergiu: version.json=' + version.artifactFingerprint + ', atual=' + artifacts.fingerprint);
     if (JSON.stringify(version.artifacts) !== JSON.stringify(artifacts.files)) errors.push('manifesto de artefatos divergiu do conteudo de dist');
     const htmlFiles = artifacts.files.filter(item => item.path === 'index.html' || item.path.endsWith('/index.html')).map(item => item.path).sort();
-    const expectedHtml = config.routes.map(route => route.file).sort();
+    const expectedHtml = [
+      ...config.routes.map(route => route.file),
+      ...propertyUrls.map(url => 'imovel/' + new URL(url).pathname.split('/').filter(Boolean).pop() + '/index.html'),
+    ].sort();
     if (JSON.stringify(htmlFiles) !== JSON.stringify(expectedHtml)) errors.push('arquivos HTML publicados divergem das rotas declaradas: ' + htmlFiles.join(', '));
     if (JSON.stringify(version.routes) !== JSON.stringify(config.routes.map(route => route.path))) errors.push('version.json divergiu das rotas declaradas');
   }

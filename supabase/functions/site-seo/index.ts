@@ -188,7 +188,7 @@ export async function fetchCatalog({ fetchImpl, env, pageSize = PAGE_SIZE }) {
   throw new Error("catalog_too_large");
 }
 
-function catalogEntities(rows) {
+export function catalogEntities(rows) {
   const entities = [];
   for (const row of rows) {
     if (!row || typeof row !== "object") continue;
@@ -362,7 +362,16 @@ export function injectPropertyMetadata(shell, metadata, { noindex = false } = {}
   html = replaceOrInjectHead(html, /<meta\b(?=[^>]*\bproperty\s*=\s*["']og:title["'])[^>]*>/gi, `<meta property="og:title" content="${escapeHtml(metadata.title)}">`);
   html = replaceOrInjectHead(html, /<meta\b(?=[^>]*\bproperty\s*=\s*["']og:description["'])[^>]*>/gi, `<meta property="og:description" content="${escapeHtml(metadata.description)}">`);
   html = replaceOrInjectHead(html, /<meta\b(?=[^>]*\bproperty\s*=\s*["']og:url["'])[^>]*>/gi, `<meta property="og:url" content="${escapeHtml(metadata.canonical)}">`);
-  if (image) html = replaceOrInjectHead(html, /<meta\b(?=[^>]*\bproperty\s*=\s*["']og:image["'])[^>]*>/gi, `<meta property="og:image" content="${escapeHtml(image)}">`);
+  html = replaceOrInjectHead(html, /<meta\b(?=[^>]*\bname\s*=\s*["']twitter:card["'])[^>]*>/gi, `<meta name="twitter:card" content="${image ? "summary_large_image" : "summary"}">`);
+  html = replaceOrInjectHead(html, /<meta\b(?=[^>]*\bname\s*=\s*["']twitter:title["'])[^>]*>/gi, `<meta name="twitter:title" content="${escapeHtml(metadata.title)}">`);
+  html = replaceOrInjectHead(html, /<meta\b(?=[^>]*\bname\s*=\s*["']twitter:description["'])[^>]*>/gi, `<meta name="twitter:description" content="${escapeHtml(metadata.description)}">`);
+  if (image) {
+    html = replaceOrInjectHead(html, /<meta\b(?=[^>]*\bproperty\s*=\s*["']og:image["'])[^>]*>/gi, `<meta property="og:image" content="${escapeHtml(image)}">`);
+    html = replaceOrInjectHead(html, /<meta\b(?=[^>]*\bname\s*=\s*["']twitter:image["'])[^>]*>/gi, `<meta name="twitter:image" content="${escapeHtml(image)}">`);
+  } else {
+    html = html.replace(/<meta\b(?=[^>]*\bproperty\s*=\s*["']og:image["'])[^>]*>\s*/gi, "");
+    html = html.replace(/<meta\b(?=[^>]*\bname\s*=\s*["']twitter:image["'])[^>]*>\s*/gi, "");
+  }
   html = html.replace(/<script\b(?=[^>]*\bid\s*=\s*["']apecerto-imovel-jsonld["'])[^>]*>[\s\S]*?<\/script\s*>/gi, "");
   const closingHead = html.search(/<\/head\s*>/i);
   if (closingHead < 0) throw new Error("shell_head_missing");

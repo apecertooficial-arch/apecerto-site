@@ -5,13 +5,6 @@ services:
     buildCommand: npm run ci
     staticPublishPath: ./dist
     autoDeployTrigger: checksPass
-    routes:
-      - type: rewrite
-        source: /sitemap-catalogo.xml
-        destination: https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/sitemap.xml
-      - type: rewrite
-        source: /imovel/*
-        destination: /index.html
     headers:
       - path: /sitemap.xml
         name: Content-Type
