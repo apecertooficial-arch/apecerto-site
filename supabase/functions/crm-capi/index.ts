@@ -1,5 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import {
+  hashedBrazilPhone,
+  hashedEmail,
+  safeEventSourceUrl,
+  sha256Hex,
+} from "../_shared/meta-identity.ts";
 
 const PIXEL_ID = Deno.env.get("META_PIXEL_ID") ?? "1088080836200357";
 const TOKEN = Deno.env.get("META_CAPI_TOKEN") ?? "";
@@ -33,11 +39,6 @@ function json(body: unknown, status = 200) {
     status,
     headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" },
   });
-}
-
-async function sha256(value: string) {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value.trim().toLowerCase()));
-  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function unixTime(value: unknown) {
@@ -147,9 +148,11 @@ Deno.serve(async (request: Request) => {
   const { data: attributionData } = await supabase.rpc("tracking_lead_attribution", { p_lead_id: negocio.lead_id });
   const attribution = (attributionData ?? {}) as Record<string, any>;
   const lead = (negocio as any).leads ?? {};
-  const userData: Record<string, unknown> = { external_id: await sha256(`negocio-${negocio.id}`) };
-  if (lead.email) userData.em = await sha256(String(lead.email));
-  if (lead.telefone) userData.ph = await sha256(String(lead.telefone).replace(/\D/g, ""));
+  const userData: Record<string, unknown> = { external_id: await sha256Hex(`negocio-${negocio.id}`) };
+  const emailHash = await hashedEmail(lead.email);
+  const phoneHash = await hashedBrazilPhone(lead.telefone);
+  if (emailHash) userData.em = emailHash;
+  if (phoneHash) userData.ph = phoneHash;
   if (attribution?.fbp ?? identity.fbp) userData.fbp = String(attribution?.fbp ?? identity.fbp);
   if (attribution?.fbc ?? identity.fbc) userData.fbc = String(attribution?.fbc ?? identity.fbc);
   // Para Lead Ads, a Meta oferece lead_id como identificador proprio de
@@ -197,14 +200,24 @@ Deno.serve(async (request: Request) => {
       event_time: Math.max(1, eventTime),
       event_id: eventId,
       action_source: "website",
-      event_source_url: attribution?.landing_path ? `https://apecerto.com${String(attribution.landing_path)}` : "https://apecerto.com/",
+      event_source_url: safeEventSourceUrl(attribution?.landing_path ? `https://apecerto.com${String(attribution.landing_path)}` : "https://apecerto.com/"),
       user_data: userData,
       custom_data: customData,
     }],
   };
   if (TEST_CODE && body.test_mode === true) payload.test_event_code = TEST_CODE;
 
-  if (dryRun) return json({ ok: true, dry_run: true, meta_event: metaEvent, payload });
+  if (dryRun) {
+    return json({
+      ok: true,
+      dry_run: true,
+      meta_event: metaEvent,
+      event_id: eventId,
+      user_data_signals: Object.keys(userData).sort(),
+      custom_data_keys: Object.keys(customData).sort(),
+      event_source_url: (payload.data as Array<Record<string, unknown>>)[0]?.event_source_url,
+    });
+  }
   if (!TOKEN) {
     await updateDelivery({ status: "blocked", error_code: "capi_token_missing", last_error: "META_CAPI_TOKEN ausente", next_attempt_at: new Date(Date.now() + 300_000).toISOString() });
     return json({ ok: false, error: "capi_token_missing" }, 503);
