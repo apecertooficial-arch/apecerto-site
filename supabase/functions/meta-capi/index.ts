@@ -1,5 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import {
+  hashedBrazilPhone,
+  hashedEmail,
+  safeEventSourceUrl,
+  sanitizeMetaCustomData,
+  sha256Hex,
+} from "../_shared/meta-identity.ts";
 
 // Meta Conversions API da ApeCerto. O navegador e o servidor usam o mesmo
 // event_id, permitindo que a Meta deduplique Pixel e CAPI.
@@ -63,14 +70,6 @@ function clean(value: unknown, max: number) {
   return String(value ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max);
 }
 
-async function sha256(value: string) {
-  const bytes = new TextEncoder().encode(value.trim().toLowerCase());
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 Deno.serve(async (request: Request) => {
   const origin = request.headers.get("origin");
   if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(origin) });
@@ -129,18 +128,18 @@ Deno.serve(async (request: Request) => {
     if (userAgent) userData.client_user_agent = userAgent;
     if (body?.fbp) userData.fbp = clean(body.fbp, 120);
     if (body?.fbc) userData.fbc = clean(body.fbc, 200);
-    if (body?.external_id) userData.external_id = await sha256(clean(body.external_id, 120));
-    if (body?.email) userData.em = await sha256(clean(body.email, 160));
-    if (body?.phone) userData.ph = await sha256(clean(String(body.phone).replace(/\D/g, ""), 40));
+    if (body?.external_id) userData.external_id = await sha256Hex(clean(body.external_id, 120).toLowerCase());
+    const emailHash = await hashedEmail(body?.email);
+    const phoneHash = await hashedBrazilPhone(body?.phone);
+    if (emailHash) userData.em = emailHash;
+    if (phoneHash) userData.ph = phoneHash;
 
     const customData: Record<string, unknown> = {};
-    const sourceData = body?.custom_data;
-    if (sourceData && typeof sourceData === "object" && !Array.isArray(sourceData)) {
-      for (const [key, value] of Object.entries(sourceData)) {
+    const sourceData = sanitizeMetaCustomData(body?.custom_data);
+    for (const [key, value] of Object.entries(sourceData)) {
         if (typeof value === "string") customData[key] = clean(value, 100);
         else if (typeof value === "number" && Number.isFinite(value)) customData[key] = value;
         else if (typeof value === "boolean") customData[key] = value;
-      }
     }
 
     const payload: Record<string, unknown> = {
@@ -149,7 +148,7 @@ Deno.serve(async (request: Request) => {
       event_time: Math.max(1, Number(body?.event_time) || Math.floor(Date.now() / 1000)),
         event_id: eventId,
         action_source: "website",
-        event_source_url: clean(body?.event_source_url, 500) || "https://apecerto.com/",
+        event_source_url: safeEventSourceUrl(clean(body?.event_source_url, 500)),
         user_data: userData,
         custom_data: customData,
       }],

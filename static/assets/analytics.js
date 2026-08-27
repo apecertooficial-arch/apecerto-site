@@ -91,6 +91,32 @@
     return out.replace(/\s+/g, ' ').trim().slice(0, max || 120);
   }
 
+  function normalizeEmailForAds(value) {
+    var email = clean(value, 254).toLowerCase();
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
+  }
+
+  function normalizePhoneForAds(value) {
+    var digits = String(value == null ? '' : value).replace(/\D/g, '');
+    if (digits.indexOf('00') === 0) digits = digits.slice(2);
+    if (/^[1-9]\d{9,10}$/.test(digits)) digits = '55' + digits;
+    return /^55[1-9]\d{9,10}$/.test(digits) ? '+' + digits : '';
+  }
+
+  function privacySafeEventParams(value) {
+    var result = {};
+    var blocked = {
+      email: true, 'e-mail': true, telefone: true, phone: true, phone_number: true,
+      nome: true, name: true, full_name: true, cpf: true, rg: true,
+      endereco: true, address: true, cep: true, postal_code: true,
+      renda: true, income: true,
+    };
+    Object.keys(value || {}).forEach(function (key) {
+      if (key !== '__identity' && !blocked[String(key).toLowerCase()]) result[key] = value[key];
+    });
+    return result;
+  }
+
   function uuidOrNull(value) {
     var normalized = clean(value, 36);
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)
@@ -106,8 +132,16 @@
     try {
       var url = new URL(location.href);
       url.hash = '';
-      ['access_token', 'refresh_token', 'token', 'token_hash', 'code', 'error', 'error_code', 'error_description']
-        .forEach(function (key) { url.searchParams.delete(key); });
+      var blocked = {
+        access_token: true, refresh_token: true, token: true, token_hash: true,
+        code: true, error: true, error_code: true, error_description: true,
+        email: true, 'e-mail': true, telefone: true, phone: true, phone_number: true,
+        nome: true, name: true, cpf: true, rg: true, endereco: true, address: true,
+        cep: true, postal_code: true, renda: true, income: true,
+      };
+      Array.from(url.searchParams.keys()).forEach(function (key) {
+        if (blocked[String(key).toLowerCase()]) url.searchParams.delete(key);
+      });
       return url.origin + url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '');
     } catch (e) {
       return clean(location.origin, 180) + pagePath();
@@ -373,8 +407,10 @@
     var fbc = getFbc();
     if (fbp) body.fbp = fbp;
     if (fbc) body.fbc = fbc;
-    if (identity && identity.email) body.email = clean(identity.email, 160);
-    if (identity && identity.phone) body.phone = clean(identity.phone, 40);
+    var normalizedEmail = identity ? normalizeEmailForAds(identity.email) : '';
+    var normalizedPhone = identity ? normalizePhoneForAds(identity.phone) : '';
+    if (normalizedEmail) body.email = normalizedEmail;
+    if (normalizedPhone) body.phone = normalizedPhone;
     var externalId = identity && identity.external_id
       ? clean(identity.external_id, 120)
       : (ensureSessionId() || '');
@@ -554,8 +590,7 @@
     var identity = sourceParams.__identity && typeof sourceParams.__identity === 'object'
       ? sourceParams.__identity
       : null;
-    var publicParams = Object.assign({}, sourceParams);
-    delete publicParams.__identity;
+    var publicParams = privacySafeEventParams(sourceParams);
     var suppliedEventId = uuidOrNull(publicParams.event_id);
     delete publicParams.event_id;
     if (consent.marketing && /^(generate_lead|schedule_complete|whatsapp_click|phone_click)$/.test(eventName)) requestGtmNow();
@@ -596,9 +631,11 @@
     // Disponibiliza os dados consentidos antes de o evento entrar no dataLayer,
     // para a tag de conversão do GTM conseguir aplicar conversões otimizadas.
     if (identity && consent.marketing) {
+      var normalizedEmail = normalizeEmailForAds(identity.email);
+      var normalizedPhone = normalizePhoneForAds(identity.phone);
       window.gtag('set', 'user_data', {
-        email: identity.email || undefined,
-        phone_number: identity.phone || undefined,
+        email: normalizedEmail || undefined,
+        phone_number: normalizedPhone || undefined,
       });
     }
     window.dataLayer.push(Object.assign({
