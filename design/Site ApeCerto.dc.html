@@ -1873,7 +1873,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 </helmet>
 
 <div style="font-family: var(--font-body); color: var(--fg-1); background: var(--bg-page); min-height: 100vh">
-  <div data-site-shell="" aria-hidden="{{ siteShellOculto }}" style="display: {{ siteShellDisplay }}">
+  <sc-if value="{{ siteShellOn }}" hint-placeholder-val="{{ true }}">
+  <div data-site-shell="">
   <a class="rw-skip" href="#conteudo-principal">Pular para o conteúdo</a>
 
   <!-- ============ NAV ============ -->
@@ -2129,6 +2130,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <button sc-camel-on-click="{{ vMapa }}" aria-pressed="{{ vMapaAtiva }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); padding: 7px 18px; border-radius: var(--radius-pill); background: {{ vMapBg }}; color: {{ vMapFg }}">Mapa</button>
       </div>
     </div>
+    <sc-if value="{{ mapaSemLocalizacaoOn }}" hint-placeholder-val="{{ false }}">
+      <div role="status" aria-live="polite" data-map-location-notice="" style="display: flex; align-items: flex-start; gap: 10px; margin: -8px 0 20px; padding: 12px 16px; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--fg-2); font-size: var(--text-sm); line-height: var(--leading-normal)">
+        <i data-lucide="map-pin-off" aria-hidden="true" style="width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; color: var(--ape-purple)"></i>
+        <span>{{ mapaSemLocalizacaoLabel }}</span>
+      </div>
+    </sc-if>
     <sc-if value="{{ filtrosOn }}" hint-placeholder-val="{{ false }}">
       <div class="rw-filter-overlay" sc-camel-on-click="{{ fecharFiltros }}">
         <aside id="filtros-avancados" class="rw-filter-drawer" role="dialog" aria-modal="true" aria-labelledby="filtros-titulo" sc-camel-on-click="{{ pararClique }}">
@@ -2514,6 +2521,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     </div>
   </footer>
   </div>
+  </sc-if>
 
   <sc-if value="{{ detRouteLoading }}" hint-placeholder-val="{{ false }}">
     <main role="main" aria-busy="true" style="min-height: 100vh; display: grid; place-items: center; padding: 24px">
@@ -3765,7 +3773,6 @@ class Component extends DCLogic {
           if (fotos.length > 1) {
             const atual = Math.min(this.state.galIdx || 0, fotos.length - 1);
             this.prepararFoto(fotos[(atual + 1) % fotos.length], 1200, 'contain');
-            this.prepararFoto(fotos[(atual - 1 + fotos.length) % fotos.length], 1200, 'contain');
           }
         }
         return;
@@ -4939,6 +4946,9 @@ class Component extends DCLogic {
     const dentroDaGrandeSaoPaulo = lat >= -24.2 && lat <= -23.2 && lng >= -47.2 && lng <= -46.0;
     return Number.isFinite(lat) && Number.isFinite(lng) && dentroDaGrandeSaoPaulo ? [lat, lng] : null;
   }
+  contarResultadosSemCoordenadas(rows) {
+    return (Array.isArray(rows) ? rows : []).reduce((total, row) => total + (this.coordenadas(row) ? 0 : 1), 0);
+  }
   saraBuscar(txt) {
     const t = txt.toLowerCase();
     const querAlugar = /alug|loca[cç][aã]o/.test(t);
@@ -5414,6 +5424,7 @@ class Component extends DCLogic {
     const fPrecoMin = st.fPrecoMin != null ? st.fPrecoMin : piso; const fPrecoMax = st.fPrecoMax != null ? st.fPrecoMax : (st.fPreco != null ? st.fPreco : teto);
     const det = st.det;
     const rotaFichaAtiva = !!(det || (this.slugImovelDaRota() && !st.rotaImovelNaoEncontrado));
+    const mapaSemLocalizacao = this.contarResultadosSemCoordenadas(filtradosAll);
     const filtrosAvancadosQtd = [st.fTipo, st.fAreaMin, st.fAreaMax, st.fBanheiros, st.fSuites].filter(Boolean).length;
     const detTourUrl = det ? this.tourUrl(det.tour_url) : '';
     const fotosPrivativasFonte = det && det.fotos && det.fotos.length ? det.fotos : (det && det.capa_path ? [det.capa_path] : []);
@@ -5427,8 +5438,7 @@ class Component extends DCLogic {
     const detBadge = det ? (this.badges[det.status] || this.badges.pronto) : null;
     return {
       rotaFichaAtiva,
-      siteShellOculto: rotaFichaAtiva,
-      siteShellDisplay: rotaFichaAtiva ? 'none' : 'block',
+      siteShellOn: !rotaFichaAtiva,
       detRouteLoading: rotaFichaAtiva && !det && !st.dbErro,
       detRouteErro: rotaFichaAtiva && !det && !!st.dbErro,
       tentarDetRoute: () => {
@@ -5513,6 +5523,10 @@ class Component extends DCLogic {
       filtrosFg: filtrosAvancadosQtd ? 'var(--ape-orange-700)' : 'var(--fg-1)',
       filtrosBorda: filtrosAvancadosQtd ? 'var(--ape-orange)' : 'var(--border-default)',
       filtrosResultadoLabel: filtradosAll.length + (filtradosAll.length === 1 ? ' apê' : ' apês'),
+      mapaSemLocalizacaoOn: mapaSemLocalizacao > 0,
+      mapaSemLocalizacaoLabel: mapaSemLocalizacao === 1
+        ? '1 resultado continua na lista, mas não aparece no mapa porque ainda não tem localização cadastrada.'
+        : mapaSemLocalizacao + ' resultados continuam na lista, mas não aparecem no mapa porque ainda não têm localização cadastrada.',
       fTipo: st.fTipo || '', fAreaMin: st.fAreaMin || '', fAreaMax: st.fAreaMax || '', fBanheiros: st.fBanheiros || '', fSuites: st.fSuites || '',
       setFTipo: e => this.aplicarFiltros({ fTipo: e.target.value, saraIds: null }),
       setFAreaMin: e => this.aplicarFiltros({ fAreaMin: String(Math.max(0, Number(e.target.value) || 0) || ''), saraIds: null }),
