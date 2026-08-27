@@ -62,7 +62,7 @@ test("catálogo leve preserva todas as unidades e busca galerias em lote só dep
   assert.match(design, /galeriaPendente \? 1 : \(n \? \(idx \+ 1\) % n : 1\)/);
   assert.match(design, /det\.fotos && det\.fotos\.length \? det\.fotos : \(det && det\.capa_path \? \[det\.capa_path\] : \[\]\)/, 'a capa leve deve ocupar a galeria enquanto os detalhes chegam');
   assert.match(design, /galeriaDet\.slice\(galThumbInicio, galThumbInicio \+ 9\)/, 'o lightbox não deve requisitar dezenas de miniaturas de uma vez');
-  assert.match(design, /\['fotos', 'fotos_condominio', 'descricao', 'diferenciais', 'lazer', 'tour_url'\]/, 'a hidratação só pode mesclar campos pesados, preservando preço e disponibilidade atuais');
+  assert.match(design, /\['fotos', 'fotos_meta', 'fotos_condominio', 'descricao', 'descricao_comercial', 'seo_titulo', 'seo_descricao', 'diferenciais', 'lazer', 'tour_url'\]/, 'a hidratação só pode mesclar conteúdo e mídia, preservando preço e disponibilidade atuais');
   assert.match(design, /id:\s*'in\.\('/);
   assert.doesNotMatch(design, /for \([^)]*\)[\s\S]{0,120}fetch\(this\.urlDetalhesProdutos/);
   assert.match(catalogoMigration, /with \(security_invoker = true\)/);
@@ -85,8 +85,10 @@ test("catálogo leve preserva todas as unidades e busca galerias em lote só dep
 test("produto pronto só aparece como unidade aprovada e usa a galeria da unidade", () => {
   assert.match(design, /r && r\.status !== 'pronto'/);
   assert.match(design, /const capaUnidade = u\.capa_path \|\| fotosUnidade\[0\] \|\| null/);
-  assert.match(design, /const fotosUnidade = Array\.isArray\(u\.fotos\) \? u\.fotos\.slice\(\) : \[\]/);
-  assert.match(design, /const fotosCondominio = Array\.isArray\(r\.fotos\) \? r\.fotos\.slice\(\) : \[\]/);
+  assert.match(design, /const fotosUnidade = Array\.isArray\(u\.fotos_meta\) && u\.fotos_meta\.length \? u\.fotos_meta\.slice\(\) : \(Array\.isArray\(u\.fotos\) \? u\.fotos\.slice\(\) : \[\]\)/);
+  assert.match(design, /const fotosCondominio = Array\.isArray\(r\.fotos_meta\) && r\.fotos_meta\.length \? r\.fotos_meta\.slice\(\) : \(Array\.isArray\(r\.fotos\) \? r\.fotos\.slice\(\) : \[\]\)/);
+  assert.match(design, /descricao: u\.descricao_comercial \|\| r\.descricao/);
+  assert.match(design, /seo_titulo: u\.seo_titulo \|\| r\.seo_titulo/);
   assert.match(design, /fotos_condominio: fotosCondominio/);
   assert.doesNotMatch(design, /fotosUnidade\[0\] \|\| r\.capa_path/);
   assert.doesNotMatch(design, /u\.fotos\.length \? u\.fotos\.slice\(\) : \(Array\.isArray\(r\.fotos\)/);

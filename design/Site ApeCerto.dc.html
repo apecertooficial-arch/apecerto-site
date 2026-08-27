@@ -4664,7 +4664,7 @@ class Component extends DCLogic {
       const completo = porUnidade.get(String(this.unidadeId(atual) || atual.id));
       if (!completo) return atual;
       const pesados = {};
-      ['fotos', 'fotos_condominio', 'descricao', 'diferenciais', 'lazer', 'tour_url'].forEach(campo => {
+      ['fotos', 'fotos_meta', 'fotos_condominio', 'descricao', 'descricao_comercial', 'seo_titulo', 'seo_descricao', 'diferenciais', 'lazer', 'tour_url'].forEach(campo => {
         if (Object.prototype.hasOwnProperty.call(completo, campo)) pesados[campo] = completo[campo];
       });
       return Object.assign({}, atual, pesados, { _catalogo_leve: false });
@@ -4749,8 +4749,8 @@ class Component extends DCLogic {
         const dorm = /studio/i.test(tipologiaUnidade) ? 0 : dm ? Number(dm[1]) : (tipologiaUnidade ? null : r.dormitorios);
         const unidadeId = this.uuidValido(u.id || u.unidade_id) ? (u.id || u.unidade_id) : null;
         const unidadeRef = u.codigo || u.numero || String(out.length + 1);
-        const fotosUnidade = Array.isArray(u.fotos) ? u.fotos.slice() : [];
-        const fotosCondominio = Array.isArray(r.fotos) ? r.fotos.slice() : [];
+        const fotosUnidade = Array.isArray(u.fotos_meta) && u.fotos_meta.length ? u.fotos_meta.slice() : (Array.isArray(u.fotos) ? u.fotos.slice() : []);
+        const fotosCondominio = Array.isArray(r.fotos_meta) && r.fotos_meta.length ? r.fotos_meta.slice() : (Array.isArray(r.fotos) ? r.fotos.slice() : []);
         const capaUnidade = u.capa_path || fotosUnidade[0] || null;
         const galeriaUnidade = fotosUnidade.length ? fotosUnidade : (capaUnidade ? [capaUnidade] : []);
         const precoUnidade = this.normalizarPrecoImovel(u.valor, this.finalidadeDe(r)) || this.precoDe(r);
@@ -4761,8 +4761,11 @@ class Component extends DCLogic {
           unidade_id: unidadeId,
           unidade_codigo: u.codigo || null,
           unidade_numero: unNum,
-          titulo: (r.titulo || r.nome) + ' · Un. ' + unNum,
+          titulo: u.titulo_comercial || (r.titulo || r.nome) + ' · Un. ' + unNum,
           nome: r.nome + ' · Un. ' + unNum,
+          descricao: u.descricao_comercial || r.descricao,
+          seo_titulo: u.seo_titulo || r.seo_titulo,
+          seo_descricao: u.seo_descricao || r.seo_descricao,
           codigo: u.codigo || r.codigo || null,
           preco: precoUnidade,
           preco_min: precoUnidade,
@@ -4904,7 +4907,7 @@ class Component extends DCLogic {
     return this.normalizarPrecoImovel(bruto, this.finalidadeDe(r));
   }
   fotoUrl(p) {
-    const raw = String(p || '').trim();
+    const raw = String(p && typeof p === 'object' ? (p.path || p.storage_path || '') : (p || '')).trim();
     if (!raw || /[\u0000-\u001f"'\\()]/.test(raw)) return '';
     if (/^https:\/\//i.test(raw)) {
       try { const u = new URL(raw); return u.protocol === 'https:' ? u.href : ''; } catch (e) { return ''; }
@@ -4912,6 +4915,10 @@ class Component extends DCLogic {
     if (/^[a-z][a-z0-9+.-]*:/i.test(raw) || raw.startsWith('//')) return '';
     const path = raw.replace(/^\/+/, '').split('/').map(s => encodeURIComponent(decodeURIComponent(s))).join('/');
     return this.SB_URL + '/storage/v1/object/public/empreendimentos/' + path;
+  }
+  fotoAlt(p, fallback) {
+    if (p && typeof p === 'object' && p.alt_text) return String(p.alt_text).replace(/\s+/g, ' ').trim().slice(0, 220);
+    return String(fallback || 'Foto do imóvel');
   }
   fotoRender(p, largura, modo) {
     const src = this.fotoUrl(p);
@@ -5428,8 +5435,8 @@ class Component extends DCLogic {
     const filtrosAvancadosQtd = [st.fTipo, st.fAreaMin, st.fAreaMax, st.fBanheiros, st.fSuites].filter(Boolean).length;
     const detTourUrl = det ? this.tourUrl(det.tour_url) : '';
     const fotosPrivativasFonte = det && det.fotos && det.fotos.length ? det.fotos : (det && det.capa_path ? [det.capa_path] : []);
-    const fotosPrivativasDet = fotosPrivativasFonte.map(p => ({ url: this.fotoUrl(p), grupo: 'Fotos do imóvel' }));
-    const fotosComunsDet = det ? (det.fotos_condominio || []).map(p => ({ url: this.fotoUrl(p), grupo: 'Áreas comuns do condomínio' })) : [];
+    const fotosPrivativasDet = fotosPrivativasFonte.map(p => ({ url: this.fotoUrl(p), grupo: 'Fotos do imóvel', alt: this.fotoAlt(p, 'Foto do imóvel') }));
+    const fotosComunsDet = det ? (det.fotos_condominio || []).map(p => ({ url: this.fotoUrl(p), grupo: 'Áreas comuns do condomínio', alt: this.fotoAlt(p, 'Área comum do condomínio') })) : [];
     const galeriaDet = fotosPrivativasDet.concat(fotosComunsDet);
     const fotosDet = galeriaDet.map(f => f.url);
     const gi = Math.min(st.galIdx || 0, Math.max(0, fotosDet.length - 1));
@@ -5604,7 +5611,7 @@ class Component extends DCLogic {
       galMaisLabel: 'Ver ' + fotosDet.length + ' fotos',
       galOn: st.galOn && fotosDet.length > 0,
       galFotoAtual: fotosDet[gi] || '',
-      galFotoAlt: 'Foto ' + (gi + 1) + ' de ' + fotosDet.length + ' — ' + (galeriaDet[gi] ? galeriaDet[gi].grupo : 'imóvel'),
+      galFotoAlt: galeriaDet[gi] ? galeriaDet[gi].alt : 'Foto do imóvel',
       galContador: (gi + 1) + ' de ' + fotosDet.length,
       galGrupoAtual: galeriaDet[gi] ? galeriaDet[gi].grupo : '',
       galResumo: fotosPrivativasDet.length + ' foto(s) do imóvel' + (fotosComunsDet.length ? ' · ' + fotosComunsDet.length + ' foto(s) de áreas comuns' : ''),

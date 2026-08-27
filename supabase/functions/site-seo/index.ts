@@ -16,8 +16,8 @@ export const FIXED_ROUTES = Object.freeze([
 
 const CATALOG_SELECT = [
   "id", "nome", "titulo", "slug", "slogan", "bairro", "endereco", "cidade", "uf",
-  "status", "finalidade", "descricao", "area_util", "dormitorios", "vagas", "preco",
-  "preco_min", "preco_max", "capa_path", "fotos", "unidades_site", "ordem",
+  "status", "finalidade", "descricao", "seo_titulo", "seo_descricao", "area_util", "dormitorios", "vagas", "preco",
+  "preco_min", "preco_max", "capa_path", "fotos", "fotos_meta", "unidades_site", "ordem",
 ].join(",");
 const PAGE_SIZE = 500;
 const MAX_CATALOG_ROWS = 10_000;
@@ -245,6 +245,8 @@ function unitBedrooms(unit, row) {
 function propertyName(entity) {
   const base = cleanText(entity.row?.titulo || entity.row?.nome || "Imóvel ApeCerto", 90);
   if (entity.kind !== "unit") return base;
+  const unitTitle = cleanText(entity.unit?.titulo_comercial, 100);
+  if (unitTitle) return unitTitle;
   const reference = cleanText(entity.unit?.numero || entity.unit?.codigo, 40);
   return reference ? `${base} · Unidade ${reference}` : base;
 }
@@ -252,7 +254,7 @@ function propertyName(entity) {
 function descriptionFor(entity) {
   const row = entity.row;
   const unit = entity.unit;
-  const supplied = cleanText(row?.descricao || row?.slogan, 180);
+  const supplied = cleanText(unit?.seo_descricao || unit?.descricao_comercial || row?.seo_descricao || row?.descricao || row?.slogan, 180);
   if (supplied) return supplied;
   const details = [
     propertyName(entity),
@@ -303,7 +305,8 @@ export function metadataFor(entity, supabaseUrl) {
   const row = entity.row;
   const unit = entity.unit;
   const name = propertyName(entity);
-  const title = cleanText(`${name} | apêcerto`, 70);
+  const editorialTitle = cleanText(unit?.seo_titulo || row?.seo_titulo, 65);
+  const title = cleanText(`${editorialTitle || name} | apêcerto`, 70);
   const description = descriptionFor(entity);
   const canonical = canonicalForSlug(entity.slug);
   const images = imagesFor(entity, supabaseUrl);

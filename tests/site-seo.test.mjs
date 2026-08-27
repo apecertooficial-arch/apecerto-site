@@ -21,6 +21,8 @@ const catalog = [{
   slug: 'edificio-alpha',
   nome: 'Edifício Alpha',
   titulo: 'Loft <3 & "especial"',
+  seo_titulo: 'Loft editorial em Moema',
+  seo_descricao: 'Descrição editorial do empreendimento.',
   descricao: 'Apartamento ensolarado & pronto para morar.',
   bairro: 'Moema',
   endereco: 'Alameda dos Testes, 10',
@@ -38,6 +40,10 @@ const catalog = [{
     area_m2: 74,
     vagas: 1,
     valor: 975000,
+    titulo_comercial: 'Apartamento ensolarado no Edifício Alpha <3',
+    descricao_comercial: 'Descrição própria da unidade que deve prevalecer sobre o texto do condomínio.',
+    seo_titulo: 'Apartamento 12 em Moema',
+    seo_descricao: 'Apartamento 12 com 74 m², duas suítes e uma vaga em Moema.',
     fotos: ['unidades/12.jpg'],
   }],
 }, {
@@ -111,6 +117,8 @@ test('ficha injeta canonical, OG e JSON-LD com escaping seguro', async () => {
   assert.match(body, /<meta name="twitter:title" content="Loft &lt;3 &amp; &quot;especial&quot; · Unidade 12 \| apêcerto">/);
   assert.match(body, /<meta name="twitter:image" content="https:\/\/diaegvfveqezispcthwk\.supabase\.co\/storage\/v1\/object\/public\/empreendimentos\/unidades\/12\.jpg">/);
   assert.match(body, /id="apecerto-imovel-jsonld"/);
+  assert.match(body, /<title>Apartamento 12 em Moema \| apêcerto<\/title>/);
+  assert.match(body, /Apartamento 12 com 74 m², duas suítes e uma vaga em Moema\./);
   assert.match(body, /\\u003c3/);
   assert.doesNotMatch(body, /<title>[^<]*<3/);
   assert.doesNotMatch(body, /<script>alert/);
