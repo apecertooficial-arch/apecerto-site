@@ -395,8 +395,36 @@ test('resultado no celular prioriza lista, filtros e alvos de toque confortávei
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   assert.match(design, /\.rw-dividida\s*\{\s*display:\s*none\s*!important/);
   assert.match(design, /\.rw-result-tools\s*\{[\s\S]{0,300}?position:\s*sticky/);
+  assert.match(design, /\.rw-result-tools\s*\{[\s\S]{0,500}?display:\s*grid\s*!important/);
+  assert.match(design, /\.rw-tool-sort, \.rw-tool-view\s*\{\s*grid-column:\s*1 \/ -1/);
+  assert.doesNotMatch(design, /\.rw-result-tools\s*\{[^}]*overflow-x:\s*auto/, 'os controles não podem depender de uma rolagem horizontal sem affordance');
   assert.match(design, /button\[aria-label="Foto anterior"\][\s\S]{0,160}?width:\s*44px\s*!important/);
   assert.match(design, /const vistaEfetiva = mobile && st\.vista === 'dividida' \? 'lista' : st\.vista/);
+});
+
+test('hero e navegação preservam hierarquia e legibilidade no desktop e no celular', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /class="rw-desk rw-nav-primary" aria-label="Navegação principal"/);
+  assert.match(design, />Anunciar imóvel<\/a>/);
+  assert.match(design, /class="rw-account-link"[^>]*>Minha conta<\/a>/);
+  assert.match(design, /class="rw-hero-main-filters"/);
+  assert.match(design, /\.rw-hero-main-filters\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\)/);
+  assert.match(design, /\.rw-search-primary button\s*\{[^}]*white-space:\s*nowrap/);
+  assert.match(design, /mobile \? 'Ver apês à venda →' : 'Buscar apê pra comprar →'/);
+  assert.match(design, /bairroPlaceholder:\s*mobile \? 'Bairro' : 'Todos os bairros'/);
+  assert.match(design, /statusPlaceholder:\s*mobile \? 'Status' : 'Qualquer status'/);
+  assert.match(design, /padding:\s*48px 24px 32px; display:\s*grid/);
+  assert.match(design, /resultsPadding:\s*st\.buscaAtiva \? '40px 24px 88px' : '32px 24px 88px'/);
+});
+
+test('capas usam proporção previsível, skeleton e fallback sem inventar ativos', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /\.rw-card-photo\s*\{[^}]*aspect-ratio:\s*4 \/ 3/);
+  assert.match(design, /\.rw-card-photo::before[^}]*animation:\s*ape-shimmer/);
+  assert.match(design, /\.rw-card-photo::after\s*\{[^}]*content:\s*"Foto em preparação"/);
+  assert.match(design, /fotoEstado:\s*n > 0 \? 'is-loading' : 'is-error'/);
+  assert.match(design, /img\.addEventListener\('load', \(\) => marcarCapa\('is-loaded'\)/);
+  assert.match(design, /img\.addEventListener\('error', \(\) => marcarCapa\('is-error'\)/);
 });
 
 test('busca entra em modo de resultados focado sem perder o caminho de volta', async () => {
