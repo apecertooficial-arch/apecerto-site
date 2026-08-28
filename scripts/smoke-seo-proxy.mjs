@@ -43,12 +43,19 @@ const fetchImpl = async (input) => {
       headers: { 'content-type': 'application/json', 'content-range': `0-${rows.length - 1}/${rows.length}` },
     });
   }
+  if (url.includes('/rest/v1/rpc/site_produto_resolver_slug_legado')) {
+    return new Response(JSON.stringify([]), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
   if (url === seo.SHELL_URL) return new Response(shell, { status: 200, headers: { 'content-type': 'text/html' } });
   throw new Error('origem inesperada: ' + url);
 };
 const envValues = new Map([
   ['SUPABASE_URL', 'https://diaegvfveqezispcthwk.supabase.co'],
   ['SUPABASE_PUBLISHABLE_KEY', 'sb_publishable_smoke_only'],
+  ['SUPABASE_SERVICE_ROLE_KEY', 'sb_secret_smoke_only'],
 ]);
 const handler = seo.createSiteSeoHandler({ fetchImpl, env: { get: (name) => envValues.get(name) } });
 
