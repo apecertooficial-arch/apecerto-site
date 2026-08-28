@@ -10,6 +10,7 @@
     "verify": "node scripts/verifica-design.mjs",
     "smoke": "node scripts/smoke-site.mjs",
     "smoke:seo": "node scripts/smoke-seo-proxy.mjs",
+    "check:render-drift": "node scripts/check-render-route-drift.mjs",
     "serve": "node scripts/serve-dist.mjs",
     "smoke:tracking:live": "node scripts/smoke-tracking-live.mjs",
     "ci": "npm test && npm run smoke && npm run smoke:seo",

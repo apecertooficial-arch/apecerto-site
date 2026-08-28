@@ -39,7 +39,27 @@ As rotas públicas incluem a área do proprietário e o cadastro do imóvel. Fic
 de imóveis usam URLs limpas no formato `/imovel/<slug>/`; o Render reescreve essa
 rota para o shell da aplicação sem transformar a navegação em erro 404.
 
+### Detector de drift da regra legada
+
+O serviço atual também mantém regras no dashboard do Render. Para comparar um
+snapshot sanitizado dessas regras com o `render.yaml`, execute:
+
+```sh
+RENDER_ACTIVE_RULES_JSON='[{"source":"/imovel/*","destination":"https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/imovel/*","action":"rewrite"}]' npm run check:render-drift
+```
+
+O snapshot não contém token, cabeçalho ou configuração de ambiente. Em automação,
+obtenha-o por uma integração read-only e injete somente os três campos acima.
+Ausência, duplicidade, mudança de ação ou destino faz o comando falhar fechado.
+
 ## SEO dinâmico do catálogo
+
+O contrato público de Produtos (views, RLS e funções de redução de identidade,
+endereço e mídia) tem como fonte de verdade o repositório do ERP. As migrations
+históricas deste repositório do site não devem ser reaplicadas isoladamente: elas
+precedem o contrato privado/público vigente e podem conter projeções antigas. O
+site consome apenas `site_produtos`/`site_produtos_catalogo` já endurecidas e
+aceita fotos somente por token opaco `midia:<uuid>` resolvido em `site-media`.
 
 A função pública `supabase/functions/site-seo/index.ts` e o build leem somente
 a view aprovada `site_produtos`, usando a mesma URL e chave pública já presentes
@@ -63,7 +83,8 @@ catálogo em `version.json` e falha se a visão pública estiver indisponível.
 
 Antes do merge, o Preview do Render deve comprovar duas fichas distintas com
 `Content-Type: text/html`, uma rota inexistente com 404/noindex, sitemap e assets.
-Não há rewrite de ficha ou sitemap para o gateway compartilhado do Supabase.
+As fichas pré-renderizadas continuam físicas; o rewrite `/imovel/*` só atende o
+fallback legado/404 no Edge `site-seo`. Sitemap não recebe rewrite.
 Como os metadados são snapshot do build, um imóvel recém-publicado no ERP entra
 imediatamente no corpo dinâmico, mas sua página SEO inicial exige novo build.
 
