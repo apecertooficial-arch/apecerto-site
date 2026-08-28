@@ -11,25 +11,25 @@ const shell = await readFile('dist/index.html', 'utf8');
 const rows = [
   {
     id: '5a9f0112-76b4-4f34-9b63-a675188daf10',
-    slug: 'ape-sol-moema',
-    titulo: 'Apê Sol Moema',
-    descricao: 'Apartamento publicado, claro e pronto para morar.',
+    slug: 'imovel-5a9f0112-76b4-4f34-9b63-a675188daf10',
+    titulo: 'NOME_INTERNO_NAO_PUBLICAR',
+    descricao: 'NUMERO_PRIVADO_9999',
     bairro: 'Moema',
     cidade: 'São Paulo',
     uf: 'SP',
-    capa_path: 'publicas/ape-sol.jpg',
+    capa_path: 'midia:5a9f0112-76b4-4f34-9b63-a675188daf10',
     preco: 950000,
     unidades_site: [],
   },
   {
     id: '8d5df891-e63e-4b9f-8b11-7965d5f39b17',
-    slug: 'ape-vista-campo-belo',
-    titulo: 'Apê Vista Campo Belo',
-    descricao: 'Apartamento publicado com vista aberta.',
+    slug: 'imovel-8d5df891-e63e-4b9f-8b11-7965d5f39b17',
+    titulo: 'OUTRO_NOME_INTERNO_NAO_PUBLICAR',
+    descricao: 'ENDERECO_EXATO_NAO_PUBLICAR',
     bairro: 'Campo Belo',
     cidade: 'São Paulo',
     uf: 'SP',
-    capa_path: 'publicas/ape-vista.jpg',
+    capa_path: 'midia:8d5df891-e63e-4b9f-8b11-7965d5f39b17',
     preco: 780000,
     unidades_site: [],
   },
@@ -69,8 +69,8 @@ await new Promise((resolve, reject) => {
 const base = `http://127.0.0.1:${server.address().port}`;
 try {
   const [solResponse, vistaResponse, missingResponse] = await Promise.all([
-    fetch(base + '/imovel/ape-sol-moema/'),
-    fetch(base + '/imovel/ape-vista-campo-belo/'),
+    fetch(base + '/imovel/imovel-5a9f0112-76b4-4f34-9b63-a675188daf10/'),
+    fetch(base + '/imovel/imovel-8d5df891-e63e-4b9f-8b11-7965d5f39b17/'),
     fetch(base + '/imovel/inexistente/'),
   ]);
   const [sol, vista, missing] = await Promise.all([solResponse.text(), vistaResponse.text(), missingResponse.text()]);
@@ -78,10 +78,11 @@ try {
   assert.equal(vistaResponse.status, 200);
   assert.equal(missingResponse.status, 404);
   assert.match(solResponse.headers.get('content-type') || '', /^text\/html; charset=utf-8$/);
-  assert.match(sol, /<title>Apê Sol Moema \| apêcerto<\/title>/);
-  assert.match(vista, /<title>Apê Vista Campo Belo \| apêcerto<\/title>/);
-  assert.match(sol, /canonical" href="https:\/\/apecerto\.com\/imovel\/ape-sol-moema\//);
-  assert.match(vista, /canonical" href="https:\/\/apecerto\.com\/imovel\/ape-vista-campo-belo\//);
+  assert.match(sol, /<title>Apartamento em Moema, São Paulo \| apêcerto<\/title>/);
+  assert.match(vista, /<title>Apartamento em Campo Belo, São Paulo \| apêcerto<\/title>/);
+  assert.match(sol, /canonical" href="https:\/\/apecerto\.com\/imovel\/imovel-5a9f0112-76b4-4f34-9b63-a675188daf10\//);
+  assert.match(vista, /canonical" href="https:\/\/apecerto\.com\/imovel\/imovel-8d5df891-e63e-4b9f-8b11-7965d5f39b17\//);
+  assert.doesNotMatch(sol + vista, /NOME_INTERNO_NAO_PUBLICAR|NUMERO_PRIVADO_9999|ENDERECO_EXATO_NAO_PUBLICAR/);
   assert.notEqual(sol, vista);
   assert.equal(missingResponse.headers.get('x-robots-tag'), 'noindex, nofollow');
   assert.match(missing, /<meta name="robots" content="noindex,nofollow">/);

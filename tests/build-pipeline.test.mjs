@@ -108,7 +108,8 @@ test('build publica sitemap index, catalogo e fichas pre-renderizadas', async ()
   assert.equal(config.seo.sitemapCatalogPath, '/sitemap-catalogo.xml');
   const catalog = await readFile(join(root, 'dist/sitemap-catalogo.xml'), 'utf8');
   assert.match(catalog, /<urlset\b/);
-  assert.match(catalog, /https:\/\/apecerto\.com\/imovel\/my-one-campo-belo-un-ap0152-/);
+  assert.match(catalog, /https:\/\/apecerto\.com\/imovel\/imovel-[a-f0-9-]{36}\//);
+  assert.doesNotMatch(catalog, /my-one-campo-belo|ap0152/i);
   const version = JSON.parse(await readFile(join(root, 'dist/version.json'), 'utf8'));
   assert.ok(version.catalog.pages > 2);
   assert.match(version.catalog.hash, /^[a-f0-9]{64}$/);

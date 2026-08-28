@@ -44,13 +44,17 @@ test('pre-render usa somente o catalogo publico e escapa metadados no shell dina
   assert.match(await readFile(join(input.distDir, '404.html'), 'utf8'), /noindex,nofollow/);
 });
 
-test('pre-render falha fechado quando o feed publico esta vazio ou invalido', async () => {
+test('pre-render falha fechado quando o feed esta vazio e usa identidade neutra no fallback', async () => {
   const empty = await fixture();
   await assert.rejects(prerenderProperties({ ...empty, fetchImpl: responseFor([]) }), /catalog_public_empty/);
 
-  const invalid = await fixture();
-  await assert.rejects(prerenderProperties({
-    ...invalid,
+  const fallback = await fixture();
+  const catalog = await prerenderProperties({
+    ...fallback,
     fetchImpl: responseFor([{ id: '37c605d9-8bc8-418a-9c68-a73177997fb6', slug: 'sem-dados', unidades_site: [] }]),
-  }), /catalog_entity_invalid:sem-dados/);
+  });
+  assert.equal(catalog.pages, 1);
+  const html = await readFile(join(fallback.distDir, 'imovel/sem-dados/index.html'), 'utf8');
+  assert.match(html, /<title>Apartamento \| apêcerto<\/title>/);
+  assert.doesNotMatch(html, /NOME_INTERNO_NAO_PUBLICAR|NUMERO_PRIVADO_9999/);
 });
