@@ -223,8 +223,8 @@ test('aviso do mapa conta dinamicamente somente resultados sem coordenadas váli
   assert.equal(contar.call(contexto, [validosMesmoEmpreendimento[0]]), 0, 'a contagem deve reagir ao conjunto filtrado atual');
   assert.equal(contar.call(contexto, []), 0);
   assert.equal(contar.call(contexto, null), 0);
-  assert.match(design, /data-map-location-notice=""[^>]*role="status"[^>]*aria-live="polite"|role="status"[^>]*aria-live="polite"[^>]*data-map-location-notice=""/);
-  assert.match(design, /const mapaSemLocalizacao = this\.contarResultadosSemCoordenadas\(filtradosAll\)/, 'o aviso deve acompanhar filtros e ordenação atuais');
+  assert.match(design, /data-map-representation-status=""[^>]*role="status"[^>]*aria-live="polite"|role="status"[^>]*aria-live="polite"[^>]*data-map-representation-status=""/);
+  assert.match(design, /const mapaRepresentacao = this\.resumoRepresentacaoMapa\(filtradosAll\)/, 'o aviso deve acompanhar filtros e ordenação atuais');
   assert.doesNotMatch(design, /latitude[^\n]{0,80}=\s*-23\.5|longitude[^\n]{0,80}=\s*-46\.6/, 'o site não pode fabricar coordenada substituta');
 });
 
@@ -295,6 +295,9 @@ test('vitrine prioriza decisão do cliente e evita controles ou dados enganosos'
   assert.match(design, /setTimeout\(resolve, 350\)/, 'a troca de foto não pode ficar presa por quase um segundo');
   assert.match(design, /ordenarProdutos\(rows, criterio\)/, 'a lista deve permitir ordenação previsível');
   assert.match(design, /aria-label="Ordenar imóveis"/, 'a ordenação precisa ser acessível');
+  assert.match(design, /moa\/4lq4pd7p32p\.gif/);
+  assert.match(design, /assets\/media\/fac779ec499e72abf87e\.jpg/, 'o GIF pesado do MOA deve usar o poster local otimizado');
+  assert.match(design, /const fotoMeta = foto \? new URL\(foto, location\.origin\)\.href : ''/, 'metadados SPA devem transformar o asset local em URL absoluta');
 });
 
 test('resultados oferecem filtros avancados verdadeiros e compartilháveis', async () => {
@@ -302,6 +305,7 @@ test('resultados oferecem filtros avancados verdadeiros e compartilháveis', asy
 
   assert.match(design, /aria-controls="filtros-avancados"/, 'a barra de resultados deve abrir o painel de filtros');
   assert.match(design, /id="filtros-avancados"[^>]*role="dialog"/, 'o painel deve ser identificado como dialogo acessível');
+  assert.match(design, /id="filtros-avancados"[^>]*aria-label="Mais filtros"/, 'o painel deve ter nome acessível explícito');
   assert.match(design, /aria-label="Área mínima em metros quadrados"/, 'a área mínima deve ter rótulo acessível');
   assert.match(design, /aria-label="Área máxima em metros quadrados"/, 'a área máxima deve ter rótulo acessível');
   assert.match(design, /aria-label="Quantidade mínima de banheiros"/, 'banheiros devem usar um controle explícito');
@@ -395,7 +399,7 @@ test('detalhe móvel mantém conversão visível e galeria responde a swipe', as
 
 test('mapa agrupa unidades por empreendimento sem esconder unidades do popup', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
-  const trecho = design.match(/\n  gruposMapa\(rows\) \{([\s\S]*?)\n  \}\n  carregarLeaflet\(\)/);
+  const trecho = design.match(/\n  gruposMapa\(rows\) \{([\s\S]*?)\n  \}\n  resumoRepresentacaoMapa\(rows\)/);
   assert.ok(trecho, 'o agrupamento do mapa deve continuar isolado e testavel');
   const gruposMapa = new Function('rows', trecho[1]);
   const contexto = {
@@ -427,6 +431,48 @@ test('mapa agrupa unidades por empreendimento sem esconder unidades do popup', a
   assert.match(mapa, /setAttribute\('aria-label', ariaLabel\)/, 'o pin deve ter nome acessivel e contagem');
   assert.match(design, /const temContagem = total != null;/, 'o badge deve aparecer somente nos pins agrupados da lista');
   assert.match(design, /this\.pinIcon\(36\)/, 'o mapa da ficha deve preservar o pin simples, sem badge artificial');
+});
+
+test('mapa explica a diferença entre imóveis, pontos agrupados e coordenadas ausentes', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const gruposTrecho = design.match(/\n  gruposMapa\(rows\) \{([\s\S]*?)\n  \}\n  resumoRepresentacaoMapa\(rows\)/);
+  const resumoTrecho = design.match(/\n  resumoRepresentacaoMapa\(rows\) \{([\s\S]*?)\n  \}\n  carregarLeaflet\(\)/);
+  assert.ok(gruposTrecho && resumoTrecho, 'o resumo do mapa deve permanecer isolado e testável');
+  const gruposMapa = new Function('rows', gruposTrecho[1]);
+  const resumoRepresentacaoMapa = new Function('rows', resumoTrecho[1]);
+  const contexto = {
+    coordenadas: r => Number.isFinite(Number(r.latitude)) && Number.isFinite(Number(r.longitude)) ? [Number(r.latitude), Number(r.longitude)] : null,
+    empreendimentoId: r => r.empreendimento_id || null,
+    contarResultadosSemCoordenadas: rows => rows.filter(r => r.latitude == null || r.longitude == null).length,
+    gruposMapa,
+  };
+  const rows = Array.from({ length: 19 }, (_, indice) => ({
+    id: 'u' + indice,
+    empreendimento_id: indice < 2 ? 'e0' : indice < 4 ? 'e1' : 'e' + indice,
+    latitude: -23.6 - indice / 10000,
+    longitude: -46.66 - indice / 10000,
+  }));
+  const agrupado = resumoRepresentacaoMapa.call(contexto, rows);
+  assert.deepEqual(agrupado, { total: 19, semLocalizacao: 0, representados: 19, pontos: 17, agrupados: 2 });
+  const ausente = resumoRepresentacaoMapa.call(contexto, rows.concat({ id: 'sem-local', empreendimento_id: 'e20', latitude: null, longitude: null }));
+  assert.equal(ausente.semLocalizacao, 1);
+  assert.equal(ausente.representados, 19);
+  assert.match(design, /Todos os ' \+ mapaRepresentacao\.total \+ ' apês aparecem no mapa em '/);
+  assert.match(design, /data-map-representation-status/);
+});
+
+test('galeria e filtros devolvem foco e compartilham fechamento seguro', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /abrirGaleria\(indice, origem\)/);
+  assert.match(design, /this\.galFocusOrigin = \(origem && origem\.currentTarget\) \|\| document\.activeElement/);
+  assert.match(design, /galAbre0: e => this\.abrirGaleria\(0, e\)/);
+  assert.match(design, /if \(this\.state\.galOn\) \{ e\.preventDefault\(\); this\.fecharGaleria\(\); return; \}/, 'Escape deve usar o mesmo fechamento que restaura o foco');
+  assert.match(design, /galFecha: \(\) => this\.fecharGaleria\(\)/, 'o botão deve usar o mesmo fechamento que restaura o foco');
+  assert.match(design, /this\.galFocusOrigin && this\.galFocusOrigin\.focus/);
+  assert.match(design, /this\.filtrosFocusOrigin = \(e && e\.currentTarget\) \|\| document\.activeElement/);
+  assert.match(design, /this\.filtrosFocusOrigin && this\.filtrosFocusOrigin\.focus/);
+  assert.match(design, /this\.state\.galOn[\s\S]{0,100}?document\.querySelector\('\[data-gallery-modal\]'\)/, 'a galeria deve participar do trap de foco global');
+  assert.match(design, /this\.state\.filtrosOn[\s\S]{0,100}?document\.querySelector\('#filtros-avancados'\)/, 'os filtros devem participar do trap de foco global');
 });
 
 test('crédito do mapa preserva o OpenStreetMap sem exibir a marca visual do Leaflet', async () => {

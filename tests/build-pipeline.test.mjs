@@ -157,6 +157,9 @@ test('build externaliza imagem grande e explicita orcamentos de tamanho', async 
   assert.ok(config.budgets.maxHtmlGzipBytes > 0);
   assert.ok(config.budgets.maxTotalBytes > 0);
   assert.ok(config.budgets.maxGzipRatio > 0 && config.budgets.maxGzipRatio < 1);
+  const prerender = await readFile(join(root, 'scripts/prerender-properties.mjs'), 'utf8');
+  assert.match(prerender, /MOA_GIF_PATH/);
+  assert.match(prerender, /fac779ec499e72abf87e\.jpg/);
 });
 
 test('shell antecipa recursos críticos e o template preserva metadados após a hidratação', async () => {
@@ -177,7 +180,12 @@ test('shell antecipa recursos críticos e o template preserva metadados após a 
     assert.match(document, /<link rel="canonical" href="https:\/\/apecerto\.com\/">/);
     assert.match(document, /<link rel="icon" type="image\/svg\+xml" href="\/favicon\.svg">/);
     assert.match(document, /<link rel="shortcut icon" type="image\/svg\+xml" href="\/favicon\.svg">/);
+    assert.match(document, /<meta property="og:image" content="https:\/\/apecerto\.com\/assets\/media\/ba920d6e62cf7c3ca6f8\.jpg">/);
+    assert.match(document, /<meta name="twitter:card" content="summary_large_image">/);
+    assert.match(document, /<meta name="twitter:image" content="https:\/\/apecerto\.com\/assets\/media\/ba920d6e62cf7c3ca6f8\.jpg">/);
   }
+  const moaPoster = await readFile(join(root, 'dist/assets/media/fac779ec499e72abf87e.jpg'));
+  assert.ok(moaPoster.length <= 300000, 'o poster do MOA deve permanecer abaixo de 300 KB');
   await access(join(root, 'dist/favicon.svg'));
   await access(join(root, 'dist/favicon.ico'));
   await access(join(root, 'dist/.image-slots.state.json'));

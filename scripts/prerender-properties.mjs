@@ -10,6 +10,14 @@ import {
 import { safeDistPath } from './site-build-lib.mjs';
 
 const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,178}[a-z0-9])?$/;
+const MOA_GIF_PATH = '/storage/v1/object/public/empreendimentos/moa/4lq4pd7p32p.gif';
+const MOA_POSTER_URL = 'https://apecerto.com/assets/media/fac779ec499e72abf87e.jpg';
+
+const applyLocalMediaOverrides = metadata => {
+  const replace = value => String(value || '').split(/[?#]/)[0].endsWith(MOA_GIF_PATH) ? MOA_POSTER_URL : value;
+  const images = (metadata.images || []).map(replace);
+  return { ...metadata, images, jsonLd: { ...metadata.jsonLd, image: images } };
+};
 
 const publicCatalogConfig = design => {
   const url = design.match(/\bSB_URL\s*=\s*'([^']+)'/)?.[1] || '';
@@ -65,7 +73,7 @@ export async function prerenderProperties({ root, distDir, config, fetchImpl = f
   const shell = await readFile(safeDistPath(distDir, 'index.html'), 'utf8');
   const urls = [];
   for (const entity of entities) {
-    const metadata = metadataFor(entity, supabaseUrl);
+    const metadata = applyLocalMediaOverrides(metadataFor(entity, supabaseUrl));
     if (!validMetadata(entity, metadata, config.origin)) throw new Error(`catalog_entity_invalid:${entity.slug}`);
     const output = safeDistPath(distDir, `imovel/${entity.slug}/index.html`);
     await mkdir(dirname(output), { recursive: true });

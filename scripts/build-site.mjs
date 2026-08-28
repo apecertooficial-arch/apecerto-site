@@ -120,6 +120,14 @@ const productionMetadata = `
   <meta property="og:description" content="Curadoria local de apartamentos em Moema e região. Fale com a ApeCerto e agende sua visita.">
   <meta property="og:url" content="https://apecerto.com/">
   <meta property="og:site_name" content="ApeCerto">
+  <meta property="og:image" content="https://apecerto.com${heroVariants.variants.jpeg_640.path}">
+  <meta property="og:image:width" content="640">
+  <meta property="og:image:height" content="640">
+  <meta property="og:image:alt" content="Sala decorada e iluminada em Moema, referência visual da ApeCerto">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ApeCerto | Apartamentos em Moema">
+  <meta name="twitter:description" content="Curadoria local de apartamentos em Moema e região. Fale com a ApeCerto e agende sua visita.">
+  <meta name="twitter:image" content="https://apecerto.com${heroVariants.variants.jpeg_640.path}">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"RealEstateAgent","name":"ApeCerto","url":"https://apecerto.com/","telephone":"+55 11 98015-4312","email":"contato@apecerto.com","address":{"@type":"PostalAddress","streetAddress":"Avenida Iraí, 79, conjunto 95A","addressLocality":"São Paulo","addressRegion":"SP","addressCountry":"BR"},"areaServed":["Moema","Campo Belo","Vila Nova Conceição","Brooklin","Planalto Paulista"]}</script>`;
 
 const productionHead = `${productionMetadata}

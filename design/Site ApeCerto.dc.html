@@ -2130,15 +2130,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <button sc-camel-on-click="{{ vMapa }}" aria-pressed="{{ vMapaAtiva }}" style="border: none; cursor: pointer; font-family: var(--font-body); font-size: var(--text-sm); font-weight: var(--weight-semibold); padding: 7px 18px; border-radius: var(--radius-pill); background: {{ vMapBg }}; color: {{ vMapFg }}">Mapa</button>
       </div>
     </div>
-    <sc-if value="{{ mapaSemLocalizacaoOn }}" hint-placeholder-val="{{ false }}">
-      <div role="status" aria-live="polite" data-map-location-notice="" style="display: flex; align-items: flex-start; gap: 10px; margin: -8px 0 20px; padding: 12px 16px; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--fg-2); font-size: var(--text-sm); line-height: var(--leading-normal)">
-        <i data-lucide="map-pin-off" aria-hidden="true" style="width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; color: var(--ape-purple)"></i>
-        <span>{{ mapaSemLocalizacaoLabel }}</span>
+    <sc-if value="{{ mapaRepresentacaoOn }}" hint-placeholder-val="{{ false }}">
+      <div role="status" aria-live="polite" data-map-representation-status="" style="display: flex; align-items: flex-start; gap: 10px; margin: -8px 0 20px; padding: 12px 16px; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--fg-2); font-size: var(--text-sm); line-height: var(--leading-normal)">
+        <i data-lucide="map-pin" aria-hidden="true" style="width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; color: var(--ape-purple)"></i>
+        <span>{{ mapaRepresentacaoLabel }}</span>
       </div>
     </sc-if>
     <sc-if value="{{ filtrosOn }}" hint-placeholder-val="{{ false }}">
       <div class="rw-filter-overlay" sc-camel-on-click="{{ fecharFiltros }}">
-        <aside id="filtros-avancados" class="rw-filter-drawer" role="dialog" aria-modal="true" aria-labelledby="filtros-titulo" sc-camel-on-click="{{ pararClique }}">
+        <aside id="filtros-avancados" class="rw-filter-drawer" role="dialog" aria-modal="true" aria-label="Mais filtros" sc-camel-on-click="{{ pararClique }}">
           <div style="position: sticky; top: 0; z-index: 2; background: rgba(250, 248, 246, 0.96); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border-soft); padding: 20px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px">
             <div>
               <div class="eyebrow">Refine sua busca</div>
@@ -3862,6 +3862,19 @@ class Component extends DCLogic {
     });
     return Array.from(mapa.values());
   }
+  resumoRepresentacaoMapa(rows) {
+    const itens = Array.isArray(rows) ? rows : [];
+    const semLocalizacao = this.contarResultadosSemCoordenadas(itens);
+    const representados = Math.max(0, itens.length - semLocalizacao);
+    const pontos = this.gruposMapa(itens).length;
+    return {
+      total: itens.length,
+      semLocalizacao,
+      representados,
+      pontos,
+      agrupados: Math.max(0, representados - pontos)
+    };
+  }
   carregarLeaflet() {
     if (window.L) return Promise.resolve(window.L);
     if (this.leafletPromise) return this.leafletPromise;
@@ -4909,6 +4922,10 @@ class Component extends DCLogic {
   fotoUrl(p) {
     const raw = String(p && typeof p === 'object' ? (p.path || p.storage_path || '') : (p || '')).trim();
     if (!raw || /[\u0000-\u001f"'\\()]/.test(raw)) return '';
+    const moaGif = 'moa/4lq4pd7p32p.gif';
+    if (raw.replace(/^\/+/, '') === moaGif || raw.split(/[?#]/)[0].endsWith('/empreendimentos/' + moaGif)) {
+      return '/assets/media/fac779ec499e72abf87e.jpg';
+    }
     if (/^https:\/\//i.test(raw)) {
       try { const u = new URL(raw); return u.protocol === 'https:' ? u.href : ''; } catch (e) { return ''; }
     }
@@ -5140,6 +5157,7 @@ class Component extends DCLogic {
     const titulo = this.nomePublico(r) + ' | apêcerto';
     const descricao = String(r.descricao || [this.nomePublico(r), r.bairro, r.area_util ? Math.round(Number(r.area_util)) + ' m²' : null].filter(Boolean).join(' · ')).replace(/\s+/g, ' ').trim().slice(0, 240);
     const foto = this.fotoUrl((r.fotos || [])[0] || r.capa_path);
+    const fotoMeta = foto ? new URL(foto, location.origin).href : '';
     document.title = titulo;
     let canonical = document.querySelector('link[rel="canonical"]');
     if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
@@ -5149,12 +5167,12 @@ class Component extends DCLogic {
     this.definirMeta('meta[property="og:description"]', 'content', descricao);
     this.definirMeta('meta[property="og:url"]', 'content', url);
     this.definirMeta('meta[property="og:type"]', 'content', 'product');
-    if (foto) this.definirMeta('meta[property="og:image"]', 'content', foto);
+    if (fotoMeta) this.definirMeta('meta[property="og:image"]', 'content', fotoMeta);
     let ld = document.getElementById('apecerto-imovel-jsonld');
     if (!ld) { ld = document.createElement('script'); ld.id = 'apecerto-imovel-jsonld'; ld.type = 'application/ld+json'; document.head.appendChild(ld); }
     ld.textContent = JSON.stringify({
       '@context': 'https://schema.org', '@type': 'Apartment', name: this.nomePublico(r), description: descricao, url,
-      image: foto ? [foto] : undefined,
+      image: fotoMeta ? [fotoMeta] : undefined,
       address: { '@type': 'PostalAddress', streetAddress: r.endereco || undefined, addressLocality: r.cidade || 'São Paulo', addressRegion: r.uf || 'SP', addressCountry: 'BR' },
       floorSize: r.area_util ? { '@type': 'QuantitativeValue', value: Number(r.area_util), unitCode: 'MTK' } : undefined,
       numberOfRooms: r.dormitorios || undefined,
@@ -5166,6 +5184,9 @@ class Component extends DCLogic {
     const canonical = document.querySelector('link[rel="canonical"]'); if (canonical) canonical.href = 'https://apecerto.com/';
     this.definirMeta('meta[property="og:url"]', 'content', 'https://apecerto.com/');
     this.definirMeta('meta[property="og:type"]', 'content', 'website');
+    this.definirMeta('meta[property="og:image"]', 'content', 'https://apecerto.com/assets/media/ba920d6e62cf7c3ca6f8.jpg');
+    this.definirMeta('meta[name="twitter:card"]', 'content', 'summary_large_image');
+    this.definirMeta('meta[name="twitter:image"]', 'content', 'https://apecerto.com/assets/media/ba920d6e62cf7c3ca6f8.jpg');
     const ld = document.getElementById('apecerto-imovel-jsonld'); if (ld) ld.remove();
   }
   abrirDetalhe(r) {
@@ -5198,11 +5219,11 @@ class Component extends DCLogic {
       window.addEventListener('keydown', this.galKeys);
     }
   }
-  abrirGaleria(indice) {
+  abrirGaleria(indice, origem) {
     const fotos = ((this.state.det || {}).fotos || []).concat((this.state.det || {}).fotos_condominio || []);
     if (!fotos.length) return;
     this.fotoGaleriaReq += 1;
-    this.galFocusOrigin = document.activeElement;
+    this.galFocusOrigin = (origem && origem.currentTarget) || document.activeElement;
     this.setState({ galOn: true, galIdx: Math.max(0, Math.min(Number(indice) || 0, fotos.length - 1)) }, () => {
       setTimeout(() => {
         const fechar = document.querySelector('[data-gallery-modal] button[aria-label="Fechar galeria"]');
@@ -5431,7 +5452,7 @@ class Component extends DCLogic {
     const fPrecoMin = st.fPrecoMin != null ? st.fPrecoMin : piso; const fPrecoMax = st.fPrecoMax != null ? st.fPrecoMax : (st.fPreco != null ? st.fPreco : teto);
     const det = st.det;
     const rotaFichaAtiva = !!(det || (this.slugImovelDaRota() && !st.rotaImovelNaoEncontrado));
-    const mapaSemLocalizacao = this.contarResultadosSemCoordenadas(filtradosAll);
+    const mapaRepresentacao = this.resumoRepresentacaoMapa(filtradosAll);
     const filtrosAvancadosQtd = [st.fTipo, st.fAreaMin, st.fAreaMax, st.fBanheiros, st.fSuites].filter(Boolean).length;
     const detTourUrl = det ? this.tourUrl(det.tour_url) : '';
     const fotosPrivativasFonte = det && det.fotos && det.fotos.length ? det.fotos : (det && det.capa_path ? [det.capa_path] : []);
@@ -5530,10 +5551,12 @@ class Component extends DCLogic {
       filtrosFg: filtrosAvancadosQtd ? 'var(--ape-orange-700)' : 'var(--fg-1)',
       filtrosBorda: filtrosAvancadosQtd ? 'var(--ape-orange)' : 'var(--border-default)',
       filtrosResultadoLabel: filtradosAll.length + (filtradosAll.length === 1 ? ' apê' : ' apês'),
-      mapaSemLocalizacaoOn: mapaSemLocalizacao > 0,
-      mapaSemLocalizacaoLabel: mapaSemLocalizacao === 1
+      mapaRepresentacaoOn: mapaRepresentacao.semLocalizacao > 0 || mapaRepresentacao.agrupados > 0,
+      mapaRepresentacaoLabel: mapaRepresentacao.semLocalizacao === 1
         ? '1 resultado continua na lista, mas não aparece no mapa porque ainda não tem localização cadastrada.'
-        : mapaSemLocalizacao + ' resultados continuam na lista, mas não aparecem no mapa porque ainda não têm localização cadastrada.',
+        : mapaRepresentacao.semLocalizacao > 1
+          ? mapaRepresentacao.semLocalizacao + ' resultados continuam na lista, mas não aparecem no mapa porque ainda não têm localização cadastrada.'
+          : 'Todos os ' + mapaRepresentacao.total + ' apês aparecem no mapa em ' + mapaRepresentacao.pontos + ' pontos; ' + mapaRepresentacao.agrupados + (mapaRepresentacao.agrupados === 1 ? ' está agrupado' : ' estão agrupados') + ' no mesmo endereço.',
       fTipo: st.fTipo || '', fAreaMin: st.fAreaMin || '', fAreaMax: st.fAreaMax || '', fBanheiros: st.fBanheiros || '', fSuites: st.fSuites || '',
       setFTipo: e => this.aplicarFiltros({ fTipo: e.target.value, saraIds: null }),
       setFAreaMin: e => this.aplicarFiltros({ fAreaMin: String(Math.max(0, Number(e.target.value) || 0) || ''), saraIds: null }),
@@ -5602,11 +5625,11 @@ class Component extends DCLogic {
         return { detDetalhes: dd, detDetalhesOn: dd.length > 0 };
       })(),
       galM1: fotosDet[0] || '', galM2: fotosDet[1] || fotosDet[0] || '', galM3: fotosDet[2] || fotosDet[0] || '', galM4: fotosDet[3] || fotosDet[0] || '', galM5: fotosDet[4] || fotosDet[0] || '',
-      galAbre0: () => this.abrirGaleria(0),
-      galAbre1: () => this.abrirGaleria(1),
-      galAbre2: () => this.abrirGaleria(2),
-      galAbre3: () => this.abrirGaleria(3),
-      galAbre4: () => this.abrirGaleria(4),
+      galAbre0: e => this.abrirGaleria(0, e),
+      galAbre1: e => this.abrirGaleria(1, e),
+      galAbre2: e => this.abrirGaleria(2, e),
+      galAbre3: e => this.abrirGaleria(3, e),
+      galAbre4: e => this.abrirGaleria(4, e),
       galMaisOn: fotosDet.length > 5,
       galMaisLabel: 'Ver ' + fotosDet.length + ' fotos',
       galOn: st.galOn && fotosDet.length > 0,
