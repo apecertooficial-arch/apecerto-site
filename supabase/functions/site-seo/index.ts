@@ -140,6 +140,42 @@ function publicKey(env) {
   return value;
 }
 
+function serviceRoleKey(env) {
+  const value = String(env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "").trim();
+  if (!value) throw new Error("legacy_resolver_key_unavailable");
+  if (value.startsWith("sb_secret_")) return value;
+  const parts = value.split(".");
+  if (parts.length !== 3) throw new Error("legacy_resolver_key_invalid");
+  try {
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = payload + "=".repeat((4 - payload.length % 4) % 4);
+    if (JSON.parse(atob(padded)).role !== "service_role") throw new Error("not_service_role");
+  } catch {
+    throw new Error("legacy_resolver_key_invalid");
+  }
+  return value;
+}
+
+async function fetchLegacyResolution({ fetchImpl, env, supabaseUrl, slug }) {
+  const key = serviceRoleKey(env);
+  const response = await fetchImpl(`${supabaseUrl}/rest/v1/rpc/site_produto_resolver_slug_legado`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ p_slug: slug }),
+    redirect: "error",
+    signal: AbortSignal.timeout(5_000),
+  });
+  if (!response.ok) throw new Error(`legacy_resolver_unavailable_${response.status}`);
+  const rows = await response.json().catch(() => null);
+  const resolved = Array.isArray(rows) && rows.length === 1 ? slugify(rows[0]?.slug) : "";
+  return SLUG_PATTERN.test(resolved) ? resolved : "";
+}
+
 function storageImage(value, supabaseUrl) {
   const raw = String(value ?? "").trim();
   if (!raw || /[\u0000-\u001f\u007f"'\\()]/.test(raw)) return "";
@@ -466,6 +502,13 @@ function errorResponse(request, status, code) {
   });
 }
 
+function permanentRedirect(request, slug) {
+  const headers = new Headers(baseHeaders("text/plain; charset=utf-8", "public, max-age=300, s-maxage=3600"));
+  headers.set("Location", canonicalForSlug(slug));
+  headers.set("X-Robots-Tag", "noindex, nofollow");
+  return new Response(request.method === "HEAD" ? null : "", { status: 301, headers });
+}
+
 function routeOf(url) {
   const marker = "/site-seo";
   const markerIndex = url.pathname.lastIndexOf(marker);
@@ -496,8 +539,10 @@ export function createSiteSeoHandler(dependencies = {}) {
       }
       const slug = decodeRequestedSlug(route.rawSlug);
       const entity = slug ? findEntity(rows, slug) : null;
-      const shell = await fetchShell(fetchImpl);
       if (!entity) {
+        const resolved = slug ? await fetchLegacyResolution({ fetchImpl, env, supabaseUrl, slug }) : "";
+        if (resolved && resolved !== slug && findEntity(rows, resolved)) return permanentRedirect(request, resolved);
+        const shell = await fetchShell(fetchImpl);
         const metadata = {
           title: "Imóvel não encontrado | apêcerto",
           description: "Este imóvel não está disponível no catálogo público da apêcerto.",
@@ -512,6 +557,7 @@ export function createSiteSeoHandler(dependencies = {}) {
           noindex: true,
         });
       }
+      const shell = await fetchShell(fetchImpl);
       const metadata = metadataFor(entity, supabaseUrl);
       return contentResponse(request, injectPropertyMetadata(shell, metadata), { contentType: "text/html; charset=utf-8" });
     } catch (error) {

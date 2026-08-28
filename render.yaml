@@ -5,6 +5,10 @@ services:
     buildCommand: npm run ci
     staticPublishPath: ./dist
     autoDeployTrigger: checksPass
+    routes:
+      - type: rewrite
+        source: /imovel/*
+        destination: https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/imovel/*
     headers:
       - path: /sitemap.xml
         name: Content-Type

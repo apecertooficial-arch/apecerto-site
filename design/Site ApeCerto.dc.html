@@ -3589,7 +3589,7 @@ class Component extends DCLogic {
   SB_URL = 'https://diaegvfveqezispcthwk.supabase.co';
   SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYWVndmZ2ZXFlemlzcGN0aHdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5OTU4MjIsImV4cCI6MjA5ODU3MTgyMn0.312n8BuI-loQrQ20x9j1hNjKZs2UO71ey9gvIo0eY0I';
   CATALOGO_VIEW = 'site_produtos_catalogo';
-  catalogoLeveDisponivel = true; detalhesCarregados = new Set(); detalhesEmVoo = new Map(); detalhesCache = new Map(); slugLegadoConsultado = new Set();
+  catalogoLeveDisponivel = true; detalhesCarregados = new Set(); detalhesEmVoo = new Map(); detalhesCache = new Map();
   listaMapaMarkers = new Map(); galTouchX = null; filtrosFocusOrigin = null;
   auth = {}; form = {}; fotosArq = []; fotosExist = [];
   anForm = {}; anArq = []; anFotosBase = [];
@@ -5138,22 +5138,8 @@ class Component extends DCLogic {
     } else if (this.state.produtosTemMais && !this.state.produtosCarregandoMais) {
       this.carregarProdutos(true, { key, cod: null });
     } else if (Array.isArray(this.state.produtos) && !this.state.produtosCarregandoMais) {
-      this.resolverSlugLegado(key);
-    }
-  }
-  resolverSlugLegado(key) {
-    const slug = this.slugParte(key);
-    if (!slug || this.slugLegadoConsultado.has(slug)) return this.marcarImovelNaoEncontrado();
-    this.slugLegadoConsultado.add(slug);
-    fetch(this.SB_URL + '/rest/v1/rpc/site_produto_resolver_slug_legado', {
-      method: 'POST',
-      headers: { apikey: this.SB_KEY, Authorization: 'Bearer ' + this.SB_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_slug: slug })
-    }).then(r => r.ok ? r.json() : []).then(rows => {
-      const destino = Array.isArray(rows) && rows[0] && this.slugParte(rows[0].slug);
-      if (destino && destino !== slug) return location.replace('/imovel/' + encodeURIComponent(destino) + '/');
       this.marcarImovelNaoEncontrado();
-    }).catch(() => this.marcarImovelNaoEncontrado());
+    }
   }
   marcarImovelNaoEncontrado() {
     if (this.state.rotaImovelNaoEncontrado) return;

@@ -34,6 +34,7 @@ test('catalogo publico consulta a view site_produtos', async () => {
   assert.ok(d.includes('precoMinimo()'), 'o slider deve usar escala própria para aluguel');
   assert.ok(d.includes('item.empreendimento_id'), 'a URL gerada pelo ERP deve localizar também o UUID do empreendimento');
   assert.ok(d.includes('marcarImovelNaoEncontrado()'), 'uma rota inválida deve voltar ao catálogo com aviso claro');
+  assert.ok(!d.includes('/rest/v1/rpc/site_produto_resolver_slug_legado'), 'aliases legados devem ser resolvidos apenas no servidor');
 });
 
 test('cards de bairro nao abrem o seletor de arquivos no site publico', async () => {
