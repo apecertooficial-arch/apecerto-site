@@ -271,7 +271,7 @@ test('event_id fornecido é honrado por todos os canais de tracking', async () =
   assert.match(track, /firstPartyTrack\(eventName, Object\.assign\(\{ event_id: eventId \}/);
   assert.match(track, /apecerto_event_id: eventId/);
   assert.match(track, /window\.gtag\('event', eventName, payload\)/);
-  assert.match(track, /metaTrack\(eventName, publicParams, eventId, identity\)/);
+  assert.match(track, /metaTrack\(eventName, metaParams, eventId, identity\)/);
   assert.match(track, /adsConversion\(eventName, publicParams, eventId\)/);
   assert.match(firstParty, /controller\.abort\(\);\s*\}, 2500\)/);
   assert.match(firstParty, /window\.navigator\.sendBeacon\(trackUrl, beaconBody\)/);

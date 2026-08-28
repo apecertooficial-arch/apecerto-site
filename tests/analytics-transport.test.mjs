@@ -15,12 +15,15 @@ function storage(initial = {}) {
 }
 
 function element() {
+  const listeners = {};
   return {
     style: {},
+    children: [],
+    listeners,
     classList: { add() {}, remove() {} },
     parentNode: { insertBefore() {} },
-    appendChild() {},
-    addEventListener() {},
+    appendChild(child) { this.children.push(child); },
+    addEventListener(type, listener) { listeners[type] = listener; },
     setAttribute() {},
     getAttribute() { return ''; },
     remove() {},
@@ -185,4 +188,84 @@ test('sem consentimento não envia identidade nem evento à Meta', async () => {
     __identity: { email: 'cliente@exemplo.com', phone: '11980154312' },
   });
   assert.equal(runtime.requests.some((request) => request.url.includes('/functions/v1/meta-capi')), false);
+});
+
+test('UTMs e hierarquia Meta percorrem site, dataLayer e CAPI sem perder o event_id', async () => {
+  const eventId = '44444444-4444-4444-8444-444444444444';
+  const runtime = await analyticsRuntime({
+    marketing: true,
+    page: 'https://apecerto.com/imovel/aratans?utm_source=facebook&utm_medium=paid_social&utm_campaign=aratans&campaign_id=1201&adset_id=1202&ad_id=1203&fbclid=fb-click-qa',
+  });
+
+  const leadTracking = runtime.window.apecertoLeadTracking();
+  assert.equal(leadTracking.attribution.first.utm_source, 'facebook');
+  assert.equal(leadTracking.attribution.first.campaign_id, '1201');
+  assert.equal(leadTracking.attribution.first.adset_id, '1202');
+  assert.equal(leadTracking.attribution.first.ad_id, '1203');
+  assert.equal(leadTracking.attribution.first.fbclid, 'fb-click-qa');
+  assert.match(leadTracking.identity.fbc, /^fb\.1\.\d+\.fb-click-qa$/);
+
+  await runtime.window.apecertoTrack('generate_lead', {
+    event_id: eventId,
+    lead_type: 'comprador',
+  });
+
+  const firstPartyRequest = runtime.requests.find((request) => {
+    if (!request.url.includes('/functions/v1/site-track') || !request.options.body) return false;
+    return JSON.parse(request.options.body).event_name === 'generate_lead';
+  });
+  assert.ok(firstPartyRequest);
+  const firstPartyBody = JSON.parse(firstPartyRequest.options.body);
+  assert.equal(firstPartyBody.utm_source, 'facebook');
+  assert.equal(firstPartyBody.utm_medium, 'paid_social');
+  assert.equal(firstPartyBody.utm_campaign, 'aratans');
+  assert.equal(firstPartyBody.properties.event_id, eventId);
+  assert.equal(firstPartyBody.properties.campaign_id, '1201');
+  assert.equal(firstPartyBody.properties.adset_id, '1202');
+  assert.equal(firstPartyBody.properties.ad_id, '1203');
+
+  const capiRequest = runtime.requests.find((request) => {
+    if (!request.url.includes('/functions/v1/meta-capi') || !request.options.body) return false;
+    return JSON.parse(request.options.body).event_name === 'generate_lead';
+  });
+  assert.ok(capiRequest);
+  const capiBody = JSON.parse(capiRequest.options.body);
+  assert.equal(capiBody.event_id, eventId);
+  assert.equal(capiBody.custom_data.utm_campaign, 'aratans');
+  assert.equal(capiBody.custom_data.campaign_id, '1201');
+  assert.equal(capiBody.custom_data.adset_id, '1202');
+  assert.equal(capiBody.custom_data.ad_id, '1203');
+  assert.match(capiBody.fbc, /^fb\.1\.\d+\.fb-click-qa$/);
+
+  const dataLayerEvent = runtime.window.dataLayer.find((entry) => entry && entry.apecerto_event_id === eventId);
+  assert.equal(dataLayerEvent.utm_source, 'facebook');
+  assert.equal(dataLayerEvent.campaign_id, '1201');
+  assert.equal(dataLayerEvent.adset_id, '1202');
+  assert.equal(dataLayerEvent.ad_id, '1203');
+});
+
+test('retirada total de consentimento apaga atribuição e sessão persistidas', async () => {
+  const runtime = await analyticsRuntime({
+    marketing: true,
+    page: 'https://apecerto.com/?utm_source=facebook&fbclid=fb-click-remover',
+  });
+  assert.ok(runtime.window.localStorage.getItem('apecerto_attribution_v3'));
+  assert.ok(runtime.window.sessionStorage.getItem('apecerto_session_v1'));
+
+  runtime.window.apecertoOpenConsent();
+  const banner = runtime.window.document.body.children.at(-1);
+  assert.ok(banner?.listeners?.click);
+  banner.listeners.click({
+    target: {
+      closest() {
+        return { getAttribute() { return 'essential'; } };
+      },
+    },
+  });
+
+  assert.equal(runtime.window.localStorage.getItem('apecerto_attribution_v3'), null);
+  assert.equal(runtime.window.localStorage.getItem('apecerto_attribution_v2'), null);
+  assert.equal(runtime.window.sessionStorage.getItem('apecerto_session_v1'), null);
+  assert.equal(runtime.window.apecertoLeadTracking().identity.fbc, null);
+  assert.equal(runtime.window.apecertoLeadTracking().attribution.current.fbclid, undefined);
 });

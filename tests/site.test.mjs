@@ -665,7 +665,7 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes("window.gtag('set', 'user_data'"), 'conversoes otimizadas devem receber os dados consentidos do lead');
   assert.ok(analytics.includes("eventName === 'page_view' || !window.apecertoGtmGa4Managed"), 'o GTM deve assumir os eventos do GA4 sem duplicar page_view');
   assert.ok(analytics.includes('window.apecertoGtmAdsManaged'), 'o GTM deve assumir a conversao do Google Ads com fallback direto');
-  assert.ok(analytics.includes("['utm_id', 'campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'form_id', 'placement', 'tracking_ref']"), 'GA e o banco devem receber os identificadores da campanha');
+  assert.match(analytics, /ATTRIBUTION_EVENT_KEYS\s*=\s*\[[\s\S]*?'campaign_id'[\s\S]*?'adset_id'[\s\S]*?'ad_id'/, 'GA, Meta e o banco devem receber a hierarquia completa da campanha');
   assert.doesNotMatch(analytics, /owner_(?:portal_open|cta_click):\s*'anMDCOmFieQcEI7398BE'/, 'clique ou abertura nao pode virar conversao do Google Ads');
   assert.ok(out.includes('GTM-524TZP8X'), 'o Tag Manager deve estar ligado ao site');
   assert.ok(out.includes('googletagmanager.com/ns.html?id=GTM-524TZP8X'), 'o fallback noscript do Tag Manager deve estar no shell publico');

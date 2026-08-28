@@ -59,6 +59,11 @@
     'form_start', 'owner_cta_click', 'financing_open',
     'schedule_start', 'gallery_interaction'
   ]);
+  var ATTRIBUTION_EVENT_KEYS = [
+    'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+    'utm_id', 'campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id',
+    'form_id', 'placement', 'tracking_ref'
+  ];
   var lastViewedItemId = '';
   var lastViewedItemName = '';
   var financingRequestId = '';
@@ -254,6 +259,16 @@
         updated_at: new Date().toISOString(),
       }));
     } catch (e) {}
+  }
+
+  function clearStoredTrackingIdentity() {
+    try {
+      localStorage.removeItem(ATTRIBUTION_KEY);
+      localStorage.removeItem(LEGACY_ATTRIBUTION_KEY);
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch (e) {}
+    sessionId = '';
+    googleIdentity = { client_id: '', session_id: '' };
   }
 
   function readStoredAttribution() {
@@ -491,6 +506,7 @@
     } else if (clarityLoaded && window.clarity) {
       window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'denied' });
     }
+    if (!consent.analytics && !consent.marketing) clearStoredTrackingIdentity();
     if (consent.marketing) {
       // O consentimento já foi atualizado no dataLayer. A partir daqui o GTM
       // pode iniciar sem competir com a primeira pintura e sem perder uma
@@ -527,7 +543,7 @@
       ? attribution.last
       : currentTouch;
     if (campaignTouch) {
-      ['utm_id', 'campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'form_id', 'placement', 'tracking_ref'].forEach(function (key) {
+      ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id', 'campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'form_id', 'placement', 'tracking_ref'].forEach(function (key) {
         if (campaignTouch[key]) properties[key] = campaignTouch[key];
       });
     }
@@ -617,7 +633,7 @@
       ? attribution.last
       : currentTouch;
     if (campaignTouch) {
-      ['utm_id', 'campaign_id', 'adset_id', 'ad_group_id', 'ad_id', 'creative_id', 'form_id', 'placement', 'tracking_ref'].forEach(function (key) {
+      ATTRIBUTION_EVENT_KEYS.forEach(function (key) {
         if (campaignTouch[key] && !payload[key]) payload[key] = campaignTouch[key];
       });
     }
@@ -650,7 +666,11 @@
     if (eventName === 'page_view' || !window.apecertoGtmGa4Managed) {
       window.gtag('event', eventName, payload);
     }
-    metaTrack(eventName, publicParams, eventId, identity);
+    var metaParams = Object.assign({}, publicParams);
+    ATTRIBUTION_EVENT_KEYS.forEach(function (key) {
+      if (campaignTouch && campaignTouch[key] && !metaParams[key]) metaParams[key] = campaignTouch[key];
+    });
+    metaTrack(eventName, metaParams, eventId, identity);
     // A conversão generate_lead é gerenciada no GTM quando o contêiner está
     // saudável. Sem GTM, mantém o beacon direto como contingência.
     var adsPromise = window.apecertoGtmAdsManaged
