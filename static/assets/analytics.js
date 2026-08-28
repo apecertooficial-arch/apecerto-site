@@ -1091,6 +1091,11 @@
       scheduled = true;
       setTimeout(function () {
         scheduled = false;
+        var nextTouch = readCurrentTouch();
+        if (hasAcquisitionSignal(nextTouch)) {
+          currentTouch = nextTouch;
+          persistAttribution();
+        }
         var nextPath = pagePath();
         if (nextPath === lastPath) return;
         lastPath = nextPath;
