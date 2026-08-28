@@ -516,6 +516,44 @@ test('galeria e filtros devolvem foco e compartilham fechamento seguro', async (
   assert.match(design, /this\.state\.filtrosOn[\s\S]{0,100}?document\.querySelector\('#filtros-avancados'\)/, 'os filtros devem participar do trap de foco global');
 });
 
+test('galeria responde imediatamente e pre-carrega somente as fotos vizinhas', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const trecho = design.match(/\n  trocarFotoGaleria\(e, fotos, indice\) \{([\s\S]*?)\n  \}\n  galTouchStart/);
+  assert.ok(trecho, 'a troca da galeria deve continuar isolada e testável');
+  const codigo = trecho[1];
+  assert.ok(codigo.indexOf('this.setState({ galIdx: indice, galLoading: true }') < codigo.indexOf('this.prepararFoto('), 'o índice e o loading devem mudar antes de qualquer espera de rede');
+  assert.match(codigo, /const proxima = \(indice \+ 1\) % fotos\.length/);
+  assert.match(codigo, /const anterior = \(indice - 1 \+ fotos\.length\) % fotos\.length/);
+  assert.doesNotMatch(codigo, /Promise\.race|await\s+this\.prepararFoto/, 'a interação não pode aguardar download ou decode');
+  assert.match(design, /class="rw-gallery-loading" role="status" aria-live="polite"/);
+});
+
+test('home usa busca progressiva e bairros derivados somente do catálogo publicado', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /class="rw-hero-advanced"/);
+  assert.match(design, /aria-controls="filtros-avancados"[^>]*>Mais filtros<\/button>/);
+  assert.match(design, /\n  bairrosPublicados\(\) \{/);
+  assert.match(design, /bairros:\s*this\.bairrosPublicados\(\)\.map/);
+  assert.doesNotMatch(design, /nome: 'Moema Pássaros'|nome: 'Moema Índios'/, 'a seção não pode manter bairros editoriais sem imóveis reais');
+  assert.match(design, /\{\{ b\.contagem \}\}/);
+});
+
+test('anunciar começa pela captação e só exige conta para enviar', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /if \(cadastro\) \{[\s\S]*tela: 'wizard'/);
+  assert.match(design, /if \(!this\.state\.sess\) \{[\s\S]*rotaPendente: 'captacao-finalizar'/);
+  assert.match(design, /pendente === 'captacao-finalizar'\) this\.enviarCaptacao\(\)/);
+  assert.match(design, /sc-camel-on-click="\{\{ abreCadastro \}\}" hint-size="220px,48px">Anunciar meu apê/);
+});
+
+test('mapa sem coordenadas mostra estado honesto em vez de uma tela vazia', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /mapaTemPontos: mapaRepresentacao\.pontos > 0/);
+  assert.match(design, /mapaSemPontos: mapaRepresentacao\.pontos === 0/);
+  assert.match(design, /Mapa temporariamente sem pontos/);
+  assert.match(design, /A localização pública precisa ser cadastrada em Produtos/);
+});
+
 test('crédito do mapa preserva o OpenStreetMap sem exibir a marca visual do Leaflet', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   assert.equal(
