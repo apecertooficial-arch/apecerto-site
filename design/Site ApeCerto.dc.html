@@ -3589,7 +3589,7 @@ class Component extends DCLogic {
   SB_URL = 'https://diaegvfveqezispcthwk.supabase.co';
   SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYWVndmZ2ZXFlemlzcGN0aHdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5OTU4MjIsImV4cCI6MjA5ODU3MTgyMn0.312n8BuI-loQrQ20x9j1hNjKZs2UO71ey9gvIo0eY0I';
   CATALOGO_VIEW = 'site_produtos_catalogo';
-  catalogoLeveDisponivel = true; detalhesCarregados = new Set(); detalhesEmVoo = new Map(); detalhesCache = new Map();
+  catalogoLeveDisponivel = true; detalhesCarregados = new Set(); detalhesEmVoo = new Map(); detalhesCache = new Map(); slugLegadoConsultado = new Set();
   listaMapaMarkers = new Map(); galTouchX = null; filtrosFocusOrigin = null;
   auth = {}; form = {}; fotosArq = []; fotosExist = [];
   anForm = {}; anArq = []; anFotosBase = [];
@@ -4898,21 +4898,27 @@ class Component extends DCLogic {
       abrir: () => this.abrirDetalhe(r)
     };
   }
-  nomePublico(r) { return (r && (r.titulo || r.nome)) || ''; }
+  identidadePublica(r) {
+    if (!r) return 'Imóvel disponível';
+    const tipologia = String(r.tipologia || '').toLowerCase();
+    const tipo = /studio/.test(tipologia) ? 'Studio' : /cobertura/.test(tipologia) ? 'Cobertura' : /casa/.test(tipologia) ? 'Casa' : /terreno/.test(tipologia) ? 'Terreno' : /(comercial|sala)/.test(tipologia) ? 'Imóvel comercial' : 'Apartamento';
+    const dorms = r.dormitorios == null || r.dormitorios === '' ? 0 : Number(r.dormitorios);
+    const quartos = dorms === 1 ? ' com 1 quarto' : dorms > 1 ? ' com ' + dorms + ' quartos' : '';
+    const bairro = String(r.bairro || '').replace(/\s+/g, ' ').trim();
+    const cidade = String(r.cidade || '').replace(/\s+/g, ' ').trim();
+    const local = bairro ? ' em ' + bairro + (cidade ? ', ' + cidade : '') : (cidade ? ' em ' + cidade : '');
+    return (tipo + quartos + local).slice(0, 120);
+  }
+  nomePublico(r) { return this.identidadePublica(r); }
+  enderecoPublico(v) {
+    return String(v || '').split(',', 1)[0].replace(/\b\d{5}-?\d{3}\b/g, '').replace(/(?:,|\s)+\s*(?:n[ºo.]?\s*)?\d+[a-z]?(?:[-/]?[0-9a-z]+)?(?:[,;].*)?$/i, '').replace(/\s+(?:ap(?:to|artamento)?|unidade|bloco|torre|lote|complemento)\s+.*$/i, '').replace(/[\s,;-]+$/g, '').trim().slice(0, 160);
+  }
   numeroPositivo(v) {
     const n = Number(v);
     return Number.isFinite(n) && n > 0 ? n : 0;
   }
   tituloComercial(r) {
-    if (!r) return '';
-    const base = String(r.empreendimento_nome || r.nome || '').replace(/\s*·\s*Un\..*$/i, '').trim();
-    const dorms = this.numeroPositivo(r.dormitorios);
-    const studio = r.dormitorios != null && r.dormitorios !== '' && Number(r.dormitorios) === 0;
-    let titulo = studio ? 'Studio' : 'Apartamento';
-    if (dorms) titulo += ' de ' + dorms + (dorms === 1 ? ' dormitório' : ' dormitórios');
-    if (base) titulo += ' no ' + base;
-    else if (r.bairro) titulo += ' em ' + r.bairro;
-    return titulo;
+    return this.identidadePublica(r);
   }
   precoDe(r) {
     if (!r) return 0;
@@ -4922,6 +4928,10 @@ class Component extends DCLogic {
   fotoUrl(p) {
     const raw = String(p && typeof p === 'object' ? (p.path || p.storage_path || '') : (p || '')).trim();
     if (!raw || /[\u0000-\u001f"'\\()]/.test(raw)) return '';
+    if (raw.startsWith('midia:')) {
+      const id = raw.slice(6);
+      return this.uuidValido(id) ? this.SB_URL + '/functions/v1/site-media/' + id.toLowerCase() : '';
+    }
     const moaGif = 'moa/4lq4pd7p32p.gif';
     if (raw.replace(/^\/+/, '') === moaGif || raw.split(/[?#]/)[0].endsWith('/empreendimentos/' + moaGif)) {
       return '/assets/media/fac779ec499e72abf87e.jpg';
@@ -5128,8 +5138,22 @@ class Component extends DCLogic {
     } else if (this.state.produtosTemMais && !this.state.produtosCarregandoMais) {
       this.carregarProdutos(true, { key, cod: null });
     } else if (Array.isArray(this.state.produtos) && !this.state.produtosCarregandoMais) {
-      this.marcarImovelNaoEncontrado();
+      this.resolverSlugLegado(key);
     }
+  }
+  resolverSlugLegado(key) {
+    const slug = this.slugParte(key);
+    if (!slug || this.slugLegadoConsultado.has(slug)) return this.marcarImovelNaoEncontrado();
+    this.slugLegadoConsultado.add(slug);
+    fetch(this.SB_URL + '/rest/v1/rpc/site_produto_resolver_slug_legado', {
+      method: 'POST',
+      headers: { apikey: this.SB_KEY, Authorization: 'Bearer ' + this.SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_slug: slug })
+    }).then(r => r.ok ? r.json() : []).then(rows => {
+      const destino = Array.isArray(rows) && rows[0] && this.slugParte(rows[0].slug);
+      if (destino && destino !== slug) return location.replace('/imovel/' + encodeURIComponent(destino) + '/');
+      this.marcarImovelNaoEncontrado();
+    }).catch(() => this.marcarImovelNaoEncontrado());
   }
   marcarImovelNaoEncontrado() {
     if (this.state.rotaImovelNaoEncontrado) return;
@@ -5173,7 +5197,7 @@ class Component extends DCLogic {
     ld.textContent = JSON.stringify({
       '@context': 'https://schema.org', '@type': 'Apartment', name: this.nomePublico(r), description: descricao, url,
       image: fotoMeta ? [fotoMeta] : undefined,
-      address: { '@type': 'PostalAddress', streetAddress: r.endereco || undefined, addressLocality: r.cidade || 'São Paulo', addressRegion: r.uf || 'SP', addressCountry: 'BR' },
+      address: { '@type': 'PostalAddress', streetAddress: this.enderecoPublico(r.endereco) || undefined, addressLocality: r.cidade || 'São Paulo', addressRegion: r.uf || 'SP', addressCountry: 'BR' },
       floorSize: r.area_util ? { '@type': 'QuantitativeValue', value: Number(r.area_util), unitCode: 'MTK' } : undefined,
       numberOfRooms: r.dormitorios || undefined,
       offers: this.precoDe(r) ? { '@type': 'Offer', priceCurrency: 'BRL', price: this.precoDe(r), availability: 'https://schema.org/InStock', url } : undefined
@@ -5603,7 +5627,7 @@ class Component extends DCLogic {
       fecharDet: () => this.fecharDetalhe(),
       detNome: det ? this.tituloComercial(det) : '',
       detBadge: detBadge ? detBadge.label : '', detBadgeBg: detBadge ? detBadge.bg : '',
-      detEndereco: det ? [det.endereco, det.bairro, det.cidade || 'São Paulo', det.uf].filter(Boolean).join(' · ') : '',
+      detEndereco: det ? [this.enderecoPublico(det.endereco), det.bairro, det.cidade || 'São Paulo', det.uf].filter(Boolean).join(' · ') : '',
       detSlogan: det && det.slogan,
       detDescColl: !(det && st.detDescExpId === det.id),
       detDescExp: !!(det && st.detDescExpId === det.id),

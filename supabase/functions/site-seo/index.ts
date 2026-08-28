@@ -38,6 +38,15 @@ function cleanText(value, maxLength = 240) {
   return text.slice(0, maxLength).trim();
 }
 
+function publicStreet(value) {
+  return cleanText(value, 160).split(",", 1)[0]
+    .replace(/\b\d{5}-?\d{3}\b/g, "")
+    .replace(/(?:,|\s)+\s*(?:n[ºo.]?\s*)?\d+[a-z]?(?:[-/]?[0-9a-z]+)?(?:[,;].*)?$/i, "")
+    .replace(/\s+(?:ap(?:to|artamento)?|unidade|bloco|torre|lote|complemento)\s+.*$/i, "")
+    .replace(/[\s,;-]+$/g, "")
+    .trim();
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -134,6 +143,10 @@ function publicKey(env) {
 function storageImage(value, supabaseUrl) {
   const raw = String(value ?? "").trim();
   if (!raw || /[\u0000-\u001f\u007f"'\\()]/.test(raw)) return "";
+  if (raw.startsWith("midia:")) {
+    const id = raw.slice(6);
+    return UUID_PATTERN.test(id) ? `${supabaseUrl}/functions/v1/site-media/${id.toLowerCase()}` : "";
+  }
   if (/^https:\/\//i.test(raw)) {
     try {
       const parsed = new URL(raw);
@@ -242,20 +255,31 @@ function unitBedrooms(unit, row) {
   return match ? Number(match[1]) : finiteNumber(row?.dormitorios, 0, 30);
 }
 
+function neutralPropertyName(entity) {
+  const row = entity.row;
+  const unit = entity.unit;
+  const typology = cleanText(unit?.tipologia, 80).toLowerCase();
+  const type = typology.includes("studio") ? "Studio"
+    : typology.includes("cobertura") ? "Cobertura"
+      : typology.includes("casa") ? "Casa"
+        : typology.includes("terreno") ? "Terreno"
+          : typology.includes("comercial") || typology.includes("sala") ? "Imóvel comercial"
+            : "Apartamento";
+  const bedrooms = unitBedrooms(unit, row);
+  const rooms = bedrooms === 1 ? " com 1 quarto" : bedrooms > 1 ? ` com ${bedrooms} quartos` : "";
+  const bairro = cleanText(row?.bairro, 80);
+  const cidade = cleanText(row?.cidade, 80);
+  const place = bairro ? ` em ${bairro}${cidade ? `, ${cidade}` : ""}` : cidade ? ` em ${cidade}` : "";
+  return cleanText(`${type}${rooms}${place}`, 100);
+}
+
 function propertyName(entity) {
-  const base = cleanText(entity.row?.titulo || entity.row?.nome || "Imóvel ApeCerto", 90);
-  if (entity.kind !== "unit") return base;
-  const unitTitle = cleanText(entity.unit?.titulo_comercial, 100);
-  if (unitTitle) return unitTitle;
-  const reference = cleanText(entity.unit?.numero || entity.unit?.codigo, 40);
-  return reference ? `${base} · Unidade ${reference}` : base;
+  return neutralPropertyName(entity) || "Imóvel disponível";
 }
 
 function descriptionFor(entity) {
   const row = entity.row;
   const unit = entity.unit;
-  const supplied = cleanText(unit?.seo_descricao || unit?.descricao_comercial || row?.seo_descricao || row?.descricao || row?.slogan, 180);
-  if (supplied) return supplied;
   const details = [
     propertyName(entity),
     cleanText(unit?.tipologia, 60),
@@ -305,8 +329,7 @@ export function metadataFor(entity, supabaseUrl) {
   const row = entity.row;
   const unit = entity.unit;
   const name = propertyName(entity);
-  const editorialTitle = cleanText(unit?.seo_titulo || row?.seo_titulo, 65);
-  const title = cleanText(`${editorialTitle || name} | apêcerto`, 70);
+  const title = cleanText(`${name} | apêcerto`, 70);
   const description = descriptionFor(entity);
   const canonical = canonicalForSlug(entity.slug);
   const images = imagesFor(entity, supabaseUrl);
@@ -322,7 +345,7 @@ export function metadataFor(entity, supabaseUrl) {
     image: images,
     address: {
       "@type": "PostalAddress",
-      streetAddress: cleanText(row?.endereco, 160),
+      streetAddress: publicStreet(row?.endereco),
       addressLocality: cleanText(row?.cidade || "São Paulo", 80),
       addressRegion: cleanText(row?.uf || "SP", 8),
       addressCountry: "BR",

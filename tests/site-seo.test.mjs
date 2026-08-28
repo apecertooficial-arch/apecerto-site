@@ -18,22 +18,22 @@ const shell = `<!doctype html><html lang="pt-BR"><head>
 
 const catalog = [{
   id: '5a9f0112-76b4-4f34-9b63-a675188daf10',
-  slug: 'edificio-alpha',
-  nome: 'Edifício Alpha',
-  titulo: 'Loft <3 & "especial"',
+  slug: 'imovel-5a9f0112-76b4-4f34-9b63-a675188daf10',
+  nome: 'NOME_INTERNO_NAO_PUBLICAR',
+  titulo: 'NOME_INTERNO_NAO_PUBLICAR',
   seo_titulo: 'Loft editorial em Moema',
   seo_descricao: 'Descrição editorial do empreendimento.',
   descricao: 'Apartamento ensolarado & pronto para morar.',
   bairro: 'Moema',
-  endereco: 'Alameda dos Testes, 10',
+  endereco: 'Alameda dos Testes, NUMERO_PRIVADO_9999, apto 71, 04567-000',
   cidade: 'São Paulo',
   uf: 'SP',
   preco_min: 900000,
   preco_max: 1200000,
-  capa_path: 'publicas/capa alpha.jpg',
+  capa_path: 'midia:5a9f0112-76b4-4f34-9b63-a675188daf10',
   unidades_site: [{
     id: 'b61cb041-49c8-4670-8ebd-735c8db50d06',
-    slug: 'edificio-alpha-un-12',
+    slug: 'imovel-b61cb041-49c8-4670-8ebd-735c8db50d06',
     numero: '12',
     codigo: 'A12',
     tipologia: '2 dormitórios',
@@ -44,16 +44,16 @@ const catalog = [{
     descricao_comercial: 'Descrição própria da unidade que deve prevalecer sobre o texto do condomínio.',
     seo_titulo: 'Apartamento 12 em Moema',
     seo_descricao: 'Apartamento 12 com 74 m², duas suítes e uma vaga em Moema.',
-    fotos: ['unidades/12.jpg'],
+    fotos: ['midia:b61cb041-49c8-4670-8ebd-735c8db50d06'],
   }],
 }, {
   id: '8d5df891-e63e-4b9f-8b11-7965d5f39b17',
-  slug: 'edificio-beta',
-  nome: 'Edifício Beta',
-  titulo: 'Apartamento solar',
+  slug: 'imovel-8d5df891-e63e-4b9f-8b11-7965d5f39b17',
+  nome: 'NOME_INTERNO_NAO_PUBLICAR',
+  titulo: 'NOME_INTERNO_NAO_PUBLICAR',
   descricao: 'Vista aberta em Campo Belo.',
   bairro: 'Campo Belo',
-  endereco: 'Rua Pública, 20',
+  endereco: 'Rua Pública, 20, bloco B',
   cidade: 'São Paulo',
   uf: 'SP',
   preco: 780000,
@@ -92,8 +92,9 @@ test('sitemap publico inclui as seis rotas fixas, empreendimentos e unidades', a
   assert.match(response.headers.get('etag') || '', /^"[a-f0-9]{64}"$/);
   assert.equal([...body.matchAll(/<loc>/g)].length, 9);
   for (const route of seo.FIXED_ROUTES) assert.ok(body.includes(new URL(route.path, seo.SITE_ORIGIN).href));
-  assert.ok(body.includes('https://apecerto.com/imovel/edificio-alpha/'));
-  assert.ok(body.includes('https://apecerto.com/imovel/edificio-alpha-un-12/'));
+  assert.ok(body.includes('https://apecerto.com/imovel/imovel-5a9f0112-76b4-4f34-9b63-a675188daf10/'));
+  assert.ok(body.includes('https://apecerto.com/imovel/imovel-b61cb041-49c8-4670-8ebd-735c8db50d06/'));
+  assert.doesNotMatch(body, /NOME_INTERNO_NAO_PUBLICAR|NUMERO_PRIVADO_9999|edificio-alpha/i);
   assert.equal(calls.some((url) => url === seo.SHELL_URL), false, 'sitemap nao deve baixar o shell HTML');
   assert.doesNotMatch(body, /Alameda|preco|telefone|email/i);
 
@@ -106,41 +107,41 @@ test('sitemap publico inclui as seis rotas fixas, empreendimentos e unidades', a
 
 test('ficha injeta canonical, OG e JSON-LD com escaping seguro', async () => {
   const { handler } = testHandler();
-  const response = await handler(new Request('https://project.supabase.co/functions/v1/site-seo/imovel/edificio-alpha-un-12/'));
+  const response = await handler(new Request('https://project.supabase.co/functions/v1/site-seo/imovel/imovel-b61cb041-49c8-4670-8ebd-735c8db50d06/'));
   const body = await response.text();
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type') || '', /^text\/html; charset=utf-8$/);
-  assert.match(body, /<link rel="canonical" href="https:\/\/apecerto\.com\/imovel\/edificio-alpha-un-12\/">/);
+  assert.match(body, /<link rel="canonical" href="https:\/\/apecerto\.com\/imovel\/imovel-b61cb041-49c8-4670-8ebd-735c8db50d06\/">/);
   assert.match(body, /<meta property="og:type" content="product">/);
-  assert.match(body, /<meta property="og:image" content="https:\/\/diaegvfveqezispcthwk\.supabase\.co\/storage\/v1\/object\/public\/empreendimentos\/unidades\/12\.jpg">/);
+  assert.match(body, /<meta property="og:image" content="https:\/\/diaegvfveqezispcthwk\.supabase\.co\/functions\/v1\/site-media\/b61cb041-49c8-4670-8ebd-735c8db50d06">/);
   assert.match(body, /<meta name="twitter:card" content="summary_large_image">/);
-  assert.match(body, /<meta name="twitter:title" content="Apartamento 12 em Moema \| apêcerto">/);
-  assert.match(body, /<meta name="twitter:image" content="https:\/\/diaegvfveqezispcthwk\.supabase\.co\/storage\/v1\/object\/public\/empreendimentos\/unidades\/12\.jpg">/);
+  assert.match(body, /<meta name="twitter:title" content="Apartamento com 2 quartos em Moema, São Paulo \| apêcerto">/);
+  assert.match(body, /<meta name="twitter:image" content="https:\/\/diaegvfveqezispcthwk\.supabase\.co\/functions\/v1\/site-media\/b61cb041-49c8-4670-8ebd-735c8db50d06">/);
   assert.match(body, /id="apecerto-imovel-jsonld"/);
-  assert.match(body, /<title>Apartamento 12 em Moema \| apêcerto<\/title>/);
-  assert.match(body, /Apartamento 12 com 74 m², duas suítes e uma vaga em Moema\./);
-  assert.match(body, /\\u003c3/);
+  assert.match(body, /<title>Apartamento com 2 quartos em Moema, São Paulo \| apêcerto<\/title>/);
+  assert.match(body, /Apartamento com 2 quartos em Moema, São Paulo/);
+  assert.doesNotMatch(body, /NOME_INTERNO_NAO_PUBLICAR|NUMERO_PRIVADO_9999|04567-000|A12|Unidade 12/);
   assert.doesNotMatch(body, /<title>[^<]*<3/);
   assert.doesNotMatch(body, /<script>alert/);
 });
 
 test('duas fichas publicas entregam metadados factuais e distintos no HTML inicial', async () => {
   const { handler } = testHandler();
-  const alphaResponse = await handler(new Request('https://project.supabase.co/functions/v1/site-seo/imovel/edificio-alpha-un-12/'));
-  const betaResponse = await handler(new Request('https://project.supabase.co/functions/v1/site-seo/imovel/edificio-beta/'));
+  const alphaResponse = await handler(new Request('https://project.supabase.co/functions/v1/site-seo/imovel/imovel-b61cb041-49c8-4670-8ebd-735c8db50d06/'));
+  const betaResponse = await handler(new Request('https://project.supabase.co/functions/v1/site-seo/imovel/imovel-8d5df891-e63e-4b9f-8b11-7965d5f39b17/'));
   const alpha = await alphaResponse.text();
   const beta = await betaResponse.text();
 
   assert.equal(alphaResponse.status, 200);
   assert.equal(betaResponse.status, 200);
-  assert.match(alpha, /<title>Apartamento 12 em Moema \| apêcerto<\/title>/);
-  assert.match(beta, /<title>Apartamento solar \| apêcerto<\/title>/);
-  assert.match(alpha, /canonical" href="https:\/\/apecerto\.com\/imovel\/edificio-alpha-un-12\//);
-  assert.match(beta, /canonical" href="https:\/\/apecerto\.com\/imovel\/edificio-beta\//);
+  assert.match(alpha, /<title>Apartamento com 2 quartos em Moema, São Paulo \| apêcerto<\/title>/);
+  assert.match(beta, /<title>Apartamento em Campo Belo, São Paulo \| apêcerto<\/title>/);
+  assert.match(alpha, /canonical" href="https:\/\/apecerto\.com\/imovel\/imovel-b61cb041-49c8-4670-8ebd-735c8db50d06\//);
+  assert.match(beta, /canonical" href="https:\/\/apecerto\.com\/imovel\/imovel-8d5df891-e63e-4b9f-8b11-7965d5f39b17\//);
   assert.notEqual(alpha, beta);
   assert.doesNotMatch(alpha, /canonical" href="https:\/\/apecerto\.com\/"/);
   assert.doesNotMatch(beta, /canonical" href="https:\/\/apecerto\.com\/"/);
-  assert.match(beta, /Vista aberta em Campo Belo\./);
+  assert.match(beta, /Apartamento em Campo Belo, São Paulo/);
   assert.doesNotMatch(beta, /Alameda dos Testes|A12|975000/);
   assert.doesNotThrow(() => JSON.parse(beta.match(/id="apecerto-imovel-jsonld"[^>]*>([^<]+)<\/script>/)[1]));
 });
