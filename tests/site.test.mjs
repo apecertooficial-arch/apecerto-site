@@ -37,6 +37,46 @@ test('catalogo publico consulta a view site_produtos', async () => {
   assert.ok(!d.includes('/rest/v1/rpc/site_produto_resolver_slug_legado'), 'aliases legados devem ser resolvidos apenas no servidor');
 });
 
+test('frontend público aceita somente token opaco para mídia de Produtos', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const trecho = design.match(/\n  fotoUrl\(p\) \{([\s\S]*?)\n  \}\n  fotoAlt\(p, fallback\)/);
+  assert.ok(trecho, 'o serializador de mídia deve continuar isolado e testável');
+  const fotoUrl = new Function('p', trecho[1]);
+  const contexto = {
+    SB_URL: 'https://project.test.invalid',
+    uuidValido: value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value),
+  };
+  assert.equal(
+    fotoUrl.call(contexto, 'midia:5a9f0112-76b4-4f34-9b63-a675188daf10'),
+    'https://project.test.invalid/functions/v1/site-media/5a9f0112-76b4-4f34-9b63-a675188daf10',
+  );
+  for (const value of [
+    'unidades/privado/foto.jpg',
+    { storage_path: 'empreendimentos/interno/foto.jpg' },
+    '/storage/v1/object/public/empreendimentos/interno/foto.jpg',
+  ]) assert.equal(fotoUrl.call(contexto, value), '', 'path físico de Storage deve falhar fechado');
+});
+
+test('frontend reduz formatos comuns ao logradouro sem número ou complemento', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const trecho = design.match(/\n  enderecoPublico\(v\) \{([\s\S]*?)\n  \}\n  numeroPositivo\(v\)/);
+  assert.ok(trecho, 'o sanitizador de endereço deve continuar isolado e testável');
+  const enderecoPublico = new Function('v', trecho[1]);
+  for (const endereco of [
+    'Rua Exemplo, 123, apto 45',
+    'Rua Exemplo 123 apto 45',
+    'Rua Exemplo 123 - Apto 45',
+    'Rua Exemplo 123 – apto 45',
+    'Rua Exemplo 123 Apto. 45',
+    'Rua Exemplo 123 bloco B',
+    'Rua Exemplo 123 torre 2',
+    'Rua Exemplo 123 fundos',
+    'Rua Exemplo fundos',
+    'Rua Exemplo sem número',
+    'Rua Exemplo sem numero',
+  ]) assert.equal(enderecoPublico(endereco), 'Rua Exemplo', endereco);
+});
+
 test('cards de bairro nao abrem o seletor de arquivos no site publico', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const { out } = await pacotePublicado();

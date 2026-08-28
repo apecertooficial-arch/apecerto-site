@@ -40,9 +40,7 @@ function cleanText(value, maxLength = 240) {
 
 function publicStreet(value) {
   return cleanText(value, 160).split(",", 1)[0]
-    .replace(/\b\d{5}-?\d{3}\b/g, "")
-    .replace(/(?:,|\s)+\s*(?:n[ºo.]?\s*)?\d+[a-z]?(?:[-/]?[0-9a-z]+)?(?:[,;].*)?$/i, "")
-    .replace(/\s+(?:ap(?:to|artamento)?|unidade|bloco|torre|lote|complemento)\s+.*$/i, "")
+    .replace(/(?:\d|\s+(?:ap(?:to|artamento)?\.?|unidade|bloco|torre|lote|complemento|fundos|casa|sala|andar|conjunto|cj\.?|s\/?n|sem n(?:ú|u)mero)\b).*$/i, "")
     .replace(/[\s,;-]+$/g, "")
     .trim();
 }
@@ -183,21 +181,7 @@ function storageImage(value, supabaseUrl) {
     const id = raw.slice(6);
     return UUID_PATTERN.test(id) ? `${supabaseUrl}/functions/v1/site-media/${id.toLowerCase()}` : "";
   }
-  if (/^https:\/\//i.test(raw)) {
-    try {
-      const parsed = new URL(raw);
-      return parsed.protocol === "https:" ? parsed.href : "";
-    } catch { return ""; }
-  }
-  if (/^[a-z][a-z0-9+.-]*:/i.test(raw) || raw.startsWith("//")) return "";
-  let path;
-  try {
-    path = raw.replace(/^\/+/, "").split("/")
-      .filter((segment) => segment && segment !== "." && segment !== "..")
-      .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
-      .join("/");
-  } catch { return ""; }
-  return path ? `${supabaseUrl}/storage/v1/object/public/empreendimentos/${path}` : "";
+  return "";
 }
 
 function unitsOf(row) {

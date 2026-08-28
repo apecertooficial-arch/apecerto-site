@@ -30,6 +30,11 @@ const catalog = [{
   uf: 'SP',
   preco_min: 900000,
   preco_max: 1200000,
+  proprietario_id: '33333333-3333-4333-8333-333333333333',
+  proprietario_nome: 'PROPRIETARIO_NAO_PUBLICAR',
+  proprietario_contato: 'CONTATO_NAO_PUBLICAR',
+  latitude: -23.6001,
+  longitude: -46.6601,
   capa_path: 'midia:5a9f0112-76b4-4f34-9b63-a675188daf10',
   unidades_site: [{
     id: 'b61cb041-49c8-4670-8ebd-735c8db50d06',
@@ -124,9 +129,46 @@ test('ficha injeta canonical, OG e JSON-LD com escaping seguro', async () => {
   assert.match(body, /id="apecerto-imovel-jsonld"/);
   assert.match(body, /<title>Apartamento com 2 quartos em Moema, São Paulo \| apêcerto<\/title>/);
   assert.match(body, /Apartamento com 2 quartos em Moema, São Paulo/);
-  assert.doesNotMatch(body, /NOME_INTERNO_NAO_PUBLICAR|NUMERO_PRIVADO_9999|04567-000|A12|Unidade 12/);
+  assert.doesNotMatch(body, /NOME_INTERNO_NAO_PUBLICAR|NUMERO_PRIVADO_9999|04567-000|A12|Unidade 12|PROPRIETARIO_NAO_PUBLICAR|CONTATO_NAO_PUBLICAR|33333333-3333-4333-8333-333333333333|-23\.6001|-46\.6601/);
   assert.doesNotMatch(body, /<title>[^<]*<3/);
   assert.doesNotMatch(body, /<script>alert/);
+});
+
+test('serializer público falha fechado para path físico de Storage', async () => {
+  const rows = [{
+    ...catalog[1],
+    slug: 'path-fisico-bloqueado',
+    capa_path: 'unidades/privado/foto-interna.jpg',
+    fotos: ['empreendimentos/privado/outra-foto.jpg'],
+  }];
+  const { handler } = testHandler(rows);
+  const response = await handler(new Request('https://project.supabase.co/functions/v1/site-seo/imovel/path-fisico-bloqueado/'));
+  const body = await response.text();
+  assert.equal(response.status, 200);
+  assert.match(body, /<meta name="twitter:card" content="summary">/);
+  assert.doesNotMatch(body, /property="og:image"|name="twitter:image"/);
+  assert.doesNotMatch(body, /storage\/v1\/object|foto-interna|outra-foto/);
+});
+
+test('endereço público falha fechado para número e complemento em formatos comuns', () => {
+  const samples = [
+    'Rua Exemplo, 123, apto 45',
+    'Rua Exemplo 123 apto 45',
+    'Rua Exemplo 123 - Apto 45',
+    'Rua Exemplo 123 – apto 45',
+    'Rua Exemplo 123 Apto. 45',
+    'Rua Exemplo 123 bloco B',
+    'Rua Exemplo 123 torre 2',
+    'Rua Exemplo 123 fundos',
+    'Rua Exemplo fundos',
+    'Rua Exemplo sem número',
+    'Rua Exemplo sem numero',
+  ];
+  for (const endereco of samples) {
+    const metadata = seo.metadataFor({ kind: 'property', slug: 'endereco-sintetico', row: { ...catalog[1], endereco }, unit: null }, 'https://project.test.invalid');
+    assert.equal(metadata.jsonLd.address.streetAddress, 'Rua Exemplo', endereco);
+    assert.doesNotMatch(metadata.jsonLd.address.streetAddress, /\d|apto|bloco|torre|fundos/i, endereco);
+  }
 });
 
 test('duas fichas publicas entregam metadados factuais e distintos no HTML inicial', async () => {

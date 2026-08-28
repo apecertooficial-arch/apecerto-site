@@ -4911,7 +4911,7 @@ class Component extends DCLogic {
   }
   nomePublico(r) { return this.identidadePublica(r); }
   enderecoPublico(v) {
-    return String(v || '').split(',', 1)[0].replace(/\b\d{5}-?\d{3}\b/g, '').replace(/(?:,|\s)+\s*(?:n[ºo.]?\s*)?\d+[a-z]?(?:[-/]?[0-9a-z]+)?(?:[,;].*)?$/i, '').replace(/\s+(?:ap(?:to|artamento)?|unidade|bloco|torre|lote|complemento)\s+.*$/i, '').replace(/[\s,;-]+$/g, '').trim().slice(0, 160);
+    return String(v || '').split(',', 1)[0].replace(/(?:\d|\s+(?:ap(?:to|artamento)?\.?|unidade|bloco|torre|lote|complemento|fundos|casa|sala|andar|conjunto|cj\.?|s\/?n|sem n(?:ú|u)mero)\b).*$/i, '').replace(/[\s,;-]+$/g, '').trim().slice(0, 160);
   }
   numeroPositivo(v) {
     const n = Number(v);
@@ -4936,12 +4936,7 @@ class Component extends DCLogic {
     if (raw.replace(/^\/+/, '') === moaGif || raw.split(/[?#]/)[0].endsWith('/empreendimentos/' + moaGif)) {
       return '/assets/media/fac779ec499e72abf87e.jpg';
     }
-    if (/^https:\/\//i.test(raw)) {
-      try { const u = new URL(raw); return u.protocol === 'https:' ? u.href : ''; } catch (e) { return ''; }
-    }
-    if (/^[a-z][a-z0-9+.-]*:/i.test(raw) || raw.startsWith('//')) return '';
-    const path = raw.replace(/^\/+/, '').split('/').map(s => encodeURIComponent(decodeURIComponent(s))).join('/');
-    return this.SB_URL + '/storage/v1/object/public/empreendimentos/' + path;
+    return '';
   }
   fotoAlt(p, fallback) {
     if (p && typeof p === 'object' && p.alt_text) return String(p.alt_text).replace(/\s+/g, ' ').trim().slice(0, 220);
