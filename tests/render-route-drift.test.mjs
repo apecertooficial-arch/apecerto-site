@@ -10,6 +10,16 @@ const yaml = `services:
         source: /imovel/*
         destination: ${destination}
 `;
+const staticYaml = `services:\n  - type: web\n    runtime: static\n`;
+
+test("detector confirma ausência da regra externa no Static Site", () => {
+  assert.equal(expectedLegacyRule(staticYaml), null);
+  assert.deepEqual(checkRenderRouteDrift(staticYaml, []), { ok: true, drift: [] });
+  assert.deepEqual(
+    checkRenderRouteDrift(staticYaml, [{ action: "rewrite", source: "/imovel/*", destination }]),
+    { ok: false, drift: ["unexpected_active_rule"] },
+  );
+});
 
 test("detector aceita a regra ativa idêntica à configuração versionada", () => {
   assert.deepEqual(expectedLegacyRule(yaml), { action: "rewrite", source: "/imovel/*", destination });

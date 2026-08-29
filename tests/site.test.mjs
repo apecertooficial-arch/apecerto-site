@@ -103,7 +103,9 @@ test('imagens dinâmicas só recebem src depois de o template resolver a URL', a
   assert.doesNotMatch(out, fundoLiteral, 'o pacote publicado não pode reintroduzir fundos literais inválidos');
   assert.equal((design.match(/data-ape-src="\{\{ p\.foto \}\}"/g) || []).length, 5, 'todos os cards devem usar a fonte inerte');
   assert.equal((design.match(/data-ape-src="\{\{ galFotoAtual \}\}"/g) || []).length, 1, 'a foto principal da galeria deve usar a fonte inerte');
-  assert.equal((design.match(/data-ape-bg="\{\{/g) || []).length, 10, 'todos os fundos dinâmicos devem usar a fonte inerte');
+  assert.equal((design.match(/data-ape-src="\{\{ galM[1-5] \}\}"/g) || []).length, 5, 'o mosaico da ficha deve usar imagens reais, sem depender de hidratação de background');
+  assert.equal((design.match(/data-ape-src="\{\{ t\.url \}\}"/g) || []).length, 1, 'as miniaturas da galeria devem usar imagens reais');
+  assert.doesNotMatch(design, /aria-label="Abrir foto [1-5][^"]*"[^>]*data-ape-bg/, 'os gatilhos da ficha não podem voltar ao hydrator frágil de fundos');
   assert.ok(design.includes("src.includes('{{') || src.includes('}}')"), 'o ativador deve rejeitar placeholders ainda não resolvidos');
   assert.ok(design.includes("img.setAttribute('src', src)"), 'a imagem resolvida deve continuar sendo exibida');
   assert.ok(design.includes("el.style.backgroundImage = 'url(' + JSON.stringify(src) + ')'"), 'o fundo resolvido deve ser aplicado com escape seguro');
@@ -141,8 +143,6 @@ test('imagens críticas e galerias usam prioridade, dimensões e preparação pr
 test('acesso do portal associa rótulos e orienta preenchimento e leitores de tela', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const campos = [
-    ['nome', 'name'],
-    ['telefone', 'tel'],
     ['email', 'email'],
     ['senha', '{{ authSenhaAutocomplete }}'],
   ];
@@ -155,7 +155,9 @@ test('acesso do portal associa rótulos e orienta preenchimento e leitores de te
       `${campo} deve expor autocomplete e obrigatoriedade`,
     );
   }
-  assert.ok(design.includes("authSenhaAutocomplete: criar ? 'new-password' : 'current-password'"), 'a senha deve distinguir criação de login');
+  assert.match(design, /Acesse o portal do proprietário/);
+  assert.match(design, /O acesso é liberado pela equipe depois do primeiro contato/);
+  assert.doesNotMatch(design, />Crie seu acesso<\/button>/, 'o portal não deve oferecer um signup que a infraestrutura recusa');
   assert.ok(design.includes('role="alert" aria-live="assertive"'), 'erros de autenticação devem ser anunciados imediatamente');
   assert.ok(design.includes('role="status" aria-live="polite"'), 'confirmações de autenticação devem ser anunciadas sem interromper');
 });
@@ -395,8 +397,36 @@ test('resultado no celular prioriza lista, filtros e alvos de toque confortávei
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   assert.match(design, /\.rw-dividida\s*\{\s*display:\s*none\s*!important/);
   assert.match(design, /\.rw-result-tools\s*\{[\s\S]{0,300}?position:\s*sticky/);
+  assert.match(design, /\.rw-result-tools\s*\{[\s\S]{0,500}?display:\s*grid\s*!important/);
+  assert.match(design, /\.rw-tool-sort, \.rw-tool-view\s*\{\s*grid-column:\s*1 \/ -1/);
+  assert.doesNotMatch(design, /\.rw-result-tools\s*\{[^}]*overflow-x:\s*auto/, 'os controles não podem depender de uma rolagem horizontal sem affordance');
   assert.match(design, /button\[aria-label="Foto anterior"\][\s\S]{0,160}?width:\s*44px\s*!important/);
-  assert.match(design, /const vistaEfetiva = mobile && st\.vista === 'dividida' \? 'lista' : st\.vista/);
+  assert.match(design, /const vistaEfetiva = mapaRepresentacao\.pontos === 0 \? 'lista' : \(mobile && st\.vista === 'dividida' \? 'lista' : st\.vista\)/);
+});
+
+test('hero e navegação preservam hierarquia e legibilidade no desktop e no celular', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /class="rw-desk rw-nav-primary" aria-label="Navegação principal"/);
+  assert.match(design, />Anunciar imóvel<\/a>/);
+  assert.match(design, /class="rw-account-link"[^>]*>Minha conta<\/a>/);
+  assert.match(design, /class="rw-hero-main-filters"/);
+  assert.match(design, /\.rw-hero-main-filters\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\)/);
+  assert.match(design, /\.rw-search-primary button\s*\{[^}]*white-space:\s*nowrap/);
+  assert.match(design, /mobile \? 'Ver apês à venda →' : 'Buscar apê pra comprar →'/);
+  assert.match(design, /bairroPlaceholder:\s*mobile \? 'Bairro' : 'Todos os bairros'/);
+  assert.match(design, /statusPlaceholder:\s*mobile \? 'Status' : 'Qualquer status'/);
+  assert.match(design, /padding:\s*48px 24px 32px; display:\s*grid/);
+  assert.match(design, /resultsPadding:\s*st\.buscaAtiva \? '40px 24px 88px' : '32px 24px 88px'/);
+});
+
+test('capas usam proporção previsível, skeleton e fallback sem inventar ativos', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /\.rw-card-photo\s*\{[^}]*aspect-ratio:\s*4 \/ 3/);
+  assert.match(design, /\.rw-card-photo::before[^}]*animation:\s*ape-shimmer/);
+  assert.match(design, /\.rw-card-photo::after\s*\{[^}]*content:\s*"Foto em preparação"/);
+  assert.match(design, /fotoEstado:\s*n > 0 \? 'is-loading' : 'is-error'/);
+  assert.match(design, /img\.addEventListener\('load', \(\) => marcarCapa\('is-loaded'\)/);
+  assert.match(design, /img\.addEventListener\('error', \(\) => marcarCapa\('is-error'\)/);
 });
 
 test('busca entra em modo de resultados focado sem perder o caminho de volta', async () => {
@@ -514,6 +544,65 @@ test('galeria e filtros devolvem foco e compartilham fechamento seguro', async (
   assert.match(design, /this\.filtrosFocusOrigin && this\.filtrosFocusOrigin\.focus/);
   assert.match(design, /this\.state\.galOn[\s\S]{0,100}?document\.querySelector\('\[data-gallery-modal\]'\)/, 'a galeria deve participar do trap de foco global');
   assert.match(design, /this\.state\.filtrosOn[\s\S]{0,100}?document\.querySelector\('#filtros-avancados'\)/, 'os filtros devem participar do trap de foco global');
+});
+
+test('galeria responde imediatamente e pre-carrega somente as fotos vizinhas', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const trecho = design.match(/\n  trocarFotoGaleria\(e, fotos, indice\) \{([\s\S]*?)\n  \}\n  galTouchStart/);
+  assert.ok(trecho, 'a troca da galeria deve continuar isolada e testável');
+  const codigo = trecho[1];
+  assert.ok(codigo.indexOf('this.setState({ galIdx: indice, galLoading: true }') < codigo.indexOf('this.prepararFoto('), 'o índice e o loading devem mudar antes de qualquer espera de rede');
+  assert.match(codigo, /const proxima = \(indice \+ 1\) % fotos\.length/);
+  assert.match(codigo, /const anterior = \(indice - 1 \+ fotos\.length\) % fotos\.length/);
+  assert.doesNotMatch(codigo, /Promise\.race|await\s+this\.prepararFoto/, 'a interação não pode aguardar download ou decode');
+  assert.match(design, /class="rw-gallery-loading" role="status" aria-live="polite"/);
+});
+
+test('home usa busca progressiva e bairros derivados somente do catálogo publicado', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /class="rw-hero-advanced"/);
+  assert.match(design, /aria-controls="filtros-avancados"[^>]*>Mais filtros<\/button>/);
+  assert.match(design, /\n  bairrosPublicados\(\) \{/);
+  assert.match(design, /bairros:\s*this\.bairrosPublicados\(\)\.map/);
+  assert.doesNotMatch(design, /nome: 'Moema Pássaros'|nome: 'Moema Índios'/, 'a seção não pode manter bairros editoriais sem imóveis reais');
+  assert.match(design, /\{\{ b\.contagem \}\}/);
+  assert.match(design, /href="\{\{ b\.href \}\}"/);
+  assert.match(design, /href:\s*'\/\?bairro=' \+ encodeURIComponent\(b\.nome\)/);
+  assert.doesNotMatch(design, /href="#(?:apes|buscar)"/, 'links visíveis de busca não podem fingir uma taxonomia compartilhável');
+  const navegacaoReal = design.slice(design.indexOf('seoCols: (() => {'), design.indexOf('\n    };\n  }\n}', design.indexOf('seoCols: (() => {')));
+  assert.doesNotMatch(navegacaoReal, /Moema Pássaros|Moema Índios|Vila Nova Conceição|Brooklin|Ibirapuera/, 'a navegação não pode anunciar bairros ausentes da fonte real');
+  assert.match(design, /class="rw-search-sara"[^>]*aria-controls="sara-painel"/, 'a busca progressiva deve manter a Sara acessível');
+  assert.match(design, /role="region" aria-label="Busca assistida pela Sara"/);
+  assert.equal((design.match(/id="sara-painel"/g) || []).length, 1, 'o painel da Sara deve ter um único id acessível');
+});
+
+test('conteúdo, portal e ficha não prometem fluxos indisponíveis nem exibem dados enganosos', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.doesNotMatch(design, />Crie seu acesso<\/button>/, 'signup público desativado não pode continuar como ação visível');
+  assert.match(design, /O acesso é liberado pela equipe depois do primeiro contato/);
+  assert.match(design, /href="https:\/\/wa\.me\/5511980154312\?text=/, 'novo proprietário deve receber orientação acionável em português');
+  assert.match(design, /authModo: 'entrar', authErro: null, authMsg: 'Seu cadastro continua preenchido/);
+  assert.match(design, /'Sem vaga de garagem'/);
+  assert.match(design, /\{ k: 'Vagas', v: this\.numeroPositivo\(det\.vagas\) \? String/);
+  assert.match(design, /const local = bairro \? ' em ' \+ bairro : \(cidade \? ' em ' \+ cidade : ''\)/, 'título e subtítulo não devem repetir cidade');
+  assert.doesNotMatch(design, /Por que alugar com a apêcerto\?|Documentos pra alugar|Caução, fiador ou seguro-fiança\?/, 'o conteúdo principal deve refletir a jornada de compra publicada');
+});
+
+test('anunciar começa pela captação e só exige conta para enviar', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /if \(cadastro\) \{[\s\S]*tela: 'wizard'/);
+  assert.match(design, /if \(!this\.state\.sess\) \{[\s\S]*rotaPendente: 'captacao-finalizar'/);
+  assert.match(design, /pendente === 'captacao-finalizar'\) this\.enviarCaptacao\(\)/);
+  assert.match(design, /sc-camel-on-click="\{\{ abreCadastro \}\}" hint-size="220px,48px">Anunciar meu apê/);
+});
+
+test('mapa sem coordenadas mostra estado honesto em vez de uma tela vazia', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  assert.match(design, /mapaTemPontos: mapaRepresentacao\.pontos > 0/);
+  assert.match(design, /mapaSemPontos: mapaRepresentacao\.pontos === 0/);
+  assert.match(design, /Mapa temporariamente sem pontos/);
+  assert.match(design, /A localização pública precisa ser cadastrada em Produtos/);
+  assert.match(design, /<sc-if value="\{\{ mapaTemPontos \}\}"[\s\S]{0,1200}?class="rw-dividida"[\s\S]{0,1200}?>Mapa<\/button>/, 'Mapa e Dividida só podem aparecer quando houver pontos reais');
 });
 
 test('crédito do mapa preserva o OpenStreetMap sem exibir a marca visual do Leaflet', async () => {
