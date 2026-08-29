@@ -263,7 +263,9 @@ test('event_id fornecido é honrado por todos os canais de tracking', async () =
     'window.apecertoLeadTracking = function () {',
   );
 
-  assert.match(pageView, /var eventId = makeUuid\(\)/);
+  assert.match(analytics, /var initialPageViewEventId = makeUuid\(\)/);
+  assert.match(pageView, /var eventId = initialPageViewEventId/);
+  assert.match(analytics, /firstPartyTrack\('page_view', \{ event_id: initialPageViewEventId \}\)/);
   assert.doesNotMatch(pageView, /publicParams|suppliedEventId/);
   assert.match(track, /var suppliedEventId = uuidOrNull\(publicParams\.event_id\)/);
   assert.match(track, /delete publicParams\.event_id/);
