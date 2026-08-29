@@ -13,7 +13,7 @@ export function expectedLegacyRule(renderYaml) {
       + "\\s*\\n\\s*destination:\\s*([^\\s#]+)",
     "i",
   ));
-  if (!match) throw new Error("A regra legada versionada não foi encontrada.");
+  if (!match) return null;
   return { action: match[1].toLowerCase(), source: LEGACY_SOURCE, destination: match[2] };
 }
 
@@ -30,13 +30,14 @@ function normalizeActiveRule(rule) {
 export function checkRenderRouteDrift(renderYaml, activeRules) {
   const expected = expectedLegacyRule(renderYaml);
   const normalized = Array.isArray(activeRules) ? activeRules.map(normalizeActiveRule).filter(Boolean) : [];
-  const active = normalized.find((rule) => rule.source === expected.source);
+  const legacyRules = normalized.filter((rule) => rule.source === LEGACY_SOURCE);
+  if (!expected) return legacyRules.length ? { ok: false, drift: ["unexpected_active_rule"] } : { ok: true, drift: [] };
+  const active = legacyRules[0];
   if (!active) return { ok: false, drift: ["missing_active_rule"] };
   const drift = [];
   if (active.action !== expected.action) drift.push("action");
   if (active.destination !== expected.destination) drift.push("destination");
-  const duplicates = normalized.filter((rule) => rule.source === expected.source).length;
-  if (duplicates !== 1) drift.push("duplicate_source");
+  if (legacyRules.length !== 1) drift.push("duplicate_source");
   return { ok: drift.length === 0, drift };
 }
 

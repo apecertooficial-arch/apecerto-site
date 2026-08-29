@@ -14,20 +14,21 @@
 1. Reconfirmar PR Draft, base, HEAD remoto, ausência de conflitos e CI verde.
 2. Criar preview isolado do serviço estático vinculado exatamente ao HEAD aprovado.
 3. Confirmar que o preview serve o commit esperado e não altera domínio/branch/auto-deploy do serviço principal.
-4. Gate HTTP direto:
+4. Confirmar no dashboard que não existe regra ativa de rewrite para `/imovel/*`.
+5. Gate HTTP direto:
    - home e assets críticos sem 404/5xx;
    - duas fichas distintas com `Content-Type: text/html; charset=utf-8`;
    - title, description, canonical, OG, Twitter e JSON-LD distintos/factuais;
    - slug inexistente com 404, `noindex,nofollow` e `Content-Type: text/html; charset=utf-8`;
    - imagem social 200 e tipo de imagem correto.
-5. Gate navegador em 1440×900 e 390×844:
+6. Gate navegador em 1440×900 e 390×844:
    - home, busca e filtros na URL;
    - 19 resultados do cenário citado, aviso factual e zero marcador inventado;
    - ficha com fotos, galeria e voltar preservando query;
    - galeria e filtros com foco, Escape, botão e retorno ao gatilho;
    - Sara, Anunciar e portal nos estados seguros, sem submissão;
    - zero overflow, erro de console, 5xx ou asset quebrado.
-6. Registrar métricas de laboratório para home, resultados e ficha; não chamar de Core Web Vitals de campo.
+7. Registrar métricas de laboratório para home, resultados e ficha; não chamar de Core Web Vitals de campo.
 
 ## 2. Merge controlado
 
@@ -38,10 +39,11 @@
 
 ## 3. Deploy de produção
 
-1. No Render, usar **Deploy a specific commit** com o merge SHA registrado; não mudar configuração do serviço.
-2. Aguardar estado Live e registrar o novo deploy ID.
-3. Confirmar que `/version.json` mudou para o artefato do merge e que o SHA de design corresponde à release.
-4. Repetir todos os gates HTTP, SEO, navegador desktop/mobile e métricas do preview diretamente em `https://apecerto.com`.
+1. Remover somente a regra ativa `/imovel/*` no serviço principal para alinhar a hospedagem ao Blueprint aprovado.
+2. No Render, usar **Deploy a specific commit** com o merge SHA registrado; não mudar outras configurações do serviço.
+3. Aguardar estado Live e registrar o novo deploy ID.
+4. Confirmar que `/version.json` mudou para o artefato do merge e que o SHA de design corresponde à release.
+5. Repetir todos os gates HTTP, SEO, navegador desktop/mobile e métricas do preview diretamente em `https://apecerto.com`.
 
 ## 4. Critérios objetivos de rollback
 
@@ -58,4 +60,3 @@ Executar rollback imediato se ocorrer qualquer um destes eventos:
 - regressão de laboratório superior a 10% sem explicação técnica verificável.
 
 Após rollback, confirmar novamente o deploy `dep-da8sk5k9v7es73cg72f0`, a versão `1f70df31b3f230` e os smokes estáveis. Não alterar `site-track` nem segurança para evitar o rollback.
-

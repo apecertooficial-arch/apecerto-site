@@ -36,8 +36,8 @@ por conteúdo e cache imutável; `version.json` identifica exatamente as fontes 
 os artefatos de cada pacote.
 
 As rotas públicas incluem a área do proprietário e o cadastro do imóvel. Fichas
-de imóveis usam URLs limpas no formato `/imovel/<slug>/`; o Render reescreve essa
-rota para o shell da aplicação sem transformar a navegação em erro 404.
+de imóveis usam URLs limpas no formato `/imovel/<slug>/` e são arquivos físicos
+pré-renderizados; o host entrega o `404.html` noindex quando o slug não existe.
 
 ### Detector de drift da regra legada
 
@@ -45,12 +45,13 @@ O serviço atual também mantém regras no dashboard do Render. Para comparar um
 snapshot sanitizado dessas regras com o `render.yaml`, execute:
 
 ```sh
-RENDER_ACTIVE_RULES_JSON='[{"source":"/imovel/*","destination":"https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/imovel/*","action":"rewrite"}]' npm run check:render-drift
+RENDER_ACTIVE_RULES_JSON='[]' npm run check:render-drift
 ```
 
 O snapshot não contém token, cabeçalho ou configuração de ambiente. Em automação,
 obtenha-o por uma integração read-only e injete somente os três campos acima.
-Ausência, duplicidade, mudança de ação ou destino faz o comando falhar fechado.
+Uma regra ativa para `/imovel/*` faz o comando falhar fechado, porque ela
+contornaria as fichas físicas e o 404 HTML do Static Site.
 
 ## SEO dinâmico do catálogo
 
@@ -83,8 +84,8 @@ catálogo em `version.json` e falha se a visão pública estiver indisponível.
 
 Antes do merge, o Preview do Render deve comprovar duas fichas distintas com
 `Content-Type: text/html`, uma rota inexistente com 404/noindex, sitemap e assets.
-As fichas pré-renderizadas continuam físicas; o rewrite `/imovel/*` só atende o
-fallback legado/404 no Edge `site-seo`. Sitemap não recebe rewrite.
+As fichas pré-renderizadas e o `404.html` são servidos diretamente pelo Static
+Site; `/imovel/*` não recebe rewrite externo.
 Como os metadados são snapshot do build, um imóvel recém-publicado no ERP entra
 imediatamente no corpo dinâmico, mas sua página SEO inicial exige novo build.
 

@@ -49,7 +49,7 @@ O código do PR está **apto a entrar no preview após a correção de hospedage
 
 ## Correção de hospedagem descoberta
 
-O slug inexistente em produção retorna 404 e `noindex`, porém o proxy externo faz o Render responder `Content-Type: text/plain`. O PR passa a declarar `Content-Type: text/html; charset=utf-8` para `/imovel/*` no Blueprint e adiciona verificação bloqueante. O preview real é o gate que comprovará se o header do Static Site também cobre a resposta do rewrite externo.
+O slug inexistente em produção retorna 404 e `noindex`, porém o proxy externo faz o Render responder `Content-Type: text/plain`. O preview comprovou que um header do Render não substitui de forma consistente o header da resposta externa. A correção segura remove a dependência do rewrite: fichas canônicas continuam físicas e o slug inexistente usa o `404.html` nativo, ambos com `Content-Type: text/html; charset=utf-8`. O verificador agora falha se a regra externa reaparecer.
 
 ## Evidências visuais do preflight
 
@@ -64,4 +64,3 @@ O slug inexistente em produção retorna 404 e `noindex`, porém o proxy externo
 2. Variantes responsivas e foco editorial das capas dependem do pipeline de mídia/Produtos.
 3. A autorização não cobre Supabase; portanto o 403 do `site-track` deve ser resolvido pelo responsável de infraestrutura sem expor segredo nem abrir escrita indiscriminada.
 4. Core Web Vitals de campo exigem tráfego real posterior; nesta entrega só são válidas métricas de laboratório.
-

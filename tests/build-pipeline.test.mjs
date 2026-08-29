@@ -237,7 +237,7 @@ test('Render aguarda CI e envia headers seguros e cache imutavel', async () => {
   assert.match(render, /autoDeployTrigger: checksPass/);
   assert.match(localServer, /public, max-age=31536000, immutable/, 'a medição local deve espelhar o cache de assets do Render');
   assert.match(localServer, /public, max-age=0, must-revalidate/, 'documentos locais devem revalidar sem bloquear o bfcache');
-  assert.match(render, /routes:\s+[\s\S]*type: rewrite\s+[\s\S]*source: \/imovel\/\*\s+[\s\S]*destination: https:\/\/diaegvfveqezispcthwk\.supabase\.co\/functions\/v1\/site-seo\/imovel\/\*/);
+  assert.doesNotMatch(render, /source: \/imovel\/\*/, 'fichas fisicas e o 404 nativo nao devem depender da Edge');
   assert.doesNotMatch(render, /source: \/sitemap-catalogo\.xml/);
   assert.doesNotMatch(render, /source: \/sitemap\.xml\s+destination:/);
   assert.match(render, /path: \/imovel\/\*\s+name: Content-Type\s+value: text\/html; charset=utf-8/);
