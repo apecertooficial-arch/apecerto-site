@@ -240,6 +240,7 @@ test('Render aguarda CI e envia headers seguros e cache imutavel', async () => {
   assert.match(render, /routes:\s+[\s\S]*type: rewrite\s+[\s\S]*source: \/imovel\/\*\s+[\s\S]*destination: https:\/\/diaegvfveqezispcthwk\.supabase\.co\/functions\/v1\/site-seo\/imovel\/\*/);
   assert.doesNotMatch(render, /source: \/sitemap-catalogo\.xml/);
   assert.doesNotMatch(render, /source: \/sitemap\.xml\s+destination:/);
+  assert.match(render, /path: \/imovel\/\*\s+name: Content-Type\s+value: text\/html; charset=utf-8/);
   assert.match(render, /path: \/sitemap\.xml\s+name: Content-Type\s+value: application\/xml; charset=utf-8/);
   assert.match(render, /path: \/sitemap-catalogo\.xml\s+name: Content-Type\s+value: application\/xml; charset=utf-8/);
   assert.match(render, /Cache-Control[\s\S]*max-age=31536000, immutable/);

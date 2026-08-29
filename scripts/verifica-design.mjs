@@ -244,6 +244,9 @@ export async function verifySite({
     }
   }
   const propertyDestination = rewriteDestination(render, seo.propertyPath || '/imovel/*');
+  if (headerValue(render, seo.propertyPath || '/imovel/*', 'Content-Type') !== 'text/html; charset=utf-8') {
+    errors.push('header HTML ausente no Render para as fichas');
+  }
   if (seo.propertyPrerenderEnabled !== true) errors.push('pre-renderizacao das fichas deve permanecer habilitada');
   const expectedPropertyDestination = 'https://diaegvfveqezispcthwk.supabase.co/functions/v1/site-seo/imovel/*';
   if (propertyDestination !== expectedPropertyDestination) errors.push('fallback server-side das fichas deve apontar para o proxy SEO aprovado');
