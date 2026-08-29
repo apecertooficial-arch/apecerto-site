@@ -13,10 +13,33 @@ const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,178}[a-z0-9])?$/;
 const MOA_GIF_PATH = '/storage/v1/object/public/empreendimentos/moa/4lq4pd7p32p.gif';
 const MOA_POSTER_URL = 'https://apecerto.com/assets/media/fac779ec499e72abf87e.jpg';
 
-const applyLocalMediaOverrides = metadata => {
+const applyLocalMediaOverrides = (metadata, entity) => {
   const replace = value => String(value || '').split(/[?#]/)[0].endsWith(MOA_GIF_PATH) ? MOA_POSTER_URL : value;
   const images = (metadata.images || []).map(replace);
-  return { ...metadata, images, jsonLd: { ...metadata.jsonLd, image: images } };
+  const source = { ...(entity?.row || {}), ...(entity?.unit || {}) };
+  const tipologia = String(source.tipologia || '').toLowerCase();
+  const tipo = /studio/.test(tipologia) ? 'Studio' : /cobertura/.test(tipologia) ? 'Cobertura' : /casa/.test(tipologia) ? 'Casa' : 'Apartamento';
+  const dormitorios = Number(source.dormitorios);
+  const quartos = Number.isFinite(dormitorios) && dormitorios > 0 ? ` com ${dormitorios} ${dormitorios === 1 ? 'quarto' : 'quartos'}` : '';
+  const bairro = String(source.bairro || '').replace(/\s+/g, ' ').trim();
+  const cidade = String(source.cidade || 'São Paulo').replace(/\s+/g, ' ').trim();
+  const name = `${tipo}${quartos}${bairro ? ` em ${bairro}` : ''}`.slice(0, 120);
+  const area = Number(source.area_util || source.area_min_disponivel);
+  const description = [name, Number.isFinite(area) && area > 0 ? `${area.toLocaleString('pt-BR')} m²` : '', bairro, cidade].filter(Boolean).join(' · ').slice(0, 240);
+  const publicAddress = {
+    '@type': 'PostalAddress',
+    addressLocality: cidade,
+    addressRegion: String(source.uf || 'SP').slice(0, 2),
+    addressCountry: 'BR',
+  };
+  return {
+    ...metadata,
+    name,
+    title: `${name} | apêcerto`,
+    description,
+    images,
+    jsonLd: { ...metadata.jsonLd, name, description, image: images, address: publicAddress, geo: undefined },
+  };
 };
 
 const publicCatalogConfig = design => {
@@ -33,6 +56,7 @@ const validMetadata = (entity, metadata, origin) => {
   if (!metadata?.title || !metadata?.description) return false;
   if (metadata.canonical !== `${origin}/imovel/${encodeURIComponent(entity.slug)}/`) return false;
   if (!metadata.jsonLd || metadata.jsonLd['@type'] !== 'Apartment') return false;
+  if (metadata.jsonLd.address?.streetAddress || metadata.jsonLd.geo) return false;
   return true;
 };
 
@@ -73,7 +97,7 @@ export async function prerenderProperties({ root, distDir, config, fetchImpl = f
   const shell = await readFile(safeDistPath(distDir, 'index.html'), 'utf8');
   const urls = [];
   for (const entity of entities) {
-    const metadata = applyLocalMediaOverrides(metadataFor(entity, supabaseUrl));
+    const metadata = applyLocalMediaOverrides(metadataFor(entity, supabaseUrl), entity);
     if (!validMetadata(entity, metadata, config.origin)) throw new Error(`catalog_entity_invalid:${entity.slug}`);
     const output = safeDistPath(distDir, `imovel/${entity.slug}/index.html`);
     await mkdir(dirname(output), { recursive: true });

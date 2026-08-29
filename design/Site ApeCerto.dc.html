@@ -1803,6 +1803,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     }
     @media (min-width: 768px) { .rw-m { display: none !important; } }
     @media (min-width: 768px) {
+      .rw-hero-search-actions { display: grid !important; grid-template-columns: minmax(220px, 1fr) auto auto; align-items: center; }
       .rw-results-mode .rw-result-tools { position: sticky; top: 72px; z-index: 35; margin-inline: -12px !important; padding: 10px 12px; background: rgba(250, 248, 246, 0.94); border-block: 1px solid var(--border-soft); backdrop-filter: blur(14px); }
       .rw-hero h1 { font-size: clamp(42px, 4vw, 52px) !important; }
       .rw-nav-primary { display: flex; align-items: center; gap: 8px; padding: 4px; border: 1px solid var(--border-soft); border-radius: var(--radius-pill); background: rgba(255,255,255,0.52); }
@@ -1814,6 +1815,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .rw-hero-search { border: 1px solid var(--border-soft); }
     .rw-hero-advanced { display: none !important; }
     .rw-search-sara { min-height: 48px; white-space: nowrap; border: 1px solid var(--ape-purple); border-radius: var(--radius-pill); padding: 0 16px; font: inherit; font-size: var(--text-sm); font-weight: var(--weight-semibold); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+    .rw-search-primary > * { width: 100% !important; min-width: 0 !important; }
+    .rw-search-primary .sc-host-x,
+    .rw-search-primary .sc-host-x button { width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; }
+    .rw-search-primary button { padding-inline: 12px !important; font-size: var(--text-sm) !important; white-space: nowrap !important; }
     .rw-card-photo { height: auto !important; aspect-ratio: 4 / 3; isolation: isolate; overflow: hidden; background: linear-gradient(135deg, var(--bg-sunken), var(--bg-tint-orange)); }
     .rw-card-photo::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.62) 48%, transparent 66%); transform: translateX(-100%); animation: ape-shimmer 1.35s infinite; }
     .rw-card-photo::after { content: "Foto em preparação"; position: absolute; inset: 0; z-index: 0; display: flex; align-items: center; justify-content: center; padding: 20px; color: var(--fg-3); font-size: var(--text-sm); font-weight: var(--weight-semibold); text-align: center; }
@@ -1851,12 +1856,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
       .rw-search-primary { min-width: 0; display: flex; }
       .rw-search-primary > * { width: 100% !important; min-width: 0; }
       .rw-search-primary button { padding-inline: 12px !important; font-size: var(--text-sm) !important; white-space: nowrap; }
+      .rw-search-sara { grid-column: 1 / -1; width: 100%; box-sizing: border-box; }
+      .rw-search-sara-label { display: inline !important; }
       button[data-favorito-card] { width: 40px !important; height: 40px !important; }
       button[aria-label="Foto anterior"], button[aria-label="Próxima foto"] { width: 44px !important; height: 44px !important; }
       .rw-sec { padding: 40px 20px !important; }
       .rw-results-head { align-items: flex-start !important; flex-direction: column; gap: 16px !important; margin-bottom: 28px !important; }
       .rw-results-head h2 { max-width: none; font-size: 26px; }
       .rw-result-tools { position: sticky; top: 72px; z-index: 35; margin: 0 -20px 18px !important; padding: 10px 20px 12px; background: rgba(250, 248, 246, 0.96); border-block: 1px solid var(--border-soft); backdrop-filter: blur(14px); display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px !important; overflow: visible; }
+      [data-map-representation-status] { margin-top: 8px !important; }
+      .rw-map-status-active[data-map-representation-status] { margin-top: 64px !important; }
       .rw-tool-favs, .rw-tool-filter { width: 100%; min-width: 0; justify-content: center; box-sizing: border-box; }
       .rw-tool-sort, .rw-tool-view { grid-column: 1 / -1; width: 100%; box-sizing: border-box; }
       .rw-tool-view > button { flex: 1; min-height: 40px; }
@@ -1896,13 +1905,73 @@ svg.leaflet-image-layer.leaflet-interactive path {
       text-decoration: none;
     }
     .rw-card-produto.rw-map-active { outline: 3px solid var(--ape-orange); outline-offset: 3px; box-shadow: var(--shadow-md) !important; }
-    .rw-filter-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(31, 28, 26, 0.42); display: flex; justify-content: flex-end; }
+    .rw-filter-overlay { position: fixed; inset: 0; z-index: 1200; background: rgba(31, 28, 26, 0.42); display: flex; justify-content: flex-end; }
     .rw-filter-drawer { width: min(460px, 100%); height: 100%; overflow-y: auto; background: var(--bg-page); box-shadow: -16px 0 48px rgba(31, 28, 26, 0.2); display: flex; flex-direction: column; }
     .rw-filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .rw-filter-field { display: flex; flex-direction: column; gap: 7px; }
     .rw-filter-field label { color: var(--fg-2); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
     .rw-filter-control { box-sizing: border-box; width: 100%; min-height: 46px; border: 1px solid var(--border-default); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--fg-1); padding: 0 13px; font: inherit; }
     @media (max-width: 520px) { .rw-filter-grid { grid-template-columns: 1fr; } }
+
+    /* Reconstrução premium 2026-08 — densidade de produto, sem alterar a identidade */
+    .rw-hero { min-height: 0 !important; padding-block: 36px 42px !important; gap: 36px !important; }
+    .rw-hero-copy { gap: 18px !important; }
+    .rw-hero-search { padding: 16px !important; border-radius: 16px !important; box-shadow: 0 2px 10px rgba(31,28,26,.055) !important; }
+    .rw-heroimg { height: 390px !important; }
+    .rw-stats { margin-top: 0 !important; gap: 32px !important; }
+    #apes { max-width: 1440px !important; }
+    #apes:not(.rw-results-mode) { padding-top: 26px !important; }
+    .rw-results-head { margin-bottom: 22px !important; }
+    .rw-results-head h2 { font-size: clamp(26px, 2.4vw, 34px) !important; }
+    .rw-result-tools { min-height: 56px; padding: 8px 0; }
+    .rw-result-tools button, .rw-result-tools select { border-radius: 12px !important; min-height: 40px !important; }
+    .rw-tool-view { border-radius: 12px !important; padding: 3px !important; }
+    .rw-vista { gap: 16px !important; }
+    .rw-cards { gap: 16px !important; }
+    .rw-card-produto { border: 1px solid var(--border-soft); border-radius: 14px !important; box-shadow: none !important; outline: none; }
+    .rw-card-produto:hover, .rw-card-produto:focus-within { border-color: var(--neutral-300); box-shadow: 0 6px 18px rgba(31,28,26,.08) !important; transform: translateY(-2px); }
+    .rw-card-produto > div:last-child { padding: 14px 16px 16px !important; gap: 8px !important; }
+    .rw-card-photo { border-radius: 0 !important; }
+    .rw-map-wrap { min-width: 0; }
+    #lista-mapa { height: calc(100vh - 188px) !important; min-height: 540px; max-height: 760px; border-radius: 14px !important; box-shadow: none !important; border: 1px solid var(--border-soft); }
+    [data-map-representation-status] { margin-top: -4px !important; padding: 9px 12px !important; border-radius: 10px !important; }
+    [data-property-route] .rw-portal { max-width: 1240px !important; padding-top: 22px !important; gap: 22px !important; }
+    .rw-detail-title { font-size: clamp(30px, 3vw, 44px) !important; line-height: 1.08 !important; max-width: 820px; }
+    .rw-detail-location { font-size: var(--text-sm) !important; }
+    .rw-gal { gap: 8px !important; grid-template-columns: 1.7fr 1fr 1fr !important; grid-template-rows: 190px 190px !important; }
+    .rw-gal > button { border-radius: 12px !important; }
+    .rw-gal.rw-gal-single { grid-template-columns: 1fr !important; }
+    .rw-gal.rw-gal-single .rw-galmain { grid-column: 1 !important; }
+    .rw-gal.rw-gal-two { grid-template-columns: 1.7fr 1fr !important; }
+    .rw-gal.rw-gal-three { grid-template-columns: 1.7fr 1fr !important; }
+    .rw-detail-grid { grid-template-columns: minmax(0, 1.65fr) minmax(300px, .8fr) !important; gap: 32px !important; }
+    .rw-detail-aside { top: 82px !important; gap: 14px !important; }
+    .rw-detail-aside > div { border: 1px solid var(--border-soft); border-radius: 16px !important; box-shadow: 0 3px 14px rgba(31,28,26,.06) !important; }
+    .rw-filter-drawer { border-left: 1px solid var(--border-soft); }
+    @media (min-width: 768px) {
+      .rw-results-mode .rw-result-tools { top: 64px; padding: 8px 12px; }
+      .rw-results-mode .rw-vista { grid-template-columns: minmax(560px, 1fr) minmax(440px, 1fr) !important; }
+      .rw-results-mode .rw-cards { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    }
+    @media (max-width: 767px) {
+      .rw-hero { padding: 14px 16px 24px !important; }
+      .rw-hero-copy { gap: 12px !important; }
+      .rw-hero h1 { font-size: 28px !important; }
+      .rw-hero-search { padding: 12px !important; border-radius: 14px !important; }
+      .rw-sec { padding: 28px 16px 72px !important; }
+      .rw-results-head { gap: 10px !important; margin-bottom: 16px !important; }
+      .rw-result-tools { top: 64px; margin-inline: -16px !important; padding: 8px 16px 10px; }
+      .rw-filter-overlay { align-items: flex-end; justify-content: stretch; }
+      .rw-filter-drawer { width: 100%; height: auto; max-height: 86dvh; border-left: 0; border-top: 1px solid var(--border-soft); border-radius: 18px 18px 0 0; box-shadow: 0 -12px 40px rgba(31,28,26,.18); }
+      .rw-search-sara { grid-column: 1 / -1; width: 100%; box-sizing: border-box; }
+      .rw-search-sara-label { position: static !important; width: auto !important; height: auto !important; overflow: visible !important; clip: auto !important; }
+      #lista-mapa { height: calc(100dvh - 214px) !important; min-height: 480px; max-height: none; border-radius: 12px !important; }
+      .rw-gal { grid-template-columns: 1fr 1fr !important; grid-template-rows: 230px 104px 104px !important; }
+      .rw-detail-grid { grid-template-columns: 1fr !important; gap: 22px !important; }
+      .rw-detail-aside { position: static !important; }
+      .rw-detail-title { font-size: 30px !important; }
+      [data-property-route] .rw-portal { padding: 18px 16px 112px !important; gap: 18px !important; }
+    }
   </style>
 </helmet>
 
@@ -2146,7 +2215,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </div>
     </div>
     <sc-if value="{{ mapaRepresentacaoOn }}" hint-placeholder-val="{{ false }}">
-      <div role="status" aria-live="polite" data-map-representation-status="" style="display: flex; align-items: flex-start; gap: 10px; margin: -8px 0 20px; padding: 12px 16px; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--fg-2); font-size: var(--text-sm); line-height: var(--leading-normal)">
+      <div class="{{ mapaRepresentacaoClasse }}" role="status" aria-live="polite" data-map-representation-status="" style="display: flex; align-items: flex-start; gap: 10px; margin: -8px 0 20px; padding: 12px 16px; border: 1px solid var(--border-soft); border-radius: var(--radius-md); background: var(--bg-surface); color: var(--fg-2); font-size: var(--text-sm); line-height: var(--leading-normal)">
         <i data-lucide="map-pin" aria-hidden="true" style="width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; color: var(--ape-purple)"></i>
         <span>{{ mapaRepresentacaoLabel }}</span>
       </div>
@@ -2592,8 +2661,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="rw-portal" style="max-width: 1080px; margin: 0 auto; padding: 32px 24px 96px; display: flex; flex-direction: column; gap: 32px">
         <div style="display: flex; flex-direction: column; gap: 8px">
           <span style="width: fit-content; background: {{ detBadgeBg }}; color: var(--fg-inverse); font-size: var(--text-xs); font-weight: var(--weight-semibold); padding: 4px 14px; border-radius: var(--radius-pill)">{{ detBadge }}</span>
-          <h1 style="margin: 0; font-size: var(--text-4xl); font-weight: var(--weight-bold); letter-spacing: var(--tracking-tight)">{{ detNome }}</h1>
-          <div style="font-size: var(--text-base); color: var(--fg-3); display: flex; align-items: center; gap: 6px">
+          <h1 class="rw-detail-title" style="margin: 0; font-size: var(--text-4xl); font-weight: var(--weight-bold); letter-spacing: var(--tracking-tight)">{{ detNome }}</h1>
+          <div class="rw-detail-location" style="font-size: var(--text-base); color: var(--fg-3); display: flex; align-items: center; gap: 6px">
             <i data-lucide="map-pin" style="width: 16px; height: 16px"></i>
             <span>{{ detEndereco }}</span>
           </div>
@@ -2601,19 +2670,19 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <span style="width: fit-content; background: var(--bg-sunken); color: var(--fg-3); font-size: var(--text-xs); font-weight: var(--weight-medium); padding: 4px 10px; border-radius: 8px; margin-top: 4px">Código do imóvel: {{ detCodigo }}</span>
           </sc-if>
         </div>
-        <div class="rw-gal" style="display: grid; grid-template-columns: 1.55fr 1fr 1fr; grid-template-rows: 211px 211px; gap: 10px">
+        <div class="rw-gal rw-gal-{{ galGrade }}" style="display: grid; grid-template-columns: 1.55fr 1fr 1fr; grid-template-rows: 211px 211px; gap: 10px">
           <button type="button" class="rw-galmain" sc-camel-on-click="{{ galAbre0 }}" aria-label="Abrir foto 1 do imóvel" style="grid-row: 1 / 3; border: none; padding: 0; border-radius: var(--radius-xl); cursor: pointer; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"><img data-ape-src="{{ galM1 }}" alt="" aria-hidden="true" width="1200" height="800" loading="eager" fetchpriority="high" decoding="async"></button>
-          <button type="button" sc-camel-on-click="{{ galAbre1 }}" aria-label="Abrir foto 2 do imóvel" style="border: none; padding: 0; border-radius: var(--radius-lg); cursor: pointer; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"><img data-ape-src="{{ galM2 }}" alt="" aria-hidden="true" width="640" height="426" loading="lazy" decoding="async"></button>
-          <button type="button" sc-camel-on-click="{{ galAbre2 }}" aria-label="Abrir foto 3 do imóvel" style="border: none; padding: 0; border-radius: var(--radius-lg); cursor: pointer; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"><img data-ape-src="{{ galM3 }}" alt="" aria-hidden="true" width="640" height="426" loading="lazy" decoding="async"></button>
-          <button type="button" sc-camel-on-click="{{ galAbre3 }}" aria-label="Abrir foto 4 do imóvel" style="border: none; padding: 0; border-radius: var(--radius-lg); cursor: pointer; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"><img data-ape-src="{{ galM4 }}" alt="" aria-hidden="true" width="640" height="426" loading="lazy" decoding="async"></button>
-          <button type="button" sc-camel-on-click="{{ galAbre4 }}" aria-label="Abrir foto 5 e ver toda a galeria" style="border: none; padding: 0; border-radius: var(--radius-lg); cursor: pointer"><img data-ape-src="{{ galM5 }}" alt="" aria-hidden="true" width="640" height="426" loading="lazy" decoding="async">
+          <sc-if value="{{ galM2On }}" hint-placeholder-val="{{ false }}"><button type="button" sc-camel-on-click="{{ galAbre1 }}" aria-label="Abrir foto 2 do imóvel" style="border: none; padding: 0; border-radius: var(--radius-lg); cursor: pointer; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"><img data-ape-src="{{ galM2 }}" alt="" aria-hidden="true" width="640" height="426" loading="lazy" decoding="async"></button></sc-if>
+          <sc-if value="{{ galM3On }}" hint-placeholder-val="{{ false }}"><button type="button" sc-camel-on-click="{{ galAbre2 }}" aria-label="Abrir foto 3 do imóvel" style="border: none; padding: 0; border-radius: var(--radius-lg); cursor: pointer; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"><img data-ape-src="{{ galM3 }}" alt="" aria-hidden="true" width="640" height="426" loading="lazy" decoding="async"></button></sc-if>
+          <sc-if value="{{ galM4On }}" hint-placeholder-val="{{ false }}"><button type="button" sc-camel-on-click="{{ galAbre3 }}" aria-label="Abrir foto 4 do imóvel" style="border: none; padding: 0; border-radius: var(--radius-lg); cursor: pointer; transition: filter 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="filter: brightness(1.05)"><img data-ape-src="{{ galM4 }}" alt="" aria-hidden="true" width="640" height="426" loading="lazy" decoding="async"></button></sc-if>
+          <sc-if value="{{ galM5On }}" hint-placeholder-val="{{ false }}"><button type="button" sc-camel-on-click="{{ galAbre4 }}" aria-label="Abrir foto 5 e ver toda a galeria" style="border: none; padding: 0; border-radius: var(--radius-lg); cursor: pointer"><img data-ape-src="{{ galM5 }}" alt="" aria-hidden="true" width="640" height="426" loading="lazy" decoding="async">
             <sc-if value="{{ galMaisOn }}" hint-placeholder-val="{{ false }}">
               <div style="position: absolute; inset: 0; background: rgba(31, 28, 26, 0.62); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--neutral-0); transition: background 200ms cubic-bezier(0.2, 0.8, 0.2, 1)" style-hover="background: rgba(31, 28, 26, 0.5)">
                 <i data-lucide="images" style="width: 22px; height: 22px"></i>
                 <span style="font-size: var(--text-sm); font-weight: var(--weight-semibold)">{{ galMaisLabel }}</span>
               </div>
             </sc-if>
-          </button>
+          </button></sc-if>
         </div>
         <div style="display: flex; align-items: center; gap: 8px; color: var(--fg-3); font-size: var(--text-sm)">
           <i data-lucide="images" style="width: 16px; height: 16px; color: var(--ape-orange)"></i>
@@ -2628,7 +2697,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
             <button sc-camel-on-click="{{ tentarDetalhes }}" style="border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer; font: inherit; font-weight: var(--weight-semibold); padding: 7px 12px; border-radius: var(--radius-pill)">Tentar novamente</button>
           </div>
         </sc-if>
-        <div class="rw-g1" style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 40px; align-items: start">
+        <div class="rw-g1 rw-detail-grid" style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 40px; align-items: start">
           <div style="display: flex; flex-direction: column; gap: 28px">
             <sc-if value="{{ detSlogan }}" hint-placeholder-val="{{ false }}">
               <p class="lead" style="margin: 0">{{ detSlogan }}</p>
@@ -2684,7 +2753,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
               </div>
             </sc-if>
           </div>
-          <div style="position: sticky; top: 84px; display: flex; flex-direction: column; gap: 20px">
+          <div class="rw-detail-aside" style="position: sticky; top: 84px; display: flex; flex-direction: column; gap: 20px">
           <div style="background: var(--bg-surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); padding: 24px; display: flex; flex-direction: column; gap: 16px">
             <div style="display: flex; flex-direction: column; gap: 2px">
               <span class="caption">Valor do imóvel</span>
@@ -2803,6 +2872,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <div style="display: flex; flex-direction: column; gap: 12px">
             <h3 style="margin: 0">Onde fica</h3>
             <div id="det-mapa" style="height: 340px; border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-sm)"></div>
+            <p style="margin: 0; font-size: var(--text-sm); color: var(--fg-3)">Localização aproximada no bairro. O ponto exato é preservado e compartilhado somente durante o atendimento.</p>
           </div>
         </sc-if>
         <sc-if value="{{ simOn }}" hint-placeholder-val="{{ false }}">
@@ -3607,6 +3677,7 @@ class Component extends DCLogic {
   SB_URL = 'https://diaegvfveqezispcthwk.supabase.co';
   SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpYWVndmZ2ZXFlemlzcGN0aHdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5OTU4MjIsImV4cCI6MjA5ODU3MTgyMn0.312n8BuI-loQrQ20x9j1hNjKZs2UO71ey9gvIo0eY0I';
   CATALOGO_VIEW = 'site_produtos_catalogo';
+  CAMPOS_SITE_PUBLICOS = 'id,slug,bairro,status,entrega,area_util,dormitorios,suites,banheiros,vagas,preco,condominio_valor,destaque,ordem,lazer,diferenciais,finalidade,iptu,capa_path,fotos,unidades_disponiveis,preco_min,preco_max,area_min_disponivel,area_max_disponivel,dormitorios_min_disponiveis,dormitorios_max_disponiveis,vagas_min_disponiveis,vagas_max_disponiveis,tipologias_disponiveis,tour_url,cidade,uf,codigo,unidades_site';
   catalogoLeveDisponivel = true; detalhesCarregados = new Set(); detalhesEmVoo = new Map(); detalhesCache = new Map();
   listaMapaMarkers = new Map(); galTouchX = null; filtrosFocusOrigin = null;
   auth = {}; form = {}; fotosArq = []; fotosExist = [];
@@ -3800,11 +3871,13 @@ class Component extends DCLogic {
     const preparar = () => {
       const det = this.state.det;
       if (det) {
-        if (this.state.galOn) {
-          const fotos = (det.fotos || []).concat(det.fotos_condominio || []).map(p => this.fotoUrl(p)).filter(Boolean);
+        const fotos = this.fotosGaleriaAtual(det);
+        if (fotos.length) {
+          const atual = this.state.galOn ? Math.min(this.state.galIdx || 0, fotos.length - 1) : 0;
+          this.prepararFoto(fotos[atual], 1200, 'contain');
           if (fotos.length > 1) {
-            const atual = Math.min(this.state.galIdx || 0, fotos.length - 1);
             this.prepararFoto(fotos[(atual + 1) % fotos.length], 1200, 'contain');
+            this.prepararFoto(fotos[(atual - 1 + fotos.length) % fotos.length], 1200, 'contain');
           }
         }
         return;
@@ -3884,13 +3957,16 @@ class Component extends DCLogic {
     (rows || []).forEach((r, indice) => {
       const ll = this.coordenadas(r);
       if (!ll) return;
-      const empreendimentoId = this.empreendimentoId(r) || String((r && (r.empreendimento_id || r.id)) || 'sem-id-' + indice);
-      let grupo = mapa.get(empreendimentoId);
+      const bairro = this.slugParte((r && r.bairro) || 'regiao');
+      const celula = bairro + ':' + Math.round(ll[0] / 0.0024) + ':' + Math.round(ll[1] / 0.0024);
+      let grupo = mapa.get(celula);
       if (!grupo) {
-        grupo = { id: empreendimentoId, ll, itens: [], nome: (r && (r.empreendimento_nome || r.nome)) || 'Empreendimento' };
-        mapa.set(empreendimentoId, grupo);
+        grupo = { id: celula, ll: ll.slice(), somaLat: 0, somaLng: 0, itens: [], nome: (r && r.bairro) || 'Região aproximada' };
+        mapa.set(celula, grupo);
       }
       grupo.itens.push(r);
+      grupo.somaLat += ll[0]; grupo.somaLng += ll[1];
+      grupo.ll = [grupo.somaLat / grupo.itens.length, grupo.somaLng / grupo.itens.length];
     });
     return Array.from(mapa.values());
   }
@@ -3904,7 +3980,8 @@ class Component extends DCLogic {
       semLocalizacao,
       representados,
       pontos,
-      agrupados: Math.max(0, representados - pontos)
+      agrupados: Math.max(0, representados - pontos),
+      aproximados: representados
     };
   }
   carregarLeaflet() {
@@ -4011,7 +4088,7 @@ class Component extends DCLogic {
       titulo.textContent = grupo.nome;
       const subtitulo = document.createElement('div');
       subtitulo.style.cssText = 'font-size:12px;color:#6E6760;margin-top:3px';
-      subtitulo.textContent = unidadeLabel + ' neste endereço';
+      subtitulo.textContent = unidadeLabel + ' nesta região aproximada';
       cabecalho.appendChild(titulo);
       cabecalho.appendChild(subtitulo);
       painel.appendChild(cabecalho);
@@ -4566,7 +4643,7 @@ class Component extends DCLogic {
   }
   urlProdutos(procurar) {
     const params = new URLSearchParams();
-    params.set('select', '*');
+    params.set('select', this.CAMPOS_SITE_PUBLICOS);
     params.set('order', 'destaque.desc,ordem.asc.nullslast,nome.asc');
     const idsDiretos = procurar && Array.isArray(procurar.ids) ? procurar.ids.filter(id => this.uuidValido(id)).slice(0, 40) : [];
     const direta = idsDiretos.length > 0 || !!(procurar && (procurar.key || procurar.cod)) || !!this.slugImovelDaRota();
@@ -4722,7 +4799,7 @@ class Component extends DCLogic {
   }
   urlDetalhesProdutos(ids) {
     const unicos = Array.from(new Set((ids || []).map(String).filter(id => this.uuidValido(id)))).slice(0, 12);
-    const params = new URLSearchParams({ select: '*', id: 'in.(' + unicos.join(',') + ')' });
+    const params = new URLSearchParams({ select: this.CAMPOS_SITE_PUBLICOS, id: 'in.(' + unicos.join(',') + ')' });
     return this.SB_URL + '/rest/v1/site_produtos?' + params.toString();
   }
   mesclarDetalhesCache(produtos) {
@@ -4782,7 +4859,7 @@ class Component extends DCLogic {
     return Promise.all(aguardando.concat([requisicao])).then(grupos => grupos.flat());
   }
   hidratarGaleriasVisiveis() {
-    const ids = Array.from(new Set((this.filtrar().out || []).slice(0, 6).filter(row => row && row._catalogo_leve).map(row => this.empreendimentoId(row)).filter(Boolean)));
+    const ids = Array.from(new Set((this.filtrar().out || []).slice(0, 12).filter(row => row && row._catalogo_leve).map(row => this.empreendimentoId(row)).filter(Boolean)));
     if (!ids.length) return null;
     return this.hidratarEmpreendimentos(ids);
   }
@@ -4891,19 +4968,23 @@ class Component extends DCLogic {
     const delta = toque.clientX - this.galTouchX;
     this.galTouchX = null;
     if (Math.abs(delta) < 45) return;
-    const atual = this.state.det || {};
-    const fotos = (atual.fotos || []).concat(atual.fotos_condominio || []).map(p => this.fotoUrl(p));
+    const fotos = this.fotosGaleriaAtual(this.state.det || {});
     if (fotos.length < 2) return;
     const indice = delta < 0 ? (this.state.galIdx + 1) % fotos.length : (this.state.galIdx - 1 + fotos.length) % fotos.length;
     this.trocarFotoGaleria(e, fotos, indice);
   }
-  mapProduto(r) {
+  mapProduto(r, capasUsadas) {
     const badge = this.badges[r.status] || this.badges.pronto;
     const precoNum = this.precoDe(r);
-    const fotos = (r.fotos && r.fotos.length ? r.fotos : (r.capa_path ? [r.capa_path] : [])).slice(0, 8);
+    const fotos = this.galeriaPublica(r.fotos && r.fotos.length ? r.fotos : (r.capa_path ? [r.capa_path] : []), 'Fotos do imóvel', 'Foto do imóvel').slice(0, 8).map(item => item.valor);
     const n = fotos.length;
     const galeriaPendente = !!r._catalogo_leve;
-    const idx = Math.min(this.state.cardGal[r.id] || 0, Math.max(0, n - 1));
+    let idx = Math.min(this.state.cardGal[r.id] || 0, Math.max(0, n - 1));
+    if (capasUsadas && !this.state.cardGal[r.id] && n > 1) {
+      const livre = fotos.findIndex(foto => !capasUsadas.has(this.fotoUrl(foto).split(/[?#]/)[0]));
+      if (livre >= 0) idx = livre;
+    }
+    if (capasUsadas && n) capasUsadas.add(this.fotoUrl(fotos[idx]).split(/[?#]/)[0]);
     const nome = this.tituloComercial(r);
     const href = '/imovel/' + encodeURIComponent(this.slugParte(r.slug || r.codigo || r.id)) + '/';
     const setIdx = (e, i) => {
@@ -4958,6 +5039,7 @@ class Component extends DCLogic {
       href,
       linkLabel: 'Ver apê: ' + nome,
       abrirLink: e => { if (e && e.stopPropagation) e.stopPropagation(); if (e && (e.button > 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)) return; if (e && e.preventDefault) e.preventDefault(); this.abrirDetalhe(r); },
+      abrirKey: e => { if (e && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); this.abrirDetalhe(r); } },
       abrir: () => this.abrirDetalhe(r)
     };
   }
@@ -4974,7 +5056,14 @@ class Component extends DCLogic {
   }
   nomePublico(r) { return this.identidadePublica(r); }
   enderecoPublico(v) {
-    return String(v || '').split(',', 1)[0].replace(/(?:\d|\s+(?:ap(?:to|artamento)?\.?|unidade|bloco|torre|lote|complemento|fundos|casa|sala|andar|conjunto|cj\.?|s\/?n|sem n(?:ú|u)mero)\b).*$/i, '').replace(/[\s,;-]+$/g, '').trim().slice(0, 160);
+    return '';
+  }
+  textoPublicoImovel(v) {
+    return String(v || '')
+      .replace(/\b(?:rua|r\.|avenida|av\.|alameda|al\.|travessa|estrada)\s+[^,.;\n]+(?:,\s*\d+[\w-]*)?/gi, 'na região')
+      .replace(/\b(?:n[ºo°]\.?|número)\s*\d+[\w-]*/gi, '')
+      .replace(/\b(?:ap(?:to|artamento)?\.?|bloco|torre|complemento|conjunto|cj\.?)\s*[\w-]+/gi, '')
+      .replace(/\s+/g, ' ').replace(/\s+([,.;:])/g, '$1').trim().slice(0, 1200);
   }
   numeroPositivo(v) {
     const n = Number(v);
@@ -5005,6 +5094,27 @@ class Component extends DCLogic {
     if (p && typeof p === 'object' && p.alt_text) return String(p.alt_text).replace(/\s+/g, ' ').trim().slice(0, 220);
     return String(fallback || 'Foto do imóvel');
   }
+  galeriaPublica(valores, grupo, fallbackAlt) {
+    const vistos = new Set();
+    const itens = (Array.isArray(valores) ? valores : []).map((valor, ordem) => {
+      const url = this.fotoUrl(valor);
+      const alt = this.fotoAlt(valor, fallbackAlt);
+      const exterior = /fachada|exterior|pr[eé]dio|edif[ií]cio|entrada|portaria/i.test(alt);
+      return { valor, url, alt, grupo, exterior, ordem };
+    }).filter(item => item.url && !vistos.has(item.url.split(/[?#]/)[0]) && vistos.add(item.url.split(/[?#]/)[0]))
+      .sort((a, b) => Number(a.exterior) - Number(b.exterior) || a.ordem - b.ordem);
+    if (grupo === 'Fotos do imóvel' && itens.length >= 4 && itens.every(item => item.alt === String(fallbackAlt || 'Foto do imóvel'))) {
+      return [itens[3]].concat(itens.slice(0, 3), itens.slice(4));
+    }
+    return itens;
+  }
+  fotosGaleriaAtual(det) {
+    const vistos = new Set();
+    return this.galeriaPublica((det || {}).fotos || [], 'Fotos do imóvel', 'Foto do imóvel')
+      .concat(this.galeriaPublica((det || {}).fotos_condominio || [], 'Áreas comuns do condomínio', 'Área comum do condomínio'))
+      .map(item => item.url)
+      .filter(url => !vistos.has(url.split(/[?#]/)[0]) && vistos.add(url.split(/[?#]/)[0]));
+  }
   fotoRender(p, largura, modo) {
     const src = this.fotoUrl(p);
     if (!src) return '';
@@ -5032,11 +5142,24 @@ class Component extends DCLogic {
     } catch (e) { return ''; }
   }
   coordenadas(r) {
-    const rawLat = r && r.latitude, rawLng = r && r.longitude;
-    if (rawLat == null || rawLng == null || String(rawLat).trim() === '' || String(rawLng).trim() === '') return null;
-    const lat = Number(rawLat), lng = Number(rawLng);
-    const dentroDaGrandeSaoPaulo = lat >= -24.2 && lat <= -23.2 && lng >= -47.2 && lng <= -46.0;
-    return Number.isFinite(lat) && Number.isFinite(lng) && dentroDaGrandeSaoPaulo ? [lat, lng] : null;
+    if (!r) return null;
+    const centros = {
+      moema: [-23.6017, -46.6654],
+      'campo-belo': [-23.6246, -46.6734],
+      'sao-judas': [-23.6250, -46.6390],
+      'vila-guarani': [-23.6370, -46.6360],
+      'vila-nova-conceicao': [-23.5920, -46.6710],
+      brooklin: [-23.6170, -46.6860],
+      'planalto-paulista': [-23.6160, -46.6500]
+    };
+    const bairro = this.slugParte(r.bairro || 'moema');
+    const centro = centros[bairro] || [-23.6100, -46.6600];
+    const identidade = String(this.empreendimentoId(r) || r.id || bairro);
+    let hash = 2166136261;
+    for (let i = 0; i < identidade.length; i += 1) hash = Math.imul(hash ^ identidade.charCodeAt(i), 16777619) >>> 0;
+    const angulo = (hash % 360) * Math.PI / 180;
+    const raio = 0.0018 + ((hash >>> 9) % 2400) / 1000000;
+    return [centro[0] + Math.sin(angulo) * raio, centro[1] + Math.cos(angulo) * raio];
   }
   contarResultadosSemCoordenadas(rows) {
     return (Array.isArray(rows) ? rows : []).reduce((total, row) => total + (this.coordenadas(row) ? 0 : 1), 0);
@@ -5223,7 +5346,7 @@ class Component extends DCLogic {
     const slug = this.slugParte(r.slug || r.codigo || r.id);
     const url = 'https://apecerto.com/imovel/' + encodeURIComponent(slug) + '/';
     const titulo = this.nomePublico(r) + ' | apêcerto';
-    const descricao = String(r.descricao || [this.nomePublico(r), r.bairro, r.area_util ? Math.round(Number(r.area_util)) + ' m²' : null].filter(Boolean).join(' · ')).replace(/\s+/g, ' ').trim().slice(0, 240);
+    const descricao = [this.nomePublico(r), r.area_util ? Math.round(Number(r.area_util)) + ' m²' : null, r.bairro, r.cidade || 'São Paulo'].filter(Boolean).join(' · ').slice(0, 240);
     const foto = this.fotoUrl((r.fotos || [])[0] || r.capa_path);
     const fotoMeta = foto ? new URL(foto, location.origin).href : '';
     document.title = titulo;
@@ -5241,7 +5364,7 @@ class Component extends DCLogic {
     ld.textContent = JSON.stringify({
       '@context': 'https://schema.org', '@type': 'Apartment', name: this.nomePublico(r), description: descricao, url,
       image: fotoMeta ? [fotoMeta] : undefined,
-      address: { '@type': 'PostalAddress', streetAddress: this.enderecoPublico(r.endereco) || undefined, addressLocality: r.cidade || 'São Paulo', addressRegion: r.uf || 'SP', addressCountry: 'BR' },
+      address: { '@type': 'PostalAddress', addressLocality: r.cidade || 'São Paulo', addressRegion: r.uf || 'SP', addressCountry: 'BR' },
       floorSize: r.area_util ? { '@type': 'QuantitativeValue', value: Number(r.area_util), unitCode: 'MTK' } : undefined,
       numberOfRooms: r.dormitorios || undefined,
       offers: this.precoDe(r) ? { '@type': 'Offer', priceCurrency: 'BRL', price: this.precoDe(r), availability: 'https://schema.org/InStock', url } : undefined
@@ -5269,6 +5392,7 @@ class Component extends DCLogic {
       if (location.pathname + location.search !== destino) history.pushState({}, '', destino);
     } catch (e) {}
     this.setState({ det: r, galIdx: 0, galOn: false, leadOk: false, leadErro: null, detalheErroEmpId: null, rotaImovelNaoEncontrado: false }, () => {
+      window.scrollTo({ top: 0, behavior: 'auto' });
       this.initMapa(r); this.atualizarMetaImovel(r);
       setTimeout(() => {
         const el = this.focarLeadAoAbrir ? document.querySelector('[data-lead-form] input[name="nome"]') : document.querySelector('[data-det-topo]');
@@ -5279,20 +5403,25 @@ class Component extends DCLogic {
     if (!this.galKeys) {
       this.galKeys = ev => {
         if (!this.state.galOn) return;
-        const atual = this.state.det || {};
-        const n = (atual.fotos || []).length + (atual.fotos_condominio || []).length; if (!n) return;
-        if (ev.key === 'ArrowLeft') this.setState({ galIdx: (this.state.galIdx - 1 + n) % n });
-        if (ev.key === 'ArrowRight') this.setState({ galIdx: (this.state.galIdx + 1) % n });
+        const fotos = this.fotosGaleriaAtual(this.state.det || {}); if (!fotos.length) return;
+        if (ev.key === 'ArrowLeft') this.trocarFotoGaleria(ev, fotos, (this.state.galIdx - 1 + fotos.length) % fotos.length);
+        if (ev.key === 'ArrowRight') this.trocarFotoGaleria(ev, fotos, (this.state.galIdx + 1) % fotos.length);
       };
       window.addEventListener('keydown', this.galKeys);
     }
   }
   abrirGaleria(indice, origem) {
-    const fotos = ((this.state.det || {}).fotos || []).concat((this.state.det || {}).fotos_condominio || []);
+    const fotos = this.fotosGaleriaAtual(this.state.det || {});
     if (!fotos.length) return;
     this.fotoGaleriaReq += 1;
     this.galFocusOrigin = (origem && origem.currentTarget) || document.activeElement;
-    this.setState({ galOn: true, galIdx: Math.max(0, Math.min(Number(indice) || 0, fotos.length - 1)), galLoading: true }, () => {
+    const selecionada = Math.max(0, Math.min(Number(indice) || 0, fotos.length - 1));
+    this.setState({ galOn: true, galIdx: selecionada, galLoading: true }, () => {
+      this.prepararFoto(fotos[selecionada], 1200, 'contain');
+      if (fotos.length > 1) {
+        this.prepararFoto(fotos[(selecionada + 1) % fotos.length], 1200, 'contain');
+        this.prepararFoto(fotos[(selecionada - 1 + fotos.length) % fotos.length], 1200, 'contain');
+      }
       setTimeout(() => {
         const fechar = document.querySelector('[data-gallery-modal] button[aria-label="Fechar galeria"]');
         if (fechar) fechar.focus();
@@ -5459,12 +5588,13 @@ class Component extends DCLogic {
       const el = document.getElementById('det-mapa');
       if (!el) return;
       if (this.mapa) { this.mapa.remove(); this.mapa = null; }
-      this.mapa = window.L.map(el, { scrollWheelZoom: true }).setView(coordenadasAtuais, 16);
+      this.mapa = window.L.map(el, { scrollWheelZoom: true }).setView(coordenadasAtuais, 14);
       window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" aria-label="Créditos do mapa OpenStreetMap">© OpenStreetMap</a>'
       }).addTo(this.mapa);
       if (this.mapa.attributionControl && this.mapa.attributionControl.setPrefix) this.mapa.attributionControl.setPrefix(false);
-      window.L.marker(coordenadasAtuais, { icon: this.pinIcon(36) }).addTo(this.mapa);
+      window.L.circle(coordenadasAtuais, { radius: 520, color: '#FF7000', weight: 2, opacity: .7, fillColor: '#FF7000', fillOpacity: .12 }).addTo(this.mapa);
+      window.L.marker(coordenadasAtuais, { icon: this.pinIcon(36), title: 'Localização aproximada do imóvel' }).addTo(this.mapa);
     }, 250);
   }
   componentWillUnmount() {
@@ -5524,9 +5654,10 @@ class Component extends DCLogic {
     const filtrosAvancadosQtd = [st.fTipo, st.fAreaMin, st.fAreaMax, st.fBanheiros, st.fSuites].filter(Boolean).length;
     const detTourUrl = det ? this.tourUrl(det.tour_url) : '';
     const fotosPrivativasFonte = det && det.fotos && det.fotos.length ? det.fotos : (det && det.capa_path ? [det.capa_path] : []);
-    const fotosPrivativasDet = fotosPrivativasFonte.map(p => ({ url: this.fotoUrl(p), grupo: 'Fotos do imóvel', alt: this.fotoAlt(p, 'Foto do imóvel') }));
-    const fotosComunsDet = det ? (det.fotos_condominio || []).map(p => ({ url: this.fotoUrl(p), grupo: 'Áreas comuns do condomínio', alt: this.fotoAlt(p, 'Área comum do condomínio') })) : [];
-    const galeriaDet = fotosPrivativasDet.concat(fotosComunsDet);
+    const fotosPrivativasDet = this.galeriaPublica(fotosPrivativasFonte, 'Fotos do imóvel', 'Foto do imóvel');
+    const fotosComunsDet = det ? this.galeriaPublica(det.fotos_condominio || [], 'Áreas comuns do condomínio', 'Área comum do condomínio') : [];
+    const vistosGaleria = new Set();
+    const galeriaDet = fotosPrivativasDet.concat(fotosComunsDet).filter(f => !vistosGaleria.has(f.url) && vistosGaleria.add(f.url));
     const fotosDet = galeriaDet.map(f => f.url);
     const gi = Math.min(st.galIdx || 0, Math.max(0, fotosDet.length - 1));
     const galThumbInicio = Math.max(0, Math.min(gi - 4, Math.max(0, galeriaDet.length - 9)));
@@ -5546,7 +5677,7 @@ class Component extends DCLogic {
       resultsModeClass: st.buscaAtiva ? 'rw-results-mode' : '',
       resultsPadding: st.buscaAtiva ? '40px 24px 88px' : '32px 24px 88px',
       voltarInicio: () => this.setState({ buscaAtiva: false }, () => this.rolarPagina(0, 'auto')),
-      produtos: this.state.produtos === undefined ? undefined : filtrados.map(r => this.mapProduto(r)),
+      produtos: this.state.produtos === undefined ? undefined : (() => { const capasUsadas = new Set(); return filtrados.map(r => this.mapProduto(r, capasUsadas)); })(),
       produtosCarregando: this.state.produtos === undefined || !!st.produtosRefiltrando,
       produtosCarregandoMais: !!st.produtosCarregandoMais,
       dbErro: this.state.dbErro,
@@ -5619,14 +5750,11 @@ class Component extends DCLogic {
       filtrosFg: filtrosAvancadosQtd ? 'var(--ape-orange-700)' : 'var(--fg-1)',
       filtrosBorda: filtrosAvancadosQtd ? 'var(--ape-orange)' : 'var(--border-default)',
       filtrosResultadoLabel: filtradosAll.length + (filtradosAll.length === 1 ? ' apê' : ' apês'),
-      mapaRepresentacaoOn: mapaRepresentacao.semLocalizacao > 0 || mapaRepresentacao.agrupados > 0,
+      mapaRepresentacaoOn: mapaRepresentacao.aproximados > 0,
       mapaTemPontos: mapaRepresentacao.pontos > 0,
       mapaSemPontos: mapaRepresentacao.pontos === 0,
-      mapaRepresentacaoLabel: mapaRepresentacao.semLocalizacao === 1
-        ? '1 resultado continua na lista, mas não aparece no mapa porque ainda não tem localização cadastrada.'
-        : mapaRepresentacao.semLocalizacao > 1
-          ? mapaRepresentacao.semLocalizacao + ' resultados continuam na lista, mas não aparecem no mapa porque ainda não têm localização cadastrada.'
-          : 'Todos os ' + mapaRepresentacao.total + ' apês aparecem no mapa em ' + mapaRepresentacao.pontos + ' pontos; ' + mapaRepresentacao.agrupados + (mapaRepresentacao.agrupados === 1 ? ' está agrupado' : ' estão agrupados') + ' no mesmo endereço.',
+      mapaRepresentacaoLabel: 'Localização aproximada: os ' + mapaRepresentacao.total + (mapaRepresentacao.total === 1 ? ' imóvel aparece' : ' imóveis aparecem') + ' pela região do bairro, nunca pelo endereço exato.',
+      mapaRepresentacaoClasse: vistaEfetiva === 'mapa' ? 'rw-map-status-active' : '',
       fTipo: st.fTipo || '', fAreaMin: st.fAreaMin || '', fAreaMax: st.fAreaMax || '', fBanheiros: st.fBanheiros || '', fSuites: st.fSuites || '',
       setFTipo: e => this.aplicarFiltros({ fTipo: e.target.value, saraIds: null }),
       setFAreaMin: e => this.aplicarFiltros({ fAreaMin: String(Math.max(0, Number(e.target.value) || 0) || ''), saraIds: null }),
@@ -5675,7 +5803,7 @@ class Component extends DCLogic {
       fecharDet: () => this.fecharDetalhe(),
       detNome: det ? this.tituloComercial(det) : '',
       detBadge: detBadge ? detBadge.label : '', detBadgeBg: detBadge ? detBadge.bg : '',
-      detEndereco: det ? [this.enderecoPublico(det.endereco), det.bairro, det.cidade || 'São Paulo', det.uf].filter(Boolean).join(' · ') : '',
+      detEndereco: det ? [det.bairro, det.cidade || 'São Paulo'].filter(Boolean).join(' · ') : '',
       detSlogan: det && det.slogan,
       detDescColl: !(det && st.detDescExpId === det.id),
       detDescExp: !!(det && st.detDescExpId === det.id),
@@ -5696,7 +5824,9 @@ class Component extends DCLogic {
         ].filter(Boolean) : [];
         return { detDetalhes: dd, detDetalhesOn: dd.length > 0 };
       })(),
-      galM1: fotosDet[0] || '', galM2: fotosDet[1] || fotosDet[0] || '', galM3: fotosDet[2] || fotosDet[0] || '', galM4: fotosDet[3] || fotosDet[0] || '', galM5: fotosDet[4] || fotosDet[0] || '',
+      galM1: fotosDet[0] || '', galM2: fotosDet[1] || '', galM3: fotosDet[2] || '', galM4: fotosDet[3] || '', galM5: fotosDet[4] || '',
+      galM2On: fotosDet.length > 1, galM3On: fotosDet.length > 2, galM4On: fotosDet.length > 3, galM5On: fotosDet.length > 4,
+      galGrade: fotosDet.length <= 1 ? 'single' : fotosDet.length === 2 ? 'two' : fotosDet.length <= 4 ? 'three' : 'full',
       galAbre0: e => this.abrirGaleria(0, e),
       galAbre1: e => this.abrirGaleria(1, e),
       galAbre2: e => this.abrirGaleria(2, e),
@@ -5719,7 +5849,7 @@ class Component extends DCLogic {
       galPrev: e => this.trocarFotoGaleria(e, fotosDet, (gi - 1 + fotosDet.length) % fotosDet.length),
       galNext: e => this.trocarFotoGaleria(e, fotosDet, (gi + 1) % fotosDet.length),
       galThumbs: galThumbsDet.map((foto, pos) => { const i = galThumbInicio + pos; return { url: foto.url, grupo: foto.grupo, label: 'Ver foto ' + (i + 1) + ' de ' + fotosDet.length + ' — ' + foto.grupo, atual: i === gi, sel: e => this.trocarFotoGaleria(e, fotosDet, i), borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' }; }),
-      detDescricao: det && det.descricao,
+      detDescricao: det ? this.nomePublico(det) + '. Consulte características, fotos e disponibilidade.' : '',
       detTourOn: !!detTourUrl, detTourUrl,
       detTemDif: !!(det && det.diferenciais && det.diferenciais.length), detDif: (det && det.diferenciais) || [],
       detTemLazer: !!(det && det.lazer && det.lazer.length), detLazer: (det && det.lazer) || [],

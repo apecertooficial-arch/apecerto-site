@@ -27,6 +27,7 @@ test('pre-render usa somente o catalogo publico e escapa metadados no shell dina
     slug: 'imovel-seguro',
     titulo: 'Loft <script>alert(1)</script>',
     descricao: 'Descrição <img src=x onerror=alert(1)> segura',
+    endereco: 'Rua Domingos Lopes, 123, apto 45',
     bairro: 'Moema',
     cidade: 'São Paulo',
     uf: 'SP',
@@ -41,6 +42,7 @@ test('pre-render usa somente o catalogo publico e escapa metadados no shell dina
   assert.match(html, /id="apecerto-imovel-jsonld"/);
   assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);
   assert.doesNotMatch(html, /onerror=/);
+  assert.doesNotMatch(html, /Rua Domingos Lopes|streetAddress|"geo"/, 'a ficha estática não pode publicar localização privada do imóvel');
   assert.match(await readFile(join(input.distDir, '404.html'), 'utf8'), /noindex,nofollow/);
 });
 
