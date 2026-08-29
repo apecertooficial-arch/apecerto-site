@@ -150,11 +150,13 @@ test('galeria deduplica mídia e prioriza uma alternativa editorial quando a ori
   assert.ok(trecho, 'a curadoria da galeria deve permanecer isolada e testável');
   const galeriaPublica = new Function('valores', 'grupo', 'fallbackAlt', trecho[1]);
   const contexto = {
-    fotoUrl: valor => String(valor || ''),
-    fotoAlt: (_valor, fallback) => fallback,
+    fotoUrl: valor => String(valor && typeof valor === 'object' ? valor.path : (valor || '')),
+    fotoAlt: (valor, fallback) => valor && typeof valor === 'object' && valor.alt_text ? valor.alt_text : fallback,
   };
-  const itens = galeriaPublica.call(contexto, ['fachada.jpg', 'piscina.jpg', 'lobby.jpg', 'sala.jpg', 'sala.jpg'], 'Fotos do imóvel', 'Foto do imóvel');
-  assert.deepEqual(itens.map(item => item.url), ['sala.jpg', 'fachada.jpg', 'piscina.jpg', 'lobby.jpg']);
+  const itens = galeriaPublica.call(contexto, ['fachada.jpg', 'piscina.jpg', 'sala.jpg', 'lobby.jpg', 'sala.jpg'], 'Fotos do imóvel', 'Foto do imóvel');
+  assert.deepEqual(itens.map(item => item.url), ['fachada.jpg', 'piscina.jpg', 'sala.jpg', 'lobby.jpg']);
+  assert.match(design, /const galMosaicoIndices = fotosDet\.length >= 4 \? \[2, 0, 1, 3, 4\] : \[0, 1, 2, 3, 4\]/);
+  assert.match(design, /galAbre0: e => this\.abrirGaleria\(galMosaicoIndices\[0\], e\)/, 'a capa promovida deve abrir a mesma foto na galeria');
 });
 
 test('acesso do portal associa rótulos e orienta preenchimento e leitores de tela', async () => {
@@ -562,7 +564,7 @@ test('galeria e filtros devolvem foco e compartilham fechamento seguro', async (
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   assert.match(design, /abrirGaleria\(indice, origem\)/);
   assert.match(design, /this\.galFocusOrigin = \(origem && origem\.currentTarget\) \|\| document\.activeElement/);
-  assert.match(design, /galAbre0: e => this\.abrirGaleria\(0, e\)/);
+  assert.match(design, /galAbre0: e => this\.abrirGaleria\(galMosaicoIndices\[0\], e\)/);
   assert.match(design, /if \(this\.state\.galOn\) \{ e\.preventDefault\(\); this\.fecharGaleria\(\); return; \}/, 'Escape deve usar o mesmo fechamento que restaura o foco');
   assert.match(design, /galFecha: \(\) => this\.fecharGaleria\(\)/, 'o botão deve usar o mesmo fechamento que restaura o foco');
   assert.match(design, /this\.galFocusOrigin && this\.galFocusOrigin\.focus/);
