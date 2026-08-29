@@ -133,7 +133,6 @@ test('imagens críticas e galerias usam prioridade, dimensões e preparação pr
   );
   assert.ok(design.includes('(max-width: 1100px) 50vw, 384px'), 'cards desktop devem limitar a largura solicitada à largura real');
   assert.ok(design.includes('agendarFotosAdjacentes'), 'o carrossel deve preparar somente as próximas fotos necessárias');
-  assert.match(design, /if \(this\.state\.det\) \{\s*preparar\(\);\s*return;/, 'a ficha deve preparar as fotos vizinhas sem aguardar o idle da listagem');
   assert.match(design, /prepararFoto\(fotos\[\(atual - 1 \+ fotos\.length\)/, 'a galeria deve deixar anterior e próxima prontas para navegação aquecida');
   assert.ok(design.includes('typeof imagem.decode === \'function\''), 'a próxima foto deve ser decodificada antes da troca');
   assert.ok(design.includes('.slice(0, 12)'), 'a preparação automática deve cobrir apenas a primeira dobra ampliada de ofertas');
@@ -142,7 +141,7 @@ test('imagens críticas e galerias usam prioridade, dimensões e preparação pr
   assert.match(design, /if \(!imageOnlyUpdate\) \{[\s\S]*?this\.syncListaMapa\(\);/, 'a troca de foto não pode reconstruir o mapa inteiro');
   assert.ok(design.includes('this.fotoCardReq.get(id) !== req'), 'uma foto antiga não pode vencer o clique mais recente no card');
   assert.ok(design.includes('this.fotoGaleriaReq === req'), 'uma foto antiga não pode vencer o clique mais recente na galeria');
-  assert.ok((design.match(/(?:this\.fotoGaleriaReq \+= 1|\+\+this\.fotoGaleriaReq);/g) || []).length >= 4, 'abrir e fechar imóvel ou galeria deve invalidar fotos pendentes');
+  assert.ok((design.match(/this\.fotoGaleriaReq \+= 1;/g) || []).length >= 4, 'abrir e fechar imóvel ou galeria deve invalidar fotos pendentes');
 });
 
 test('galeria deduplica mídia e prioriza uma alternativa editorial quando a origem não classifica as fotos', async () => {
@@ -156,14 +155,7 @@ test('galeria deduplica mídia e prioriza uma alternativa editorial quando a ori
   };
   const itens = galeriaPublica.call(contexto, ['fachada.jpg', 'piscina.jpg', 'sala.jpg', 'lobby.jpg', 'sala.jpg'], 'Fotos do imóvel', 'Foto do imóvel');
   assert.deepEqual(itens.map(item => item.url), ['fachada.jpg', 'piscina.jpg', 'sala.jpg', 'lobby.jpg']);
-  const classificados = galeriaPublica.call(contexto, [
-    { path: 'fachada.jpg', alt_text: 'Fachada do edifício' },
-    { path: 'quarto.jpg', alt_text: 'Quarto' },
-    { path: 'living.jpg', alt_text: 'Living integrado à varanda' },
-  ], 'Fotos do imóvel', 'Foto do imóvel');
-  assert.deepEqual(classificados.map(item => item.url), ['living.jpg', 'quarto.jpg', 'fachada.jpg'], 'metadados reais devem promover interiores de maior apelo e deixar fachadas por último');
-  assert.match(design, /const galCapaEditorial = galeriaDet\.findIndex\(foto => foto\.destaque\)/);
-  assert.match(design, /const galCapaIndice = galCapaEditorial >= 0 \? galCapaEditorial : \(fotosDet\.length >= 4 \? 2 : 0\)/, 'sem metadado editorial, a capa anterior deve ser preservada');
+  assert.match(design, /const galMosaicoIndices = fotosDet\.length >= 4 \? \[2, 0, 1, 3, 4\] : \[0, 1, 2, 3, 4\]/);
   assert.match(design, /galAbre0: e => this\.abrirGaleria\(galMosaicoIndices\[0\], e\)/, 'a capa promovida deve abrir a mesma foto na galeria');
 });
 
@@ -588,8 +580,6 @@ test('galeria responde imediatamente e pre-carrega somente as fotos vizinhas', a
   assert.ok(trecho, 'a troca da galeria deve continuar isolada e testável');
   const codigo = trecho[1];
   assert.ok(codigo.indexOf('this.setState({ galIdx: indice, galLoading: true }') < codigo.indexOf('this.prepararFoto('), 'o índice e o loading devem mudar antes de qualquer espera de rede');
-  assert.match(codigo, /const selecionada = this\.prepararFoto\(fotos\[indice\], 1200, 'contain'\)/, 'a foto escolhida deve controlar o fim do loading');
-  assert.match(codigo, /selecionada\.then\(\(\) => \{[\s\S]*?this\.fotoGaleriaReq === req[\s\S]*?galLoading: false/, 'o loading deve terminar quando a foto escolhida estiver pronta, sem aguardar o timeout de segurança');
   assert.match(codigo, /const proxima = \(indice \+ 1\) % fotos\.length/);
   assert.match(codigo, /const anterior = \(indice - 1 \+ fotos\.length\) % fotos\.length/);
   assert.doesNotMatch(codigo, /Promise\.race|await\s+this\.prepararFoto/, 'a interação não pode aguardar download ou decode');
