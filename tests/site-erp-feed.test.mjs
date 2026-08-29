@@ -49,7 +49,7 @@ test("catálogo público vem da aprovação de Produtos do ERP", () => {
 
 test("catálogo leve preserva todas as unidades e busca galerias em lote só depois", () => {
   assert.match(design, /this\.expandirUnidades\(rows\)/);
-  assert.match(design, /slice\(0, 6\)/);
+  assert.match(design, /slice\(0, 12\)/);
   assert.match(design, /new Set\([^\n]*empreendimentoId/);
   assert.match(design, /detalhesCache\s*=\s*new Map\(\)/);
   assert.match(design, /detalhesEmVoo\s*=\s*new Map\(\)/);
@@ -57,7 +57,7 @@ test("catálogo leve preserva todas as unidades e busca galerias em lote só dep
   assert.match(design, /return new Promise\(resolve => \{[\s\S]{0,600}?resolve\(completos\)/, 'a hidratação deve aguardar a interface receber os detalhes antes de liberar o carrossel');
   assert.match(design, /faltantes\.includes\(detEmpId\)[\s\S]{0,160}?retornados\.has\(detEmpId\) \? null : detEmpId/, 'resposta vazia deve encerrar o carregamento com erro recuperável');
   assert.match(design, /mesclarDetalhesCache\(this\.expandirUnidades\(rows\)\)/);
-  assert.match(design, /this\.filtrar\(\)\.out[^\n]*slice\(0, 6\)\.filter\(row => row && row\._catalogo_leve\)/, 'o fallback completo não pode baixar as mesmas galerias novamente');
+  assert.match(design, /this\.filtrar\(\)\.out[^\n]*slice\(0, 12\)\.filter\(row => row && row\._catalogo_leve\)/, 'o fallback completo não pode baixar as mesmas galerias novamente');
   assert.match(design, /if \(!ids\.length\) return null/);
   assert.match(design, /galeriaPendente \? 1 : \(n \? \(idx \+ 1\) % n : 1\)/);
   assert.match(design, /det\.fotos && det\.fotos\.length \? det\.fotos : \(det && det\.capa_path \? \[det\.capa_path\] : \[\]\)/, 'a capa leve deve ocupar a galeria enquanto os detalhes chegam');
@@ -95,8 +95,8 @@ test("produto pronto só aparece como unidade aprovada e usa a galeria da unidad
 });
 
 test("detalhe separa fotos privativas das áreas comuns do condomínio", () => {
-  assert.match(design, /grupo: 'Fotos do imóvel'/);
-  assert.match(design, /grupo: 'Áreas comuns do condomínio'/);
+  assert.match(design, /this\.galeriaPublica\([^\n]*'Fotos do imóvel'/);
+  assert.match(design, /this\.galeriaPublica\([^\n]*'Áreas comuns do condomínio'/);
   assert.match(design, /galGrupoAtual/);
 });
 

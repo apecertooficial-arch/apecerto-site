@@ -27,13 +27,21 @@ test('pre-render usa somente o catalogo publico e escapa metadados no shell dina
     slug: 'imovel-seguro',
     titulo: 'Loft <script>alert(1)</script>',
     descricao: 'Descrição <img src=x onerror=alert(1)> segura',
+    endereco: 'Rua Domingos Lopes, 123, apto 45',
     bairro: 'Moema',
     cidade: 'São Paulo',
     uf: 'SP',
-    unidades_site: [],
+    area_util: 31,
+    unidades_site: [{
+      id: '45dfa57e-35da-49cb-8766-4e6a61f7ec4a',
+      slug: 'unidade-segura',
+      tipologia: '1 dormitório',
+      area_m2: 33,
+      valor: 510000,
+    }],
   }];
   const catalog = await prerenderProperties({ ...input, fetchImpl: responseFor(rows) });
-  assert.equal(catalog.pages, 1);
+  assert.equal(catalog.pages, 2);
   assert.match(catalog.hash, /^[a-f0-9]{64}$/);
   const html = await readFile(join(input.distDir, 'imovel/imovel-seguro/index.html'), 'utf8');
   assert.match(html, /<link rel="canonical" href="https:\/\/apecerto\.com\/imovel\/imovel-seguro\/">/);
@@ -41,6 +49,11 @@ test('pre-render usa somente o catalogo publico e escapa metadados no shell dina
   assert.match(html, /id="apecerto-imovel-jsonld"/);
   assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);
   assert.doesNotMatch(html, /onerror=/);
+  assert.doesNotMatch(html, /Rua Domingos Lopes|streetAddress|"geo"/, 'a ficha estática não pode publicar localização privada do imóvel');
+  const unitHtml = await readFile(join(input.distDir, 'imovel/unidade-segura/index.html'), 'utf8');
+  assert.match(unitHtml, /<title>Apartamento com 1 quarto em Moema, São Paulo \| apêcerto<\/title>/);
+  assert.match(unitHtml, /33 m²/, 'o metadado da unidade deve usar a mesma área canônica exibida no corpo');
+  assert.doesNotMatch(unitHtml, /31 m²/, 'a área genérica do empreendimento não pode substituir a área da unidade');
   assert.match(await readFile(join(input.distDir, '404.html'), 'utf8'), /noindex,nofollow/);
 });
 

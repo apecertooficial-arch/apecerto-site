@@ -57,9 +57,9 @@ test('frontend público aceita somente token opaco para mídia de Produtos', asy
   ]) assert.equal(fotoUrl.call(contexto, value), '', 'path físico de Storage deve falhar fechado');
 });
 
-test('frontend reduz formatos comuns ao logradouro sem número ou complemento', async () => {
+test('frontend nunca publica o logradouro do imóvel e limpa referências privadas do texto', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
-  const trecho = design.match(/\n  enderecoPublico\(v\) \{([\s\S]*?)\n  \}\n  numeroPositivo\(v\)/);
+  const trecho = design.match(/\n  enderecoPublico\(v\) \{([\s\S]*?)\n  \}\n  textoPublicoImovel\(v\)/);
   assert.ok(trecho, 'o sanitizador de endereço deve continuar isolado e testável');
   const enderecoPublico = new Function('v', trecho[1]);
   for (const endereco of [
@@ -74,7 +74,11 @@ test('frontend reduz formatos comuns ao logradouro sem número ou complemento', 
     'Rua Exemplo fundos',
     'Rua Exemplo sem número',
     'Rua Exemplo sem numero',
-  ]) assert.equal(enderecoPublico(endereco), 'Rua Exemplo', endereco);
+  ]) assert.equal(enderecoPublico(endereco), '', endereco);
+  assert.match(design, /CAMPOS_SITE_PUBLICOS\s*=\s*'[^']+'/);
+  const campos = design.match(/CAMPOS_SITE_PUBLICOS\s*=\s*'([^']+)'/)?.[1] || '';
+  assert.doesNotMatch(campos, /(?:^|,)(?:endereco|latitude|longitude|descricao|slogan|titulo|nome)(?:,|$)/, 'a resposta REST pública não pode pedir rua, coordenada exata ou texto livre capaz de conter endereço');
+  assert.doesNotMatch(design, /select=' \+ encodeURIComponent\('\*'\)/, 'o navegador não pode requisitar todas as colunas do catálogo');
 });
 
 test('cards de bairro nao abrem o seletor de arquivos no site publico', async () => {
@@ -129,15 +133,30 @@ test('imagens críticas e galerias usam prioridade, dimensões e preparação pr
   );
   assert.ok(design.includes('(max-width: 1100px) 50vw, 384px'), 'cards desktop devem limitar a largura solicitada à largura real');
   assert.ok(design.includes('agendarFotosAdjacentes'), 'o carrossel deve preparar somente as próximas fotos necessárias');
-  assert.doesNotMatch(design, /prepararFoto\(fotos\[\(atual - 1 \+ fotos\.length\)/, 'a galeria não deve baixar também a foto anterior em segundo plano');
+  assert.match(design, /prepararFoto\(fotos\[\(atual - 1 \+ fotos\.length\)/, 'a galeria deve deixar anterior e próxima prontas para navegação aquecida');
   assert.ok(design.includes('typeof imagem.decode === \'function\''), 'a próxima foto deve ser decodificada antes da troca');
-  assert.ok(design.includes('.slice(0, 6)'), 'a preparação automática deve ficar limitada aos seis cards visíveis');
-  assert.match(design, /if \(det\) \{[\s\S]*?if \(this\.state\.galOn\)[\s\S]*?return;[\s\S]*?const rows =/, 'uma galeria aberta deve ter prioridade sobre fotos invisíveis dos cards');
+  assert.ok(design.includes('.slice(0, 12)'), 'a preparação automática deve cobrir apenas a primeira dobra ampliada de ofertas');
+  assert.match(design, /if \(det\) \{[\s\S]*?this\.fotosGaleriaAtual\(det\)[\s\S]*?return;[\s\S]*?const rows =/, 'a ficha deve preparar sua galeria antes de fotos invisíveis dos cards');
   assert.ok(design.includes('const imageOnlyUpdate ='), 'a troca de foto deve ser reconhecida como atualização visual isolada');
   assert.match(design, /if \(!imageOnlyUpdate\) \{[\s\S]*?this\.syncListaMapa\(\);/, 'a troca de foto não pode reconstruir o mapa inteiro');
   assert.ok(design.includes('this.fotoCardReq.get(id) !== req'), 'uma foto antiga não pode vencer o clique mais recente no card');
   assert.ok(design.includes('this.fotoGaleriaReq === req'), 'uma foto antiga não pode vencer o clique mais recente na galeria');
   assert.ok((design.match(/this\.fotoGaleriaReq \+= 1;/g) || []).length >= 4, 'abrir e fechar imóvel ou galeria deve invalidar fotos pendentes');
+});
+
+test('galeria deduplica mídia e prioriza uma alternativa editorial quando a origem não classifica as fotos', async () => {
+  const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
+  const trecho = design.match(/\n  galeriaPublica\(valores, grupo, fallbackAlt\) \{([\s\S]*?)\n  \}\n  fotosGaleriaAtual/);
+  assert.ok(trecho, 'a curadoria da galeria deve permanecer isolada e testável');
+  const galeriaPublica = new Function('valores', 'grupo', 'fallbackAlt', trecho[1]);
+  const contexto = {
+    fotoUrl: valor => String(valor && typeof valor === 'object' ? valor.path : (valor || '')),
+    fotoAlt: (valor, fallback) => valor && typeof valor === 'object' && valor.alt_text ? valor.alt_text : fallback,
+  };
+  const itens = galeriaPublica.call(contexto, ['fachada.jpg', 'piscina.jpg', 'sala.jpg', 'lobby.jpg', 'sala.jpg'], 'Fotos do imóvel', 'Foto do imóvel');
+  assert.deepEqual(itens.map(item => item.url), ['fachada.jpg', 'piscina.jpg', 'sala.jpg', 'lobby.jpg']);
+  assert.match(design, /const galMosaicoIndices = fotosDet\.length >= 4 \? \[2, 0, 1, 3, 4\] : \[0, 1, 2, 3, 4\]/);
+  assert.match(design, /galAbre0: e => this\.abrirGaleria\(galMosaicoIndices\[0\], e\)/, 'a capa promovida deve abrir a mesma foto na galeria');
 });
 
 test('acesso do portal associa rótulos e orienta preenchimento e leitores de tela', async () => {
@@ -225,32 +244,36 @@ test('grafismos da marca preservam a proporcao depois da externalizacao das imag
   }
 });
 
-test('mapa ignora coordenadas ausentes ou impossiveis antes de calcular o enquadramento', async () => {
+test('mapa usa somente centro aproximado do bairro e deslocamento estável', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const trecho = design.match(/\n  coordenadas\(r\) \{([\s\S]*?)\n  \}\n  contarResultadosSemCoordenadas\(rows\)/);
   assert.ok(trecho, 'a validação de coordenadas deve continuar isolada e testável');
   const coordenadas = new Function('r', trecho[1]);
-
-  assert.equal(coordenadas({ latitude: null, longitude: null }), null, 'NULL do banco não pode virar o ponto 0,0');
-  assert.equal(coordenadas({ latitude: '', longitude: '' }), null, 'campos vazios não podem criar marcador');
-  assert.equal(coordenadas({ latitude: '-23.603', longitude: '46.667' }), null, 'longitude com sinal invertido não pode abrir o mapa até a África');
-  assert.equal(coordenadas({ latitude: '0', longitude: '0' }), null, 'o ponto nulo explícito deve ser descartado');
-  assert.equal(coordenadas({ latitude: '-22.90', longitude: '-43.20' }), null, 'um ponto fora da região atendida não pode afastar o mapa de São Paulo');
-  assert.deepEqual(
-    coordenadas({ latitude: '-23.603', longitude: '-46.667' }),
-    [-23.603, -46.667],
-    'uma coordenada válida de São Paulo deve continuar no mapa',
-  );
+  const contexto = {
+    slugParte: v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+    empreendimentoId: r => r.empreendimento_id || r.id || null,
+  };
+  const a = coordenadas.call(contexto, { id: 'u1', bairro: 'Moema', latitude: -1, longitude: -1 });
+  const repetido = coordenadas.call(contexto, { id: 'u1', bairro: 'Moema', latitude: -90, longitude: 90 });
+  const b = coordenadas.call(contexto, { id: 'u2', bairro: 'Moema' });
+  assert.deepEqual(a, repetido, 'coordenada privada da origem não pode influenciar o mapa público');
+  assert.notDeepEqual(a, b, 'ofertas diferentes devem receber deslocamento determinístico diferente');
+  assert.ok(Math.abs(a[0] - -23.6017) < 0.005 && Math.abs(a[1] - -46.6654) < 0.005, 'o ponto deve permanecer na região ampla de Moema');
+  assert.doesNotMatch(trecho[1], /r\.(?:latitude|longitude)/, 'o cálculo não pode ler coordenadas exatas');
 });
 
-test('aviso do mapa conta dinamicamente somente resultados sem coordenadas válidas', async () => {
+test('aviso do mapa informa que todos os resultados usam localização aproximada', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const coordenadasTrecho = design.match(/\n  coordenadas\(r\) \{([\s\S]*?)\n  \}\n  contarResultadosSemCoordenadas\(rows\)/);
   const contadorTrecho = design.match(/\n  contarResultadosSemCoordenadas\(rows\) \{([\s\S]*?)\n  \}\n  saraBuscar\(txt\)/);
   assert.ok(coordenadasTrecho && contadorTrecho, 'validação e contador devem permanecer isolados e testáveis');
   const coordenadas = new Function('r', coordenadasTrecho[1]);
   const contar = new Function('rows', contadorTrecho[1]);
-  const contexto = { coordenadas };
+  const contexto = {
+    slugParte: v => String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    empreendimentoId: r => r.empreendimento_id || r.id || null,
+  };
+  contexto.coordenadas = r => coordenadas.call(contexto, r);
 
   const validosMesmoEmpreendimento = [
     { id: 'u1', empreendimento_id: 'e1', latitude: -23.60, longitude: -46.66 },
@@ -262,13 +285,15 @@ test('aviso do mapa conta dinamicamente somente resultados sem coordenadas váli
     { id: 'u4', latitude: 'abc', longitude: '-46.66' },
     { id: 'u5', latitude: '0', longitude: '0' },
     { id: 'u6', latitude: '-22.9', longitude: '-43.2' },
-  ])), 4);
+  ])), 0, 'ausência ou erro na coordenada privada não remove a oferta do mapa aproximado');
   assert.equal(contar.call(contexto, [validosMesmoEmpreendimento[0]]), 0, 'a contagem deve reagir ao conjunto filtrado atual');
   assert.equal(contar.call(contexto, []), 0);
   assert.equal(contar.call(contexto, null), 0);
   assert.match(design, /data-map-representation-status=""[^>]*role="status"[^>]*aria-live="polite"|role="status"[^>]*aria-live="polite"[^>]*data-map-representation-status=""/);
   assert.match(design, /const mapaRepresentacao = this\.resumoRepresentacaoMapa\(filtradosAll\)/, 'o aviso deve acompanhar filtros e ordenação atuais');
-  assert.doesNotMatch(design, /latitude[^\n]{0,80}=\s*-23\.5|longitude[^\n]{0,80}=\s*-46\.6/, 'o site não pode fabricar coordenada substituta');
+  assert.match(design, /Localização aproximada:/, 'a interface deve explicar a proteção de localização');
+  assert.match(design, /rw-map-status-active\[data-map-representation-status\][^{]*\{[^}]*margin-top:\s*64px\s*!important/, 'o aviso do mapa mobile não pode ficar encoberto pelos controles sticky');
+  assert.match(design, /mapaRepresentacaoClasse:\s*vistaEfetiva === 'mapa' \? 'rw-map-status-active' : ''/, 'o espaçamento adicional deve existir apenas no modo mapa');
 });
 
 test('mapa carrega o catalogo atual sem limite de preco ou paginacao escondida', async () => {
@@ -382,6 +407,7 @@ test('ficha usa uma experiencia de rota sem manter a home ativa atrás', async (
   assert.match(design, /detRouteErro/, 'a ficha deve oferecer recuperação se a conexão falhar');
   assert.match(design, /tentarDetRoute/, 'a falha da ficha deve permitir tentar novamente');
   assert.match(design, /voltarCatalogoRota/, 'a falha da ficha deve permitir voltar ao catálogo');
+  assert.match(design, /window\.scrollTo\(\{ top: 0, behavior: 'auto' \}\)/, 'a ficha deve abrir no topo mesmo quando o catálogo estava rolado');
 });
 
 test('locação só fica disponível quando a vitrine pública tiver imóveis', async () => {
@@ -468,14 +494,14 @@ test('detalhe móvel mantém conversão visível e galeria responde a swipe', as
   assert.match(design, /Math\.abs\(delta\)\s*<\s*45/);
 });
 
-test('mapa agrupa unidades por empreendimento sem esconder unidades do popup', async () => {
+test('mapa agrupa pontos aproximados próximos sem esconder imóveis do popup', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const trecho = design.match(/\n  gruposMapa\(rows\) \{([\s\S]*?)\n  \}\n  resumoRepresentacaoMapa\(rows\)/);
   assert.ok(trecho, 'o agrupamento do mapa deve continuar isolado e testavel');
   const gruposMapa = new Function('rows', trecho[1]);
   const contexto = {
     coordenadas: r => r.latitude == null || r.longitude == null ? null : [Number(r.latitude), Number(r.longitude)],
-    empreendimentoId: r => r.empreendimento_id || null,
+    slugParte: v => String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
   };
   const grupos = gruposMapa.call(contexto, [
     { id: 'u1', empreendimento_id: 'e1', empreendimento_nome: 'Predio A', latitude: -23.60, longitude: -46.66 },
@@ -484,10 +510,9 @@ test('mapa agrupa unidades por empreendimento sem esconder unidades do popup', a
     { id: 'u4', empreendimento_id: 'e3', empreendimento_nome: 'Sem local', latitude: null, longitude: null },
   ]);
 
-  assert.equal(grupos.length, 2, 'cada empreendimento localizado deve produzir exatamente um grupo');
-  assert.equal(grupos[0].itens.length, 2, 'todas as unidades do empreendimento devem permanecer acessiveis');
-  assert.equal(grupos[1].itens.length, 1, 'empreendimentos diferentes nao podem ser fundidos pela coordenada');
-  assert.deepEqual(grupos[0].ll, [-23.60, -46.66]);
+  assert.equal(grupos.length, 1, 'pontos próximos da mesma região devem virar um grupo legível');
+  assert.equal(grupos[0].itens.length, 3, 'todos os imóveis agrupados devem permanecer acessíveis no popup');
+  assert.ok(Math.abs(grupos[0].ll[0] - -23.60) < 1e-9 && Math.abs(grupos[0].ll[1] - -46.66) < 1e-9);
 
   const mapa = design.match(/\n  syncListaMapa\(\) \{([\s\S]*?)\n  \}\n  checkDemo\(\)/)?.[1] || '';
   assert.match(mapa, /grupo\.ll\.join\(','\)/, 'a assinatura deve reagir a mudancas de latitude e longitude');
@@ -513,7 +538,7 @@ test('mapa explica a diferença entre imóveis, pontos agrupados e coordenadas a
   const resumoRepresentacaoMapa = new Function('rows', resumoTrecho[1]);
   const contexto = {
     coordenadas: r => Number.isFinite(Number(r.latitude)) && Number.isFinite(Number(r.longitude)) ? [Number(r.latitude), Number(r.longitude)] : null,
-    empreendimentoId: r => r.empreendimento_id || null,
+    slugParte: v => String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
     contarResultadosSemCoordenadas: rows => rows.filter(r => r.latitude == null || r.longitude == null).length,
     gruposMapa,
   };
@@ -524,11 +549,14 @@ test('mapa explica a diferença entre imóveis, pontos agrupados e coordenadas a
     longitude: -46.66 - indice / 10000,
   }));
   const agrupado = resumoRepresentacaoMapa.call(contexto, rows);
-  assert.deepEqual(agrupado, { total: 19, semLocalizacao: 0, representados: 19, pontos: 17, agrupados: 2 });
+  assert.equal(agrupado.total, 19);
+  assert.equal(agrupado.representados, 19);
+  assert.equal(agrupado.aproximados, 19);
+  assert.ok(agrupado.pontos > 0 && agrupado.pontos < agrupado.total, 'o mapa deve reduzir sobreposição sem esconder inventário');
   const ausente = resumoRepresentacaoMapa.call(contexto, rows.concat({ id: 'sem-local', empreendimento_id: 'e20', latitude: null, longitude: null }));
   assert.equal(ausente.semLocalizacao, 1);
   assert.equal(ausente.representados, 19);
-  assert.match(design, /Todos os ' \+ mapaRepresentacao\.total \+ ' apês aparecem no mapa em '/);
+  assert.match(design, /Localização aproximada: os ' \+ mapaRepresentacao\.total/);
   assert.match(design, /data-map-representation-status/);
 });
 
@@ -536,7 +564,7 @@ test('galeria e filtros devolvem foco e compartilham fechamento seguro', async (
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   assert.match(design, /abrirGaleria\(indice, origem\)/);
   assert.match(design, /this\.galFocusOrigin = \(origem && origem\.currentTarget\) \|\| document\.activeElement/);
-  assert.match(design, /galAbre0: e => this\.abrirGaleria\(0, e\)/);
+  assert.match(design, /galAbre0: e => this\.abrirGaleria\(galMosaicoIndices\[0\], e\)/);
   assert.match(design, /if \(this\.state\.galOn\) \{ e\.preventDefault\(\); this\.fecharGaleria\(\); return; \}/, 'Escape deve usar o mesmo fechamento que restaura o foco');
   assert.match(design, /galFecha: \(\) => this\.fecharGaleria\(\)/, 'o botão deve usar o mesmo fechamento que restaura o foco');
   assert.match(design, /this\.galFocusOrigin && this\.galFocusOrigin\.focus/);
