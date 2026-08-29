@@ -16,29 +16,18 @@ const MOA_POSTER_URL = 'https://apecerto.com/assets/media/fac779ec499e72abf87e.j
 const applyLocalMediaOverrides = (metadata, entity) => {
   const replace = value => String(value || '').split(/[?#]/)[0].endsWith(MOA_GIF_PATH) ? MOA_POSTER_URL : value;
   const images = (metadata.images || []).map(replace);
-  const source = { ...(entity?.row || {}), ...(entity?.unit || {}) };
-  const tipologia = String(source.tipologia || '').toLowerCase();
-  const tipo = /studio/.test(tipologia) ? 'Studio' : /cobertura/.test(tipologia) ? 'Cobertura' : /casa/.test(tipologia) ? 'Casa' : 'Apartamento';
-  const dormitorios = Number(source.dormitorios);
-  const quartos = Number.isFinite(dormitorios) && dormitorios > 0 ? ` com ${dormitorios} ${dormitorios === 1 ? 'quarto' : 'quartos'}` : '';
-  const bairro = String(source.bairro || '').replace(/\s+/g, ' ').trim();
-  const cidade = String(source.cidade || 'São Paulo').replace(/\s+/g, ' ').trim();
-  const name = `${tipo}${quartos}${bairro ? ` em ${bairro}` : ''}`.slice(0, 120);
-  const area = Number(source.area_util || source.area_min_disponivel);
-  const description = [name, Number.isFinite(area) && area > 0 ? `${area.toLocaleString('pt-BR')} m²` : '', bairro, cidade].filter(Boolean).join(' · ').slice(0, 240);
+  const row = entity?.row || {};
+  const cidade = String(row.cidade || 'São Paulo').replace(/\s+/g, ' ').trim();
   const publicAddress = {
     '@type': 'PostalAddress',
     addressLocality: cidade,
-    addressRegion: String(source.uf || 'SP').slice(0, 2),
+    addressRegion: String(row.uf || 'SP').slice(0, 2),
     addressCountry: 'BR',
   };
   return {
     ...metadata,
-    name,
-    title: `${name} | apêcerto`,
-    description,
     images,
-    jsonLd: { ...metadata.jsonLd, name, description, image: images, address: publicAddress, geo: undefined },
+    jsonLd: { ...metadata.jsonLd, image: images, address: publicAddress, geo: undefined },
   };
 };
 
