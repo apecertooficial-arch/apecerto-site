@@ -4995,6 +4995,14 @@ class Component extends DCLogic {
       const id = raw.slice(6);
       return this.uuidValido(id) ? this.SB_URL + '/functions/v1/site-media/' + id.toLowerCase() : '';
     }
+    try {
+      const resolved = new URL(raw);
+      const allowedOrigin = new URL(this.SB_URL).origin;
+      const match = resolved.pathname.match(/^\/functions\/v1\/site-media\/([0-9a-f-]{36})$/i);
+      if (resolved.origin === allowedOrigin && !resolved.search && !resolved.hash && match && this.uuidValido(match[1])) {
+        return allowedOrigin + '/functions/v1/site-media/' + match[1].toLowerCase();
+      }
+    } catch (e) {}
     const moaGif = 'moa/4lq4pd7p32p.gif';
     if (raw.replace(/^\/+/, '') === moaGif || raw.split(/[?#]/)[0].endsWith('/empreendimentos/' + moaGif)) {
       return '/assets/media/fac779ec499e72abf87e.jpg';

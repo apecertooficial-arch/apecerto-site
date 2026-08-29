@@ -62,8 +62,6 @@ const handler = seo.createSiteSeoHandler({ fetchImpl, env: { get: (name) => envV
 const server = createServer(async (request, response) => {
   const upstream = await handler(new Request('http://127.0.0.1' + (request.url || '/'), { method: request.method }));
   const headers = Object.fromEntries(upstream.headers);
-  // Espelha o header final configurado no Blueprint para a resposta reescrita.
-  headers['content-type'] = 'text/html; charset=utf-8';
   response.writeHead(upstream.status, headers);
   response.end(request.method === 'HEAD' ? undefined : Buffer.from(await upstream.arrayBuffer()));
 });

@@ -243,6 +243,7 @@ test('Render aguarda CI e envia headers seguros e cache imutavel', async () => {
   assert.match(render, /path: \/imovel\/\*\s+name: Content-Type\s+value: text\/html; charset=utf-8/);
   assert.match(render, /path: \/sitemap\.xml\s+name: Content-Type\s+value: application\/xml; charset=utf-8/);
   assert.match(render, /path: \/sitemap-catalogo\.xml\s+name: Content-Type\s+value: application\/xml; charset=utf-8/);
+  assert.match(render, /path: \/imovel\/\*\s+name: Content-Type\s+value: text\/html; charset=utf-8/);
   assert.match(render, /Cache-Control[\s\S]*max-age=31536000, immutable/);
   for (const header of [
     'Strict-Transport-Security',

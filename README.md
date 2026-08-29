@@ -45,13 +45,16 @@ O serviço atual também mantém regras no dashboard do Render. Para comparar um
 snapshot sanitizado dessas regras com o `render.yaml`, execute:
 
 ```sh
-RENDER_ACTIVE_RULES_JSON='[]' npm run check:render-drift
+RENDER_ACTIVE_RULES_JSON='[]' \
+RENDER_ACTIVE_HEADERS_JSON='[{"path":"/imovel/*","name":"Content-Type","value":"text/html; charset=utf-8"}]' \
+npm run check:render-drift
 ```
 
-O snapshot não contém token, cabeçalho ou configuração de ambiente. Em automação,
-obtenha-o por uma integração read-only e injete somente os três campos acima.
-Uma regra ativa para `/imovel/*` faz o comando falhar fechado, porque ela
-contornaria as fichas físicas e o 404 HTML do Static Site.
+Os snapshots não contêm token nem configuração de ambiente. Em automação,
+obtenha-os por uma integração read-only e injete somente os campos mostrados.
+Uma regra ativa para `/imovel/*`, ou a ausência, duplicidade ou divergência do
+header, faz o comando falhar fechado. Isso preserva as fichas físicas e o 404
+HTML do Static Site.
 
 ## SEO dinâmico do catálogo
 
