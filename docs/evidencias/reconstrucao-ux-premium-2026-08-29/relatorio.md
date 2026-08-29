@@ -1,8 +1,11 @@
 # Evidências — reconstrução UX premium do Site ApêCerto
 
-Data: 29/08/2026  
-Base: `origin/main` em `05a51d4e2c1ed53d79075d275eaefef4757dfaf1`  
-Branch: `codex/reconstrucao-ux-premium-20260829`  
+Data: 29/08/2026
+
+Base final: `origin/main` em `a8b2ac436a21836cbccd34813472b15114a06f66` (inclui o fix de atribuição Meta do PR #35)
+
+Branch: `codex/reconstrucao-ux-premium-20260829`
+
 Status deste documento: validação local; preview e produção ainda não comprovados.
 
 ## Resultado local
@@ -56,9 +59,9 @@ O INP não pode ser declarado com validade de campo nesta execução. A observa�
 ## Gates técnicos
 
 - Build e verificador bloqueante: aprovados; pacote local final `105aa4dba1bbe75b` antes do commit.
-- Suíte completa no estado final: 125/125 testes verdes.
+- Suíte completa no estado final sobre a `main` atualizada: 130/130 testes verdes, incluindo a preservação de atribuição Meta do PR #35.
 - Regressão direcionada do mapa/privacidade/galeria: 54/54 testes verdes antes da repetição integral.
-- Smoke HTTP: 6 rotas ativas + 1 desativada, orçamento inicial medido em 381.094 bytes, sem rota quebrada.
+- Smoke HTTP: 6 rotas ativas + 1 desativada, orçamento inicial medido em 381.256 bytes, sem rota quebrada.
 - Smoke SEO: duas fichas distintas e uma rota 404/noindex aprovadas.
 - Segurança: nenhum segredo administrativo foi adicionado ao frontend.
 

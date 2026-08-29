@@ -1,7 +1,8 @@
 # Design brief — reconstrução UX premium do Site ApêCerto
 
-Data: 29/08/2026  
-Base de comparação: produção ApêCerto em 1440×900, Airbnb Brasil e QuintoAndar atuais em home e busca.  
+Data: 29/08/2026
+
+Base de comparação: produção ApêCerto em 1440×900, Airbnb Brasil e QuintoAndar atuais em home e busca.
 Nota-base de aceite: 3,2/10. CI verde e PR anterior não são evidência de qualidade visual.
 
 ## Diagnóstico visual da produção
