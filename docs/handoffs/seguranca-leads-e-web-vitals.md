@@ -28,6 +28,20 @@ Implementação futura mínima:
 4. Respeitar consentimento e a política de retenção já vigente.
 5. Cobrir transporte, sanitização, duplicidade e navegadores sem `PerformanceObserver`.
 
+## `site-track` — 403 no gateway
+
+A inspeção desta branch encontrou a função `supabase/functions/site-track`, e o frontend chama o endpoint público por Beacon/fetch sem credencial privilegiada. Entretanto, `supabase/config.toml` só explicita `verify_jwt = false` para `site-seo` e `site-financing-lead`; não há uma seção equivalente para `site-track`. Isso é compatível com o 403 ocorrer no gateway antes de a validação de origem/payload da função ser executada.
+
+Próxima ação do responsável de infraestrutura, fora deste PR:
+
+1. confirmar nos logs que o 403 vem da verificação JWT do gateway;
+2. revisar a versão atual da função e sua allowlist de origem/payload;
+3. declarar a configuração pública estritamente para `site-track`, sem expor `service_role` no navegador e sem abrir tabela/RLS;
+4. publicar a função/configuração em mudança separada, com teste de origem permitida, origem negada, payload inválido, rate limit e ausência de segredo no bundle;
+5. só então executar um smoke sintético identificado e verificar persistência/dedupe.
+
+Nenhuma alteração Supabase, função, RLS ou produção foi feita nesta rodada.
+
 ## Fora de escopo deste PR
 
 Supabase, banco, função `site-track`, RLS, schema, migração ou credencial.

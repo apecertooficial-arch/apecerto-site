@@ -2,7 +2,7 @@
 
 ## Conclusão
 
-A nota anterior de 9,6/10 não representa a experiência percebida. A linha de base real foi **6,1/10**. Após a segunda revisão visual, esta branch leva a avaliação local para **8,445/10**, sem declarar o site pronto em produção: mapa completo, seleção editorial das capas, foco de corte e variantes responsivas ainda dependem do contrato de Produtos/backend.
+A nota anterior de 9,6/10 não representa a experiência percebida. A linha de base real foi **6,1/10**. Após a segunda revisão visual e a validação item a item da auditoria externa, esta branch leva a avaliação local para **8,590/10**, sem declarar o site pronto em produção: mapa completo, seleção editorial das capas, foco de corte, variantes responsivas e a configuração externa de tracking ainda dependem de Produtos/infraestrutura.
 
 Base usada: `origin/main` em `255a7558cd49138f5126c5e343115fb6fe254f66`. Nenhum merge ou deploy foi feito.
 
@@ -56,7 +56,7 @@ Depois final: [home 1440×900](evidencias/ux-real-2026-08-28/depois-final-1440x9
 - overflow horizontal em 390×844: **0 px**;
 - segunda bateria de fluidez, em três execuções por fluxo: filtros sem long tasks; scroll com 0/1/0 long tasks (máxima 63 ms); galeria com 0/0/0 long tasks. A primeira foto teve um intervalo de frame de 300,1 ms durante carregamento/decodificação e as duas seguintes ficaram em 17,7/17,6 ms;
 - build: 30.342 bytes de HTML bruto / 11.047 bytes gzip; orçamento inicial 378.739 bytes;
-- testes: **122/122 verdes**;
+- testes: **123/123 verdes**;
 - verificador bloqueante: aprovado;
 - smoke HTTP: 6 rotas ativas e 1 desativada, aprovado;
 - smoke SEO: duas fichas distintas e uma rota 404/noindex, aprovado.
@@ -83,7 +83,7 @@ A instrumentação de laboratório e a metodologia estão registradas em [mediç
 
 Pesos: 10% para cada uma das oito primeiras áreas; 5% para Bairros, Anunciar e Acessibilidade; 3% para Desempenho; 2% para SEO e segurança. Cálculo sem arredondamento: `0,87 + 0,89 + 0,88 + 0,86 + 0,88 + 0,68 + 0,78 + 0,88 + 0,45 + 0,425 + 0,43 + 0,24 + 0,18 = 8,445`.
 
-**Nota geral ponderada local: 8,445/10.** O teto continua abaixo de 9 enquanto o mapa completo e a curadoria das capas permanecerem bloqueados pelo contrato de Produtos.
+Esta tabela registra a segunda revisão visual anterior. A recalibração final com a rubrica obrigatória da auditoria Claude está em [Validação Claude × PR #34](validacao-auditoria-claude-pr34-2026-08-28.md) e resulta em **8,590/10**. O teto continua abaixo de 9 enquanto mapa completo, curadoria/variantes das capas e tracking externo permanecerem bloqueados.
 
 ## Dependências externas que impedem 10/10
 
