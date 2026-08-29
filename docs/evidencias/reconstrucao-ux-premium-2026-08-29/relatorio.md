@@ -6,7 +6,11 @@ Base final: `origin/main` em `a8b2ac436a21836cbccd34813472b15114a06f66` (inclui 
 
 Branch: `codex/reconstrucao-ux-premium-20260829`
 
-Status deste documento: validação local; preview e produção ainda não comprovados.
+Status deste documento: validação local e preview do Render comprovados; produção ainda não alterada.
+
+HEAD funcional validado no preview: `fdf1a912e40f4f9abb2165bd2a8c0aefceafec87`.
+
+Preview: `https://apecerto-site-pr-36.onrender.com` (deploy `dep-da95313ncjis7391vla0`).
 
 ## Resultado local
 
@@ -34,7 +38,7 @@ Os princípios extraídos dos benchmarks — densidade, busca progressiva, lista
 - O frontend ignora latitude/longitude da origem e não geocodifica endereço.
 - O catálogo e o detalhe solicitam allowlist explícita. Rua, número, complemento, latitude, longitude, nome livre e descrição livre não fazem parte das respostas pedidas pelo navegador.
 - UI e JSON-LD do imóvel publicam bairro/cidade; o endereço corporativo do rodapé permanece separado e permitido.
-- Galeria 1+4 usa URLs únicas, prioriza alternativa de interior, pré-carrega anterior/próxima e não replica a fachada para preencher posições.
+- Galeria 1+4 usa URLs únicas, prioriza uma alternativa de interior, pré-carrega anterior/próxima e não replica a fachada para preencher posições. No preview, a capa servida foi o ativo interior `142bef87…`; clicar nela abriu o mesmo ativo e o fechamento por botão/Escape devolveu o foco ao gatilho.
 - Cards têm 4:3, skeleton/fallback, clique na superfície e estados hover/focus; as primeiras ofertas evitam repetir a mesma capa quando existe alternativa real.
 - Anunciar continua iniciando pela captação; Sara e Portal permanecem funcionais.
 - Nenhum overflow horizontal em 1280 ou 390 px nas medições de navegador.
@@ -56,14 +60,30 @@ Medição em Chrome real local, três rodadas. Não são Core Web Vitals de camp
 
 O INP não pode ser declarado com validade de campo nesta execução. A observação de eventos não capturou uma amostra representativa; a latência percebida da galeria foi medida diretamente do clique até a imagem completa.
 
+No preview, três amostras HTTP após aquecimento ficaram em 43–61 ms de TTFB/tempo total para home e 47–61 ms para a ficha. O navegador de validação não expôs a API de Performance para uma segunda leitura confiável de LCP/CLS; por isso, as métricas locais acima continuam identificadas como laboratório e não foram promovidas a Core Web Vitals de campo.
+
 ## Gates técnicos
 
-- Build e verificador bloqueante: aprovados; pacote local final `105aa4dba1bbe75b` antes do commit.
+- Build e verificador bloqueante: aprovados; pacote funcional final `f8e11515cdc71ca8`, design `f0d471524841`.
 - Suíte completa no estado final sobre a `main` atualizada: 130/130 testes verdes, incluindo a preservação de atribuição Meta do PR #35.
 - Regressão direcionada do mapa/privacidade/galeria: 54/54 testes verdes antes da repetição integral.
 - Smoke HTTP: 6 rotas ativas + 1 desativada, orçamento inicial medido em 381.256 bytes, sem rota quebrada.
 - Smoke SEO: duas fichas distintas e uma rota 404/noindex aprovadas.
 - Segurança: nenhum segredo administrativo foi adicionado ao frontend.
+- GitHub Actions: `validate` concluído com sucesso no HEAD funcional `fdf1a912…`.
+
+## Gate do preview real
+
+- Render serviu exatamente `fdf1a912…`; nenhum serviço de produção foi alterado.
+- `/version.json`: `f8e11515cdc71ca8`, catálogo público com hash e data de geração, 124 páginas.
+- Home e duas fichas: HTTP 200 e `Content-Type: text/html; charset=utf-8`; títulos, descriptions, canonicals, OG, Twitter e JSON-LD distintos/factuais.
+- Rota inexistente: HTTP 404 com `noindex,nofollow`.
+- Endereço do imóvel: sem rua, número, coordenada exata ou `geo` na UI/HTML/JSON-LD; endereço corporativo do rodapé preservado.
+- Busca mobile: 19 resultados para `tipo=studio&area_min=24&area_max=35`, URL persistida, sem overflow horizontal.
+- Mapa mobile: todos os 19 imóveis representados em pontos aproximados/agrupados; aviso integralmente legível.
+- Filtros: diálogo “Mais filtros”, foco inicial, Escape e devolução de foco comprovados.
+- Ficha desktop/mobile: sem home montada atrás, capa interior, cinco ativos únicos, galeria coerente e foco restaurado.
+- Assets críticos: todos 200; console sem erros ou avisos relevantes; nenhum lead foi enviado.
 
 ## Nota ponderada local — não é nota de produção
 
@@ -83,9 +103,9 @@ Nenhum item crítico local ficou abaixo de 8. A nota não é arredondada para 9 
 
 1. O catálogo atual não oferece classificação semântica/focal point consistente para todas as fotos. O Site usa deduplicação e uma heurística conservadora; a curadoria perfeita de capa depende de um contrato futuro de Produtos, fora desta mudança.
 2. Centros de bairro são deliberadamente aproximados. Eles melhoram a procura e preservam a privacidade, mas não representam a posição física exata.
-3. Preview real do Render ainda é o gate obrigatório para assets, cache, mapa/tiles, métricas de rede e comportamento da hospedagem.
-4. Produção deve permanecer no deploy estável até que preview, CI e smoke do SHA aprovado estejam verdes.
+3. A telemetria de campo (LCP/INP/CLS de usuários reais) só pode ser avaliada após tráfego de produção; não foi inferida a partir do preview.
+4. Produção permanece no deploy estável até Ready/merge/deploy controlado do SHA aprovado e repetição dos smokes.
 
 ## Gate de release
 
-Somente avançar para Ready/merge/deploy quando o Draft PR servir exatamente o SHA aprovado no preview e repetir: HTTP/SEO, 1440×900, 1280×800, 390×844, lista/mapa, filtros, ficha, galeria, console/rede e privacidade. Em 5xx, asset quebrado, mapa ausente, rua/coordenada privada, regressão de navegação ou desempenho relevante, cancelar a publicação ou executar rollback imediato para o commit/deploy estável registrado antes do release.
+O preview funcional passou os gates de HTTP/SEO, 1440×900, 1280×800, 390×844, lista/mapa, filtros, ficha, galeria, console/rede e privacidade. Após qualquer commit documental posterior, reconfirmar CI e que o preview serve o novo HEAD antes de Ready/merge/deploy. Em 5xx, asset quebrado, mapa ausente, rua/coordenada privada, regressão de navegação ou desempenho relevante, cancelar a publicação ou executar rollback imediato para o commit/deploy estável `05a51d4e2c1ed53d79075d275eaefef4757dfaf1` / `dep-da93knajnfac73citl50`.
