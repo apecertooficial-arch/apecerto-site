@@ -1,0 +1,280 @@
+{
+  "generatedAt": "2026-08-29T03:47:15.630Z",
+  "origin": "https://apecerto.com",
+  "viewports": [
+    {
+      "label": "1440x900",
+      "home": {
+        "innerWidth": 1440,
+        "innerHeight": 900,
+        "scrollWidth": 1440,
+        "lcpMs": 1324,
+        "cls": 0.008,
+        "longTasksMs": [
+          100
+        ],
+        "streetLeak": false
+      },
+      "search": {
+        "resultText": "19 apês encontrados",
+        "notice": "Localização aproximada: os 19 imóveis aparecem pela região do bairro, nunca pelo endereço exato.",
+        "visiblePropertyLinks": 20,
+        "markers": 9,
+        "markerUnitSumConfirmedByTitles": 19,
+        "overflow": false,
+        "streetLeak": false,
+        "mapVisible": true
+      },
+      "filters": {
+        "opened": true,
+        "dialogName": "Mais filtros",
+        "focused": "Tipo do imóvel",
+        "returnedFocus": true
+      },
+      "detail": {
+        "h1": "Apartamento com 1 quarto em Campo Belo",
+        "mosaicButtons": 5,
+        "uniqueMosaicImages": 5,
+        "overflow": false,
+        "streetLeak": false
+      },
+      "gallery": {
+        "opened": true,
+        "coldMs": 146.6,
+        "warmMs": [
+          1141.1,
+          262.3,
+          327
+        ],
+        "returnedFocus": true
+      },
+      "consoleIssues": [],
+      "failedResponses": []
+    },
+    {
+      "label": "1280x800",
+      "home": {
+        "innerWidth": 1280,
+        "innerHeight": 800,
+        "scrollWidth": 1280,
+        "lcpMs": 676,
+        "cls": 0.003,
+        "longTasksMs": [],
+        "streetLeak": false
+      },
+      "search": {
+        "resultText": "19 apês encontrados",
+        "notice": "Localização aproximada: os 19 imóveis aparecem pela região do bairro, nunca pelo endereço exato.",
+        "visiblePropertyLinks": 20,
+        "markers": 9,
+        "markerUnitSumConfirmedByTitles": 19,
+        "overflow": false,
+        "streetLeak": false,
+        "mapVisible": true
+      },
+      "filters": {
+        "opened": true,
+        "dialogName": "Mais filtros",
+        "focused": "Tipo do imóvel",
+        "returnedFocus": true
+      },
+      "detail": {
+        "h1": "Apartamento com 1 quarto em Campo Belo",
+        "mosaicButtons": 5,
+        "uniqueMosaicImages": 5,
+        "overflow": false,
+        "streetLeak": false
+      },
+      "gallery": {
+        "opened": true,
+        "coldMs": 47.1,
+        "warmMs": [
+          263,
+          46,
+          1343.8
+        ],
+        "returnedFocus": true
+      },
+      "consoleIssues": [],
+      "failedResponses": []
+    },
+    {
+      "label": "390x844",
+      "home": {
+        "innerWidth": 390,
+        "innerHeight": 844,
+        "scrollWidth": 390,
+        "lcpMs": 1072,
+        "cls": 0,
+        "longTasksMs": [],
+        "streetLeak": false
+      },
+      "search": {
+        "resultText": "19 apês encontrados",
+        "notice": "Localização aproximada: os 19 imóveis aparecem pela região do bairro, nunca pelo endereço exato.",
+        "visiblePropertyLinks": 20,
+        "markers": 9,
+        "markerUnitSumConfirmedByTitles": 19,
+        "overflow": false,
+        "streetLeak": false,
+        "mapVisible": true
+      },
+      "filters": {
+        "opened": true,
+        "dialogName": "Mais filtros",
+        "focused": "Tipo do imóvel",
+        "returnedFocus": true
+      },
+      "detail": {
+        "h1": "Apartamento com 1 quarto em Campo Belo",
+        "mosaicButtons": 5,
+        "uniqueMosaicImages": 5,
+        "overflow": false,
+        "streetLeak": false
+      },
+      "gallery": {
+        "opened": true,
+        "coldMs": 42.7,
+        "warmMs": [
+          178.6,
+          30.7,
+          1127.6
+        ],
+        "returnedFocus": true
+      },
+      "consoleIssues": [],
+      "failedResponses": []
+    }
+  ],
+  "flows": {
+    "sara": {
+      "visibleDetectorTextMatch": false,
+      "regionVisibleConfirmedByRole": true,
+      "accessibleRegionName": "Busca assistida pela Sara",
+      "focusedLabel": "Descreva o imóvel que procura"
+    },
+    "anunciar": {
+      "status": 200,
+      "title": "Cadastre seu imóvel | ApeCerto",
+      "inputs": [
+        "nome",
+        "telefone",
+        "email",
+        "bairro",
+        "tipo",
+        "objetivo"
+      ],
+      "loginGate": false,
+      "issues": []
+    },
+    "portal": {
+      "status": 200,
+      "title": "Portal do proprietário | apêcerto",
+      "inputs": [
+        "Filtrar por bairro",
+        "Filtrar por status do imóvel",
+        "range",
+        "range",
+        "Ordenar imóveis",
+        "email",
+        "senha"
+      ],
+      "loginGate": false,
+      "issues": []
+    }
+  },
+  "http": [
+    {
+      "round": 1,
+      "home": {
+        "status": 200,
+        "contentType": "text/html; charset=utf-8",
+        "ttfbMs": 347.5,
+        "totalMs": 351
+      },
+      "detail": {
+        "status": 200,
+        "contentType": "text/html; charset=utf-8",
+        "ttfbMs": 19.2,
+        "totalMs": 20.6
+      }
+    },
+    {
+      "round": 2,
+      "home": {
+        "status": 200,
+        "contentType": "text/html; charset=utf-8",
+        "ttfbMs": 20.5,
+        "totalMs": 21.1
+      },
+      "detail": {
+        "status": 200,
+        "contentType": "text/html; charset=utf-8",
+        "ttfbMs": 18.5,
+        "totalMs": 19
+      }
+    },
+    {
+      "round": 3,
+      "home": {
+        "status": 200,
+        "contentType": "text/html; charset=utf-8",
+        "ttfbMs": 23,
+        "totalMs": 23.9
+      },
+      "detail": {
+        "status": 200,
+        "contentType": "text/html; charset=utf-8",
+        "ttfbMs": 18.5,
+        "totalMs": 19.1
+      }
+    }
+  ],
+  "networkPrivacy": {
+    "1440x900": {
+      "feedResponseCount": 11,
+      "statuses": [
+        200
+      ],
+      "forbiddenKeyHits": [
+        "numero"
+      ],
+      "leakedStreetValue": false,
+      "queryFieldLists": [
+        "unidades_disponiveis",
+        "id",
+        "id,slug,bairro,status,entrega,area_util,dormitorios,suites,banheiros,vagas,preco,condominio_valor,destaque,ordem,lazer,diferenciais,finalidade,iptu,capa_path,fotos,unidades_disponiveis,preco_min,preco_max,area_min_disponivel,area_max_disponivel,dormitorios_min_disponiveis,dormitorios_max_disponiveis,vagas_min_disponiveis,vagas_max_disponiveis,tipologias_disponiveis,tour_url,cidade,uf,codigo,unidades_site"
+      ]
+    },
+    "1280x800": {
+      "feedResponseCount": 11,
+      "statuses": [
+        200
+      ],
+      "forbiddenKeyHits": [
+        "numero"
+      ],
+      "leakedStreetValue": false,
+      "queryFieldLists": [
+        "unidades_disponiveis",
+        "id",
+        "id,slug,bairro,status,entrega,area_util,dormitorios,suites,banheiros,vagas,preco,condominio_valor,destaque,ordem,lazer,diferenciais,finalidade,iptu,capa_path,fotos,unidades_disponiveis,preco_min,preco_max,area_min_disponivel,area_max_disponivel,dormitorios_min_disponiveis,dormitorios_max_disponiveis,vagas_min_disponiveis,vagas_max_disponiveis,tipologias_disponiveis,tour_url,cidade,uf,codigo,unidades_site"
+      ]
+    },
+    "390x844": {
+      "feedResponseCount": 11,
+      "statuses": [
+        200
+      ],
+      "forbiddenKeyHits": [
+        "numero"
+      ],
+      "leakedStreetValue": false,
+      "queryFieldLists": [
+        "id",
+        "unidades_disponiveis",
+        "id,slug,bairro,status,entrega,area_util,dormitorios,suites,banheiros,vagas,preco,condominio_valor,destaque,ordem,lazer,diferenciais,finalidade,iptu,capa_path,fotos,unidades_disponiveis,preco_min,preco_max,area_min_disponivel,area_max_disponivel,dormitorios_min_disponiveis,dormitorios_max_disponiveis,vagas_min_disponiveis,vagas_max_disponiveis,tipologias_disponiveis,tour_url,cidade,uf,codigo,unidades_site"
+      ]
+    }
+  }
+}

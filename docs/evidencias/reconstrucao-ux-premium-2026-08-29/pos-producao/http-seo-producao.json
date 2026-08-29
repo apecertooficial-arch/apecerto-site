@@ -1,0 +1,124 @@
+{
+  "origin": "https://apecerto.com",
+  "version": {
+    "status": 200,
+    "version": "f8e11515cdc71ca8",
+    "designSha256": "f0d4715248416f29a89590c4ec0364f10cb4972ee8c5f537d6399858509bc9aa",
+    "catalog": {
+      "generatedAt": "2026-08-29T03:34:39.880Z",
+      "hash": "0c1c11f9c7d4d883814f7d59727d11857a82f6c3394288426498044433dafeb9",
+      "rows": 53,
+      "pages": 124
+    }
+  },
+  "report": [
+    {
+      "path": "/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "title": "ApeCerto | Apartamentos em Moema",
+      "description": "Apartamentos para comprar em Moema e região, com curadoria local, atendimento digital 24 horas e visitas agendadas pela ApeCerto.",
+      "canonical": "https://apecerto.com/",
+      "ogTitle": "ApeCerto | Apartamentos em Moema",
+      "twitterTitle": "ApeCerto | Apartamentos em Moema",
+      "robots": "index,follow,max-image-preview:large",
+      "jsonLdType": null,
+      "propertyAddress": null,
+      "hasPropertyStreetOrGeo": false,
+      "leakedStreet": false
+    },
+    {
+      "path": "/imovel/imovel-45dfa57e-35da-49cb-8766-4e6a61f7ec4a/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "title": "Apartamento com 1 quarto em Campo Belo | apêcerto",
+      "description": "Apartamento com 1 quarto em Campo Belo · 1 Dorm · 33 m² · Campo Belo · São Paulo",
+      "canonical": "https://apecerto.com/imovel/imovel-45dfa57e-35da-49cb-8766-4e6a61f7ec4a/",
+      "ogTitle": "Apartamento com 1 quarto em Campo Belo | apêcerto",
+      "twitterTitle": "Apartamento com 1 quarto em Campo Belo | apêcerto",
+      "robots": "index,follow,max-image-preview:large",
+      "jsonLdType": "Apartment",
+      "propertyAddress": {
+        "@type": "PostalAddress",
+        "addressLocality": "São Paulo",
+        "addressRegion": "SP",
+        "addressCountry": "BR"
+      },
+      "hasPropertyStreetOrGeo": false,
+      "leakedStreet": false
+    },
+    {
+      "path": "/imovel/imovel-5f369d0b-9655-4813-948b-2f98da0828b3/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "title": "Apartamento com 1 quarto em Campo Belo, São Paulo | apêcerto",
+      "description": "Apartamento com 1 quarto em Campo Belo, São Paulo · 01 Dormitorio · 42 m² · Campo Belo · São Paulo",
+      "canonical": "https://apecerto.com/imovel/imovel-5f369d0b-9655-4813-948b-2f98da0828b3/",
+      "ogTitle": "Apartamento com 1 quarto em Campo Belo, São Paulo | apêcerto",
+      "twitterTitle": "Apartamento com 1 quarto em Campo Belo, São Paulo | apêcerto",
+      "robots": "index,follow,max-image-preview:large",
+      "jsonLdType": "Apartment",
+      "propertyAddress": {
+        "@type": "PostalAddress",
+        "addressLocality": "São Paulo",
+        "addressRegion": "SP",
+        "addressCountry": "BR"
+      },
+      "hasPropertyStreetOrGeo": false,
+      "leakedStreet": false
+    },
+    {
+      "path": "/imovel/slug-inexistente-codex/",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "title": "Imóvel não encontrado | apêcerto",
+      "description": "Este imóvel não está disponível no catálogo público da apêcerto.",
+      "canonical": "https://apecerto.com/imovel/nao-encontrado/",
+      "ogTitle": "Imóvel não encontrado | apêcerto",
+      "twitterTitle": "Imóvel não encontrado | apêcerto",
+      "robots": "noindex,nofollow",
+      "jsonLdType": "WebPage",
+      "propertyAddress": null,
+      "hasPropertyStreetOrGeo": false,
+      "leakedStreet": false
+    }
+  ],
+  "assets": [
+    {
+      "path": "/assets/analytics.229708037ed4.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "path": "/assets/bundle/02e0ed85f31313c3bdef.html",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "/assets/bundle-optimized/140dd5eb12873d0a80dd.webp",
+      "status": 200,
+      "contentType": "image/webp"
+    },
+    {
+      "path": "/assets/bundle/8fe7df74405f3c55f49b.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "path": "/assets/bundle/d949f1c3687aedadceda.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "path": "/assets/bundle/35f4f974f4b2bcd44da7.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "path": "/assets/bundle/34ac3d13d51971378645.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    }
+  ],
+  "brokenAssets": []
+}
