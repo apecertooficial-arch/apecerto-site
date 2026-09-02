@@ -28,6 +28,9 @@
   var LEGACY_ATTRIBUTION_KEY = 'apecerto_attribution_v2';
   var SESSION_KEY = 'apecerto_session_v1';
   var pageViewId = makeUuid();
+  // Correlaciona a visualização inicial persistida no first-party com o mesmo
+  // evento enviado ao Pixel e à CAPI depois do consentimento de marketing.
+  var initialPageViewEventId = makeUuid();
   var sessionId = '';
   var googleIdentity = { client_id: '', session_id: '' };
   var googleLoaded = false;
@@ -459,7 +462,7 @@
   function marketingPageView() {
     if (!consent.marketing || marketingPageViewSent) return;
     marketingPageViewSent = true;
-    var eventId = makeUuid();
+    var eventId = initialPageViewEventId;
     var payload = {
       event: 'apecerto_event',
       apecerto_event_name: 'page_view',
@@ -1125,7 +1128,7 @@
   trackScrollDepth();
   trackEngagement();
   trackSpaNavigation();
-  firstPartyTrack('page_view', {});
+  firstPartyTrack('page_view', { event_id: initialPageViewEventId });
 
   function trackingReady() {
     addConsentSettingsButton();

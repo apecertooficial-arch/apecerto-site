@@ -157,6 +157,30 @@ test('consentimento de marketing antecipa o GTM sem esperar window.load', async 
   assert.equal(runtime.gtmRequests(), 1);
 });
 
+test('page_view inicial preserva o mesmo event_id no banco, Pixel e CAPI', async () => {
+  const runtime = await analyticsRuntime({ marketing: true });
+  const firstPartyRequest = runtime.requests.find((request) => {
+    if (!request.url.includes('/functions/v1/site-track') || !request.options.body) return false;
+    return JSON.parse(request.options.body).event_name === 'page_view';
+  });
+  const capiRequest = runtime.requests.find((request) => {
+    if (!request.url.includes('/functions/v1/meta-capi') || !request.options.body) return false;
+    return JSON.parse(request.options.body).event_name === 'page_view';
+  });
+
+  assert.ok(firstPartyRequest);
+  assert.ok(capiRequest);
+  const firstPartyBody = JSON.parse(firstPartyRequest.options.body);
+  const capiBody = JSON.parse(capiRequest.options.body);
+  const dataLayerEvent = runtime.window.dataLayer.find((entry) => entry?.apecerto_event_name === 'page_view');
+  const pixelEvent = runtime.window.fbq.queue.find((entry) => entry[0] === 'track' && entry[1] === 'PageView');
+
+  assert.match(firstPartyBody.properties.event_id, /^[0-9a-f-]{36}$/i);
+  assert.equal(firstPartyBody.properties.event_id, capiBody.event_id);
+  assert.equal(dataLayerEvent?.event_id, capiBody.event_id);
+  assert.equal(pixelEvent?.[3]?.eventID, capiBody.event_id);
+});
+
 test('conversão crítica confirma o acionamento idempotente do transporte Google', async () => {
   const runtime = await analyticsRuntime({ marketing: true });
   const requestsBeforeLead = runtime.gtmRequests();
