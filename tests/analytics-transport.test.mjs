@@ -34,11 +34,11 @@ function element() {
   };
 }
 
-async function analyticsRuntime({ marketing, analytics = marketing, page = 'https://apecerto.com/?utm_source=qa' }) {
+async function analyticsRuntime({ marketing, analytics = marketing, page = 'https://apecerto.com/?utm_source=qa', storedConsent = true }) {
   const source = await readFile('static/assets/analytics.js', 'utf8');
-  const local = storage({
+  const local = storage(storedConsent ? {
     [consentKey]: JSON.stringify({ analytics, marketing }),
-  });
+  } : {});
   const session = storage();
   const root = element();
   Object.assign(root, { clientWidth: 1280, clientHeight: 800, scrollHeight: 1200 });
@@ -57,13 +57,14 @@ async function analyticsRuntime({ marketing, analytics = marketing, page = 'http
     cookie: '',
     addEventListener() {},
     createElement() { return element(); },
-    getElementById() { return null; },
+    getElementById(id) { return body.children.find((child) => child.id === id) || null; },
     getElementsByTagName() { return [firstScript]; },
   };
   const pageUrl = new URL(page);
   let gtmRequests = 0;
   const requests = [];
   const timers = [];
+  const windowListeners = {};
   const window = {
     document,
     location: pageUrl,
@@ -79,7 +80,7 @@ async function analyticsRuntime({ marketing, analytics = marketing, page = 'http
         if (url) pageUrl.href = new URL(url, pageUrl).href;
       },
     },
-    addEventListener() {},
+    addEventListener(type, listener) { windowListeners[type] = listener; },
     setTimeout(callback, delay) { timers.push({ callback, delay }); return timers.length; },
     clearTimeout() {},
     setInterval() { return 1; },
@@ -136,6 +137,7 @@ async function analyticsRuntime({ marketing, analytics = marketing, page = 'http
       return timers.length;
     },
     timerCount: () => timers.length,
+    dispatchWindow(type) { windowListeners[type]?.(); },
   };
 }
 
@@ -155,6 +157,18 @@ function chooseConsent(runtime, choice) {
 test('consentimento de marketing antecipa o GTM sem esperar window.load', async () => {
   const runtime = await analyticsRuntime({ marketing: true });
   assert.equal(runtime.gtmRequests(), 1);
+});
+
+test('shell visual remonta CMP e preferências após substituir o documento', async () => {
+  const runtime = await analyticsRuntime({ marketing: false, storedConsent: false });
+  assert.ok(runtime.window.document.getElementById('apecerto-consent'));
+  assert.ok(runtime.window.document.getElementById('apecerto-consent-settings'));
+
+  runtime.window.document.body.children.length = 0;
+  runtime.dispatchWindow('apecerto:bundle-mounted');
+
+  assert.ok(runtime.window.document.getElementById('apecerto-consent'));
+  assert.ok(runtime.window.document.getElementById('apecerto-consent-settings'));
 });
 
 test('page_view inicial preserva o mesmo event_id no banco, Pixel e CAPI', async () => {

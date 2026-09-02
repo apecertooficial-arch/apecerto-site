@@ -682,6 +682,10 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes("data-consent=\"analytics\""), 'Analytics deve ter consentimento separado');
   assert.ok(analytics.includes("data-consent=\"all\""), 'marketing deve exigir aceite explicito');
   assert.ok(analytics.includes('apecerto-consent-settings'), 'o visitante deve conseguir reabrir as preferencias de privacidade');
+  assert.ok(analytics.includes("window.addEventListener('apecerto:bundle-mounted', trackingReady)"), 'o CMP deve remontar depois do shell substituir o documento');
+  assert.ok(analytics.includes("new MutationObserver(function ()"), 'o CMP deve observar a troca do documentElement sem depender da ordem de carregamento');
+  assert.ok(analytics.includes("if (existing) return;"), 'a remontagem do CMP deve ser idempotente');
+  assert.ok(out.includes("window.dispatchEvent(new CustomEvent('apecerto:bundle-mounted'))"), 'o shell deve avisar quando o DOM definitivo estiver montado');
   assert.ok(analytics.includes("window.fbq('consent', 'revoke')"), 'revogar marketing deve interromper explicitamente o Pixel');
   assert.ok(analytics.includes("window.fbq('consent', 'grant')"), 'aceitar marketing deve liberar explicitamente o Pixel');
   assert.ok(!/owner_(?:portal_open|cta_click):\s*'Lead'/.test(analytics), 'abrir o portal ou clicar no CTA nao pode ser contado como Lead na Meta');

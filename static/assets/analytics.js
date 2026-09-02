@@ -908,7 +908,7 @@
 
   function addConsentBanner() {
     var existing = document.getElementById('apecerto-consent');
-    if (existing) existing.remove();
+    if (existing) return;
     document.documentElement.classList.add('apecerto-consent-open');
     var banner = document.createElement('section');
     banner.id = 'apecerto-consent';
@@ -1135,6 +1135,23 @@
     if (!storedConsent) addConsentBanner();
   }
 
+  // O shell visual substitui document.documentElement depois que este arquivo
+  // roda. Os listeners delegados permanecem no Document/Window, mas os
+  // controles de consentimento pertencem ao DOM antigo e precisam ser
+  // remontados no documento definitivo.
+  window.addEventListener('apecerto:bundle-mounted', trackingReady);
+  // A remontagem nao pode depender apenas da ordem entre o script deferido e
+  // o empacotador. Observar a troca do documentElement garante que o CMP seja
+  // recolocado mesmo quando o evento do shell chegar antes deste listener.
+  if (typeof MutationObserver === 'function') {
+    new MutationObserver(function () {
+      if (!document.body) return;
+      if (!document.getElementById('apecerto-consent-settings') ||
+          (!storedConsent && !document.getElementById('apecerto-consent'))) {
+        trackingReady();
+      }
+    }).observe(document, { childList: true });
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', trackingReady);
   else trackingReady();
 })();
