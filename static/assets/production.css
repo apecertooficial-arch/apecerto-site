@@ -3,25 +3,6 @@ button[data-act="replace"] {
   display: none !important;
 }
 
-/* Os cartões de bairro continuam editáveis no arquivo do Cloud Design, mas a
-   publicação usa um visual de marca estável, sem controles de upload no DOM. */
-.rw-bairro-visual {
-  color: #7d00b7;
-  overflow: hidden;
-  background: linear-gradient(145deg, #fff1e6 0%, #f4e6fb 100%);
-}
-.rw-bairro-visual[data-bairro-visual="bairro-indios"],
-.rw-bairro-visual[data-bairro-visual="bairro-campobelo"] {
-  color: #b64500;
-  background: linear-gradient(145deg, #f4e6fb 0%, #fff1e6 100%);
-}
-.rw-bairro-visual[data-bairro-visual="bairro-vnc"],
-.rw-bairro-visual[data-bairro-visual="bairro-ibira"] {
-  color: #6c008f;
-  background: linear-gradient(145deg, #f9f2ed 0%, #efe1f7 100%);
-}
-.rw-bairro-visual svg { display: block; }
-
 #apecerto-consent {
   position: fixed;
   z-index: 2147483647;

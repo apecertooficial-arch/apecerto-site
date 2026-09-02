@@ -157,18 +157,6 @@ design = trocaObrigatoria(
 
 design = trocaObrigatoria(
   design,
-  `            <div style="height: 170px; position: relative">
-              <image-slot id="{{ b.slot }}" shape="rect" placeholder="{{ b.foto }}"></image-slot>
-            </div>`,
-  `            <a href="{{ b.href }}" sc-camel-on-click="{{ b.filtrar }}" aria-label="Ver os apês de {{ b.nome }}" data-bairro-image-link="true" style="height: 170px; position: relative; display: block">
-              <span class="rw-bairro-visual" data-bairro-visual="{{ b.slot }}" aria-hidden="true" style="display: block; height: 100%; pointer-events: none">
-                <svg viewBox="0 0 480 170" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" focusable="false" aria-hidden="true"><path d="M0 134L62 98l48 26 74-68 61 51 56-38 179 84v17H0Z" fill="currentColor" opacity=".09"></path><path d="M42 135V97h70v38m20 0V76h92v59m24 0V101h80v34m20 0V65h86v70" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" opacity=".34"></path><path d="M27 135h426" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".34"></path><circle cx="382" cy="38" r="15" fill="none" stroke="currentColor" stroke-width="5" opacity=".42"></circle><path d="M397 38h34m-10 0v11m-10-11v8" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" opacity=".42"></path></svg>
-              </span>
-            </a>`,
-  'cards de bairro sem controles editoriais no site publico',
-);
-design = trocaObrigatoria(
-  design,
   '<script src="ff9f78ad-2cb1-45e3-80ee-5aeee257da44"></script>',
   '<!-- runtime image-slot omitido: nenhum controle editorial é publicado -->',
   'runtime de upload removido do site publico',

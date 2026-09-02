@@ -81,16 +81,13 @@ test('frontend nunca publica o logradouro do imóvel e limpa referências privad
   assert.doesNotMatch(design, /select=' \+ encodeURIComponent\('\*'\)/, 'o navegador não pode requisitar todas as colunas do catálogo');
 });
 
-test('cards de bairro nao abrem o seletor de arquivos no site publico', async () => {
+test('home não publica a seção promocional de bairros removida', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const { out } = await pacotePublicado();
-  assert.ok(design.includes('<image-slot id="{{ b.slot }}"'), 'o arquivo-fonte deve continuar editável no Cloud Design');
-  assert.ok(
-    out.includes('data-bairro-image-link="true"'),
-    'a imagem do bairro deve ser um link normal para o catalogo',
-  );
-  assert.ok(out.includes('data-bairro-visual="{{ b.slot }}"'), 'o site publicado deve usar o visual de marca dos bairros');
-  assert.ok(out.includes('class="rw-bairro-visual"'), 'o visual publicado deve manter o estilo dedicado');
+  assert.doesNotMatch(design, /<section id="bairros"/);
+  assert.doesNotMatch(design, /Encontre seu apê por bairro/);
+  assert.doesNotMatch(out, /<section id="bairros"/);
+  assert.doesNotMatch(out, /Encontre seu apê por bairro/);
   assert.doesNotMatch(out, /<image-slot\b/, 'controles do editor não podem chegar ao site público');
   assert.doesNotMatch(out, /<script src="ff9f78ad-2cb1-45e3-80ee-5aeee257da44"/, 'o runtime de upload não pode ser baixado no site público');
 });
@@ -436,6 +433,12 @@ test('hero e navegação preservam hierarquia e legibilidade no desktop e no cel
   assert.match(design, />Anunciar imóvel<\/a>/);
   assert.match(design, /class="rw-account-link"[^>]*>Minha conta<\/a>/);
   assert.match(design, /class="rw-hero-main-filters"/);
+  assert.match(design, /\.rw-hero-advanced\s*\{[^}]*display:\s*flex\s*!important/, 'o filtro de preço principal não pode voltar a ficar oculto');
+  assert.doesNotMatch(design, /\.rw-hero-advanced\s*\{[^}]*display:\s*none\s*!important/);
+  assert.match(design, /id="filtro-preco-minimo"/);
+  assert.match(design, /id="filtro-preco-maximo"/);
+  assert.match(design, /const filtrosAvancadosQtd = [^;]+precoTocado/, 'o contador dos filtros deve incluir a faixa de preço ativa');
+  assert.match(design, /limparFiltrosAvancados:[\s\S]{0,260}?fPrecoMax:\s*null[\s\S]{0,120}?precoTocado:\s*false/, 'limpar o painel também deve limpar a faixa de preço');
   assert.match(design, /\.rw-hero-main-filters\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\)/);
   assert.match(design, /\.rw-search-primary button\s*\{[^}]*white-space:\s*nowrap/);
   assert.match(design, /mobile \? 'Ver apês à venda →' : 'Buscar apê pra comprar →'/);
@@ -586,16 +589,13 @@ test('galeria responde imediatamente e pre-carrega somente as fotos vizinhas', a
   assert.match(design, /class="rw-gallery-loading" role="status" aria-live="polite"/);
 });
 
-test('home usa busca progressiva e bairros derivados somente do catálogo publicado', async () => {
+test('home usa busca progressiva e navegação de bairros derivada somente do catálogo publicado', async () => {
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   assert.match(design, /class="rw-hero-advanced"/);
   assert.match(design, /aria-controls="filtros-avancados"[^>]*>Mais filtros<\/button>/);
   assert.match(design, /\n  bairrosPublicados\(\) \{/);
-  assert.match(design, /bairros:\s*this\.bairrosPublicados\(\)\.map/);
-  assert.doesNotMatch(design, /nome: 'Moema Pássaros'|nome: 'Moema Índios'/, 'a seção não pode manter bairros editoriais sem imóveis reais');
-  assert.match(design, /\{\{ b\.contagem \}\}/);
-  assert.match(design, /href="\{\{ b\.href \}\}"/);
-  assert.match(design, /href:\s*'\/\?bairro=' \+ encodeURIComponent\(b\.nome\)/);
+  assert.match(design, /menuBairros:\s*this\.bairrosUnicos\(\)\.map/);
+  assert.doesNotMatch(design, /nome: 'Moema Pássaros'|nome: 'Moema Índios'/, 'a navegação não pode manter bairros editoriais sem imóveis reais');
   assert.doesNotMatch(design, /href="#(?:apes|buscar)"/, 'links visíveis de busca não podem fingir uma taxonomia compartilhável');
   const navegacaoReal = design.slice(design.indexOf('seoCols: (() => {'), design.indexOf('\n    };\n  }\n}', design.indexOf('seoCols: (() => {')));
   assert.doesNotMatch(navegacaoReal, /Moema Pássaros|Moema Índios|Vila Nova Conceição|Brooklin|Ibirapuera/, 'a navegação não pode anunciar bairros ausentes da fonte real');
