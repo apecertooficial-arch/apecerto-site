@@ -195,6 +195,17 @@ test('page_view inicial preserva o mesmo event_id no banco, Pixel e CAPI', async
   assert.equal(pixelEvent?.[3]?.eventID, capiBody.event_id);
 });
 
+test('Pixel desliga eventos automáticos antes de inicializar', async () => {
+  const runtime = await analyticsRuntime({ marketing: true });
+  const queue = runtime.window.fbq.queue.map((entry) => Array.from(entry));
+  const autoConfigIndex = queue.findIndex((entry) => entry[0] === 'set' && entry[1] === 'autoConfig');
+  const initIndex = queue.findIndex((entry) => entry[0] === 'init');
+
+  assert.ok(autoConfigIndex >= 0);
+  assert.ok(initIndex > autoConfigIndex);
+  assert.deepEqual(queue[autoConfigIndex].slice(0, 3), ['set', 'autoConfig', false]);
+});
+
 test('conversão crítica confirma o acionamento idempotente do transporte Google', async () => {
   const runtime = await analyticsRuntime({ marketing: true });
   const requestsBeforeLead = runtime.gtmRequests();

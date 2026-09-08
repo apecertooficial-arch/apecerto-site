@@ -406,6 +406,10 @@
     // A sessão first-party só é usada depois do consentimento de marketing.
     // O mesmo external_id segue no Pixel e na CAPI, melhorando a qualidade de
     // correspondência sem coletar telefone/e-mail antes de uma conversão.
+    // Os eventos oficiais saem deste runtime com event_id compartilhado entre
+    // Pixel e CAPI. Desliga a instrumentação automática do Pixel para evitar
+    // PageView/cliques paralelos sem event_id e sem o contrato de consentimento.
+    window.fbq('set', 'autoConfig', false, PIXEL_ID);
     window.fbq('init', PIXEL_ID, { external_id: ensureSessionId() || undefined });
   }
 
