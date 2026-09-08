@@ -728,6 +728,17 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(out.includes("apecertoTrack('generate_lead'"), 'leads devem disparar evento');
   assert.ok(out.includes("apecertoTrack('schedule_complete'"), 'visita gravada deve disparar conclusao de agendamento');
   assert.ok(out.includes("apecertoTrack('financing_open'"), 'abertura do financiamento deve ser medida');
+  assert.ok(out.includes("const trackingItemName = this.tituloComercial(r) || ''"), 'a ficha deve usar o titulo comercial real no tracking');
+  assert.ok(out.includes('item_name: trackingItemName'), 'ViewContent deve carregar o titulo comercial resolvido');
+  assert.ok(
+    out.indexOf("history.pushState({}, '', destino)") < out.indexOf("window.apecertoTrack('view_item'"),
+    'a pagina virtual da ficha deve ser criada antes do ViewContent',
+  );
+  assert.doesNotMatch(
+    out,
+    /window\.apecertoTrack\('view_item'[\s\S]{0,250}?item_name:\s*r\.nome/,
+    'ViewContent nao pode usar o campo ausente r.nome',
+  );
   assert.ok(out.includes("lead_type: 'comprador'"), 'compradores devem ser tipificados');
   assert.ok(out.includes("lead_type: 'financiamento'"), 'pedidos de financiamento devem ser tipificados');
   assert.ok(!out.includes('/rest/v1/site_simulacoes'), 'o financiamento nao pode depender de tabela inexistente');

@@ -187,21 +187,28 @@ design = trocaObrigatoria(design, '>nota média no Google</div>', '>especialista
 design = trocaObrigatoria(
   design,
   '  abrirDetalhe(r) {\n    this.lead = {};',
-  `  abrirDetalhe(r) {\n    window.apecertoCurrentItem = { id: String(r.id || ''), name: r.nome || '' };\n    if (window.apecertoTrack) window.apecertoTrack('view_item', { item_id: String(r.id || ''), item_name: r.nome || '', bairro: r.bairro || '', value: this.precoDe(r), currency: 'BRL' });\n    this.lead = {};`,
+  `  abrirDetalhe(r) {\n    const trackingItemId = String(r.id || '');\n    const trackingItemName = this.tituloComercial(r) || '';\n    window.apecertoCurrentItem = { id: trackingItemId, name: trackingItemName };\n    this.lead = {};`,
   'evento view_item',
 );
 
 design = trocaObrigatoria(
   design,
+  "    } catch (e) {}\n    this.setState({ det: r, galIdx: 0, galOn: false, leadOk: false, leadErro: null, detalheErroEmpId: null, rotaImovelNaoEncontrado: false }, () => {",
+  "    } catch (e) {}\n    // O observador de pushState cria primeiro o page_view_id canônico da ficha.\n    // Enfileirar ViewContent depois dele evita ligar o imóvel à página anterior.\n    setTimeout(() => { if (window.apecertoTrack) window.apecertoTrack('view_item', { item_id: trackingItemId, item_name: trackingItemName, bairro: r.bairro || '', value: this.precoDe(r), currency: 'BRL' }); }, 0);\n    this.setState({ det: r, galIdx: 0, galOn: false, leadOk: false, leadErro: null, detalheErroEmpId: null, rotaImovelNaoEncontrado: false }, () => {",
+  'ordem canonica da ficha e do view_item',
+);
+
+design = trocaObrigatoria(
+  design,
   '    const setIdx = (e, i) => {\n      if (!galeriaPendente)',
-  "    const setIdx = (e, i) => {\n      if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(r.id || ''), item_name: r.nome || '', action_label: i > idx ? 'Próxima foto' : 'Foto anterior' });\n      if (!galeriaPendente)",
+  "    const setIdx = (e, i) => {\n      if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(r.id || ''), item_name: this.tituloComercial(r) || '', action_label: i > idx ? 'Próxima foto' : 'Foto anterior' });\n      if (!galeriaPendente)",
   'galeria do card com contexto do imovel',
 );
 
 design = trocaObrigatoria(
   design,
   '        if (favs[r.id]) delete favs[r.id]; else favs[r.id] = true;\n        try { localStorage.setItem(\'apecerto_favs\', JSON.stringify(favs)); } catch (err) {}',
-  "        if (favs[r.id]) delete favs[r.id]; else favs[r.id] = true;\n        if (window.apecertoTrack) window.apecertoTrack('favorite_toggle', { item_id: String(r.id || ''), item_name: r.nome || '', status: favs[r.id] ? 'added' : 'removed' });\n        try { localStorage.setItem('apecerto_favs', JSON.stringify(favs)); } catch (err) {}",
+  "        if (favs[r.id]) delete favs[r.id]; else favs[r.id] = true;\n        if (window.apecertoTrack) window.apecertoTrack('favorite_toggle', { item_id: String(r.id || ''), item_name: this.tituloComercial(r) || '', status: favs[r.id] ? 'added' : 'removed' });\n        try { localStorage.setItem('apecerto_favs', JSON.stringify(favs)); } catch (err) {}",
   'favorito do card com contexto do imovel',
 );
 
@@ -215,28 +222,28 @@ design = trocaObrigatoria(
 design = trocaObrigatoria(
   design,
   '      detFavTgl: () => { const d = this.state.det; if (!d) return; const favs = Object.assign({}, this.state.favs); if (favs[d.id]) delete favs[d.id]; else favs[d.id] = true; try { localStorage.setItem(\'apecerto_favs\', JSON.stringify(favs)); } catch (err) {} this.setState({ favs }); },',
-  "      detFavTgl: () => { const d = this.state.det; if (!d) return; const favs = Object.assign({}, this.state.favs); if (favs[d.id]) delete favs[d.id]; else favs[d.id] = true; if (window.apecertoTrack) window.apecertoTrack('favorite_toggle', { item_id: String(d.id || ''), item_name: d.nome || '', status: favs[d.id] ? 'added' : 'removed' }); try { localStorage.setItem('apecerto_favs', JSON.stringify(favs)); } catch (err) {} this.setState({ favs }); },",
+  "      detFavTgl: () => { const d = this.state.det; if (!d) return; const favs = Object.assign({}, this.state.favs); if (favs[d.id]) delete favs[d.id]; else favs[d.id] = true; if (window.apecertoTrack) window.apecertoTrack('favorite_toggle', { item_id: String(d.id || ''), item_name: this.tituloComercial(d) || '', status: favs[d.id] ? 'added' : 'removed' }); try { localStorage.setItem('apecerto_favs', JSON.stringify(favs)); } catch (err) {} this.setState({ favs }); },",
   'favorito do detalhe com contexto do imovel',
 );
 
 design = trocaObrigatoria(
   design,
   '      galPrev: e => this.trocarFotoGaleria(e, fotosDet, (gi - 1 + fotosDet.length) % fotosDet.length),\n      galNext: e => this.trocarFotoGaleria(e, fotosDet, (gi + 1) % fotosDet.length),\n      galThumbs: galThumbsDet.map((foto, pos) => { const i = galThumbInicio + pos; return { url: foto.url, grupo: foto.grupo, label: \'Ver foto \' + (i + 1) + \' de \' + fotosDet.length + \' — \' + foto.grupo, atual: i === gi, sel: e => this.trocarFotoGaleria(e, fotosDet, i), borda: i === gi ? \'var(--ape-orange)\' : \'transparent\', op: i === gi ? \'1\' : \'0.6\' }; }),',
-  "      galPrev: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Foto anterior' }); this.trocarFotoGaleria(e, fotosDet, (gi - 1 + fotosDet.length) % fotosDet.length); },\n      galNext: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Próxima foto' }); this.trocarFotoGaleria(e, fotosDet, (gi + 1) % fotosDet.length); },\n      galThumbs: galThumbsDet.map((foto, pos) => { const i = galThumbInicio + pos; return { url: foto.url, grupo: foto.grupo, label: 'Ver foto ' + (i + 1) + ' de ' + fotosDet.length + ' — ' + foto.grupo, atual: i === gi, sel: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: det.nome || '', action_label: 'Miniatura ' + (i + 1) }); this.trocarFotoGaleria(e, fotosDet, i); }, borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' }; }),",
+  "      galPrev: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: this.tituloComercial(det) || '', action_label: 'Foto anterior' }); this.trocarFotoGaleria(e, fotosDet, (gi - 1 + fotosDet.length) % fotosDet.length); },\n      galNext: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: this.tituloComercial(det) || '', action_label: 'Próxima foto' }); this.trocarFotoGaleria(e, fotosDet, (gi + 1) % fotosDet.length); },\n      galThumbs: galThumbsDet.map((foto, pos) => { const i = galThumbInicio + pos; return { url: foto.url, grupo: foto.grupo, label: 'Ver foto ' + (i + 1) + ' de ' + fotosDet.length + ' — ' + foto.grupo, atual: i === gi, sel: e => { if (window.apecertoTrack) window.apecertoTrack('gallery_interaction', { item_id: String(det.id || ''), item_name: this.tituloComercial(det) || '', action_label: 'Miniatura ' + (i + 1) }); this.trocarFotoGaleria(e, fotosDet, i); }, borda: i === gi ? 'var(--ape-orange)' : 'transparent', op: i === gi ? '1' : '0.6' }; }),",
   'galeria do detalhe com contexto do imovel',
 );
 
 design = trocaObrigatoria(
   design,
   '        sel: ok ? () => this.setState({ leadDia: val, calOn: false }) : () => {}',
-  "        sel: ok ? () => { if (window.apecertoTrack) window.apecertoTrack('schedule_field_select', { field_name: 'date', item_id: String((this.state.det || {}).id || ''), item_name: (this.state.det || {}).nome || '' }); this.setState({ leadDia: val, calOn: false }); } : () => {}",
+  "        sel: ok ? () => { if (window.apecertoTrack) window.apecertoTrack('schedule_field_select', { field_name: 'date', item_id: String((this.state.det || {}).id || ''), item_name: this.state.det ? this.tituloComercial(this.state.det) : '' }); this.setState({ leadDia: val, calOn: false }); } : () => {}",
   'selecao de data do agendamento',
 );
 
 design = trocaObrigatoria(
   design,
   "      leadHoras: (() => { const hs = []; for (let h = 8; h <= 19; h++) { hs.push(String(h).padStart(2, '0') + ':00'); if (h < 19) hs.push(String(h).padStart(2, '0') + ':30'); } return hs; })().map(h => ({ label: h, sel: () => this.setState({ leadHora: h, horaOn: false }),",
-  "      leadHoras: (() => { const hs = []; for (let h = 8; h <= 19; h++) { hs.push(String(h).padStart(2, '0') + ':00'); if (h < 19) hs.push(String(h).padStart(2, '0') + ':30'); } return hs; })().map(h => ({ label: h, sel: () => { if (window.apecertoTrack) window.apecertoTrack('schedule_field_select', { field_name: 'time', item_id: String((this.state.det || {}).id || ''), item_name: (this.state.det || {}).nome || '' }); this.setState({ leadHora: h, horaOn: false }); },",
+  "      leadHoras: (() => { const hs = []; for (let h = 8; h <= 19; h++) { hs.push(String(h).padStart(2, '0') + ':00'); if (h < 19) hs.push(String(h).padStart(2, '0') + ':30'); } return hs; })().map(h => ({ label: h, sel: () => { if (window.apecertoTrack) window.apecertoTrack('schedule_field_select', { field_name: 'time', item_id: String((this.state.det || {}).id || ''), item_name: this.state.det ? this.tituloComercial(this.state.det) : '' }); this.setState({ leadHora: h, horaOn: false }); },",
   'selecao de horario do agendamento',
 );
 
@@ -308,11 +315,12 @@ const buyerLeadProductionMethod = `  async leadEnviar() {
       const pref = [this.state.leadDia, this.state.leadHora].filter(Boolean).join(' às ') || null;
       const empreendimentoId = this.empreendimentoId(det);
       const unidadeId = this.unidadeId(det);
+      const trackingItemName = this.tituloComercial(det) || '';
       await window.apecertoSubmitSiteLead({
         lead_type: 'comprador',
         empreendimento_id: empreendimentoId,
         unidade_id: unidadeId,
-        empreendimento_nome: det.nome,
+        empreendimento_nome: trackingItemName,
         preferencia_horario: pref,
         nome: l.nome,
         telefone: l.telefone,
@@ -320,13 +328,13 @@ const buyerLeadProductionMethod = `  async leadEnviar() {
         context: {
           empreendimento_id: empreendimentoId,
           unidade_id: unidadeId,
-          empreendimento_nome: det.nome,
+          empreendimento_nome: trackingItemName,
           preferencia_horario: pref,
           source: 'property_detail'
         }
       });
       if (window.apecertoTrack) {
-        const item = { lead_type: 'comprador', item_id: String(det.id || ''), item_name: det.nome || '', __identity: { email: l.email || '', phone: l.telefone || '' } };
+        const item = { lead_type: 'comprador', item_id: String(det.id || ''), item_name: trackingItemName, __identity: { email: l.email || '', phone: l.telefone || '' } };
         window.apecertoTrack('generate_lead', item);
         if (pref) window.apecertoTrack('schedule_complete', item);
       }
@@ -452,7 +460,7 @@ design = trocaBlocoObrigatorio(design, '  async fichaEnviar() {', '  similares(d
 design = trocaObrigatoria(
   design,
   '  abrirFicha() {\n    this.fichaFocusOrigin = document.activeElement;',
-  "  abrirFicha() {\n    if (this.state.fichaOn || this.fichaSubmitInFlight || this.state.fichaEnviando) return;\n    const det = this.state.det;\n    const itemId = det ? String(det.id || '') : '';\n    const novaIntencao = this.state.fichaOk || (this.fichaRequestItemId && this.fichaRequestItemId !== itemId);\n    if (novaIntencao && window.apecertoResetFinancingLead) window.apecertoResetFinancingLead();\n    this.fichaRequestItemId = itemId;\n    if (window.apecertoTrack) window.apecertoTrack('financing_open', { cta_name: 'simular_financiamento', item_id: itemId, item_name: det ? det.nome || '' : '' });\n    this.fichaFocusOrigin = document.activeElement;",
+  "  abrirFicha() {\n    if (this.state.fichaOn || this.fichaSubmitInFlight || this.state.fichaEnviando) return;\n    const det = this.state.det;\n    const itemId = det ? String(det.id || '') : '';\n    const novaIntencao = this.state.fichaOk || (this.fichaRequestItemId && this.fichaRequestItemId !== itemId);\n    if (novaIntencao && window.apecertoResetFinancingLead) window.apecertoResetFinancingLead();\n    this.fichaRequestItemId = itemId;\n    if (window.apecertoTrack) window.apecertoTrack('financing_open', { cta_name: 'simular_financiamento', item_id: itemId, item_name: det ? this.tituloComercial(det) : '' });\n    this.fichaFocusOrigin = document.activeElement;",
   'evento abertura do financiamento',
 );
 design = trocaObrigatoria(
