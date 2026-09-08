@@ -34,6 +34,7 @@
   var sessionId = '';
   var googleIdentity = { client_id: '', session_id: '' };
   var googleLoaded = false;
+  var googleDirectReady = false;
   var clarityLoaded = false;
   var pixelLoaded = false;
   var analyticsPageViewSent = false;
@@ -314,6 +315,10 @@
     var script = document.createElement('script');
     script.async = true;
     script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(MEASUREMENT_ID);
+    script.onload = function () {
+      googleDirectReady = true;
+      analyticsPageView();
+    };
     document.head.appendChild(script);
     window.gtag('js', new Date());
     window.gtag('config', MEASUREMENT_ID, {
@@ -482,14 +487,21 @@
 
   function analyticsPageView() {
     if (!consent.analytics || analyticsPageViewSent) return;
+    // O comando precisa sair depois que existe um destino Google real. Quando
+    // ele era colocado antes do carregamento do contêiner, os eventos seguintes
+    // chegavam ao GA4, mas a visualização inicial podia ser descartada.
+    if (!gtmContainerReady() && !googleDirectReady) return;
     analyticsPageViewSent = true;
     window.gtag('event', 'page_view', {
+      send_to: MEASUREMENT_ID,
       page_location: safePageUrl(),
       page_view_id: pageViewId,
       event_id: initialPageViewEventId,
       apecerto_session_id: ensureSessionId() || undefined,
     });
   }
+
+  window.addEventListener('apecerto:gtm-loaded', analyticsPageView);
 
   function applyConsent(next) {
     var previousConsent = Object.assign({}, consent);

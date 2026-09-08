@@ -161,13 +161,20 @@ test('consentimento de marketing antecipa o GTM sem esperar window.load', async 
 
 test('consentimento de analytics recupera exatamente um page_view inicial no GA4', async () => {
   const runtime = await analyticsRuntime({ marketing: false, analytics: true });
-  const initialPageViews = runtime.window.dataLayer.filter((entry) => (
+  const pageViews = () => runtime.window.dataLayer.filter((entry) => (
     Array.isArray(entry) && entry[0] === 'event' && entry[1] === 'page_view'
   ));
 
+  assert.equal(pageViews().length, 0);
+  runtime.window.apecertoGtmContainerLoaded = true;
+  runtime.dispatchWindow('apecerto:gtm-loaded');
+  const initialPageViews = pageViews();
   assert.equal(initialPageViews.length, 1);
   assert.equal(initialPageViews[0][2].event_id, '11111111-1111-4111-8111-111111111111');
   assert.equal(initialPageViews[0][2].page_location, 'https://apecerto.com/?utm_source=qa');
+  assert.equal(initialPageViews[0][2].send_to, 'G-P63KVXKJDH');
+  runtime.dispatchWindow('apecerto:gtm-loaded');
+  assert.equal(pageViews().length, 1);
 });
 
 test('shell visual remonta CMP e preferências após substituir o documento', async () => {
