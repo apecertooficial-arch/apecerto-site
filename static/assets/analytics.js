@@ -36,6 +36,7 @@
   var googleLoaded = false;
   var clarityLoaded = false;
   var pixelLoaded = false;
+  var analyticsPageViewSent = false;
   var marketingPageViewSent = false;
   var googleAdsLoaded = false;
   var consent = { analytics: false, marketing: false };
@@ -479,6 +480,17 @@
     capiSend('page_view', {}, eventId, { external_id: ensureSessionId() || undefined });
   }
 
+  function analyticsPageView() {
+    if (!consent.analytics || analyticsPageViewSent) return;
+    analyticsPageViewSent = true;
+    window.gtag('event', 'page_view', {
+      page_location: safePageUrl(),
+      page_view_id: pageViewId,
+      event_id: initialPageViewEventId,
+      apecerto_session_id: ensureSessionId() || undefined,
+    });
+  }
+
   function applyConsent(next) {
     var previousConsent = Object.assign({}, consent);
     consent = {
@@ -501,6 +513,10 @@
     if (consent.analytics) {
       ensureSessionId();
       persistAttribution();
+      // A primeira visualização ocorre antes da escolha de consentimento. Como
+      // a Google Tag publicada usa send_page_view=false, ela precisa ser
+      // repetida explicitamente assim que Analytics for autorizado.
+      analyticsPageView();
       refreshGoogleIdentity();
       setTimeout(refreshGoogleIdentity, 1200);
       loadClarity();
