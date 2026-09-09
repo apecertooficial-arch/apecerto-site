@@ -43,7 +43,9 @@ if (homeResponse) {
   requireMatch(home, /googletagmanager\.com\/gtm\.js\?id=/, 'bootstrap do GTM ausente do head');
   requireMatch(home, new RegExp(IDS.gtm), 'ID canonico do GTM ausente do HTML');
   requireMatch(home, new RegExp(`ns\\.html\\?id=${IDS.gtm}`), 'GTM ausente do noscript');
-  if ((home.match(/googletagmanager\.com\/gtm\.js\?id=/g) || []).length !== 1) failures.push('GTM deve carregar exatamente uma vez');
+  if ((home.match(/<script id="apecerto-gtm-deferred">/g) || []).length !== 1) failures.push('shell deve declarar exatamente um bootstrap do GTM');
+  requireMatch(home, /if \(typeof window\.apecertoLoadGtm !== 'function'\)/, 'shell nao reinstala o GTM depois do DOM definitivo');
+  requireMatch(home, /if \(typeof window\.apecertoTrack !== 'function'\)/, 'shell nao reinstala o tracking depois do DOM definitivo');
 
   const analyticsPath = home.match(/<script src="(\/assets\/analytics\.[a-f0-9]{12}\.js)" defer><\/script>/)?.[1];
   if (!analyticsPath) {
