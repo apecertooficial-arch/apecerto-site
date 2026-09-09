@@ -653,7 +653,7 @@ test('crédito do mapa preserva o OpenStreetMap sem exibir a marca visual do Lea
 });
 
 test('build aplica a camada de producao e tracking', async () => {
-  const { out } = await pacotePublicado();
+  const { shell, template, out } = await pacotePublicado();
   const design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
   const analytics = await readFile('dist/' + await assetPublicado('assets/analytics.js'), 'utf8');
   const productionCss = await readFile('dist/' + await assetPublicado('assets/production.css'), 'utf8');
@@ -682,6 +682,11 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(analytics.includes("data-consent=\"analytics\""), 'Analytics deve ter consentimento separado');
   assert.ok(analytics.includes("data-consent=\"all\""), 'marketing deve exigir aceite explicito');
   assert.ok(analytics.includes('apecerto-consent-settings'), 'o visitante deve conseguir reabrir as preferencias de privacidade');
+  assert.ok(template.includes('id="apecerto-production-css"'), 'o DOM definitivo deve preservar os estilos do CMP');
+  assert.ok(shell.includes("if (typeof window.apecertoTrack !== 'function')"), 'o shell deve reinstalar o runtime no DOM definitivo');
+  assert.ok(shell.includes("if (typeof window.apecertoLoadGtm !== 'function')"), 'o shell deve reinstalar o carregador consentido do GTM');
+  assert.doesNotMatch(template, /<script[^>]+(?:analytics|googletagmanager)/, 'o template inerte nao deve fingir que executou o tracking');
+  assert.ok(analytics.includes('window.__APECERTO_ANALYTICS_LOADED__'), 'o runtime deve impedir inicializacao duplicada entre shell e DOM definitivo');
   assert.ok(analytics.includes("window.addEventListener('apecerto:bundle-mounted', trackingReady)"), 'o CMP deve remontar depois do shell substituir o documento');
   assert.ok(analytics.includes("new MutationObserver(function ()"), 'o CMP deve observar a troca do documentElement sem depender da ordem de carregamento');
   assert.ok(analytics.includes("if (existing) return;"), 'a remontagem do CMP deve ser idempotente');
@@ -722,8 +727,9 @@ test('build aplica a camada de producao e tracking', async () => {
   assert.ok(!analytics.includes('event_source_url: location.href'), 'a CAPI nao pode receber a URL bruta do navegador');
   assert.ok(!analytics.includes('page_location: location.href'), 'o GA nao pode receber a URL bruta do navegador');
   assert.match(out, /\/assets\/analytics\.[a-f0-9]{12}\.js/, 'o runtime de tracking deve ser carregado com nome imutavel');
-  assert.equal((out.match(/<script src="\/assets\/analytics\.[a-f0-9]{12}\.js" defer><\/script>/g) || []).length, 1, 'o runtime de tracking deve carregar uma unica vez');
-  assert.equal((out.match(/googletagmanager\.com\/gtm\.js\?id=/g) || []).length, 1, 'o Tag Manager deve carregar uma unica vez');
+  assert.equal((shell.match(/<script src="\/assets\/analytics\.[a-f0-9]{12}\.js" defer><\/script>/g) || []).length, 1, 'o shell deve carregar uma unica instancia idempotente do tracking');
+  assert.equal((template.match(/<script src="\/assets\/analytics\.[a-f0-9]{12}\.js" defer><\/script>/g) || []).length, 0, 'o template nao deve manter uma instancia inerte do tracking');
+  assert.ok(shell.includes("gtmRuntime.textContent"), 'o shell deve executar o bootstrap protegido do Tag Manager no DOM definitivo');
   assert.ok(out.includes('11980154312'), 'o WhatsApp oficial deve estar no bundle');
   assert.ok(out.includes("apecertoTrack('generate_lead'"), 'leads devem disparar evento');
   assert.ok(out.includes("apecertoTrack('schedule_complete'"), 'visita gravada deve disparar conclusao de agendamento');

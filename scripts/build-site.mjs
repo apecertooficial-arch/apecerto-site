@@ -11,6 +11,8 @@ const existe = p => access(p).then(() => true, () => false);
 const base = await readFile('index.html', 'utf8');
 let design = await readFile('design/Site ApeCerto.dc.html', 'utf8');
 const productionCss = await readFile('static/assets/production.css', 'utf8');
+const analyticsSource = await readFile('static/assets/analytics.js');
+const analyticsAssetPath = '/assets/analytics.' + createHash('sha256').update(analyticsSource).digest('hex').slice(0, 12) + '.js';
 const heroVariants = JSON.parse(await readFile('build-assets/hero-variants.json', 'utf8'));
 const optimizedBundleAssets = JSON.parse(await readFile('build-assets/bundle-optimized.json', 'utf8'));
 const embeddedAssets = new Map();
@@ -130,20 +132,24 @@ const productionMetadata = `
   <meta name="twitter:image" content="https://apecerto.com${heroVariants.variants.jpeg_640.path}">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"RealEstateAgent","name":"ApeCerto","url":"https://apecerto.com/","telephone":"+55 11 98015-4312","email":"contato@apecerto.com","address":{"@type":"PostalAddress","streetAddress":"Avenida Iraí, 79, conjunto 95A","addressLocality":"São Paulo","addressRegion":"SP","addressCountry":"BR"},"areaServed":["Moema","Campo Belo","Vila Nova Conceição","Brooklin","Planalto Paulista"]}</script>`;
 
-const productionHead = `${productionMetadata}
+const productionStyle = `
   <style id="apecerto-no-bundle-splash">#__bundler_loading,#__bundler_thumbnail{display:none!important}</style>
-  <style id="apecerto-production-css">${productionCss}</style>
+  <style id="apecerto-production-css">${productionCss}</style>`;
+const consentBootstrap = `window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments)};window.gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});`;
+const gtmBootstrap = `(function(w,d,l,i){w[l]=w[l]||[];function load(){if(w.apecertoGtmLoading||w.apecertoGtmContainerLoaded)return;w.apecertoGtmLoading=true;w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName('script')[0],j=d.createElement('script'),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;j.onload=function(){w.apecertoGtmContainerLoaded=true;w.dispatchEvent(new CustomEvent('apecerto:gtm-loaded'))};j.onerror=function(){w.apecertoGtmLoadFailed=true;if(w.apecertoLoadGoogleFallback)w.apecertoLoadGoogleFallback()};f.parentNode.insertBefore(j,f)}w.apecertoLoadGtm=load;function schedule(){var started=false,start=function(){if(started)return;started=true;['pointerdown','touchstart','keydown'].forEach(function(n){d.removeEventListener(n,start,true)});load()};['pointerdown','touchstart','keydown'].forEach(function(n){d.addEventListener(n,start,{capture:true,once:true,passive:n!=='keydown'})});w.setTimeout(start,12000)}if(d.readyState==='complete')schedule();else w.addEventListener('load',schedule,{once:true})})(window,document,'dataLayer','GTM-524TZP8X');`;
+const productionHead = `${productionMetadata}${productionStyle}
   <script id="apecerto-recovery-scrub">(function(){try{var p=new URLSearchParams(String(location.hash||'').replace(/^#/,''));var t=p.get('type');var a=p.get('access_token');var e=p.get('error_description');if((a&&t==='recovery')||e){Object.defineProperty(window,'__APECERTO_RECOVERY__',{value:{type:t,access_token:a,error_description:e},configurable:true});history.replaceState({},'',location.pathname+location.search)}}catch(_){}})();</script>
-  <script>window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){window.dataLayer.push(arguments)};window.gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});</script>
-  <script id="apecerto-gtm-deferred">(function(w,d,l,i){w[l]=w[l]||[];function load(){if(w.apecertoGtmLoading||w.apecertoGtmContainerLoaded)return;w.apecertoGtmLoading=true;w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName('script')[0],j=d.createElement('script'),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;j.onload=function(){w.apecertoGtmContainerLoaded=true;w.dispatchEvent(new CustomEvent('apecerto:gtm-loaded'))};j.onerror=function(){w.apecertoGtmLoadFailed=true;if(w.apecertoLoadGoogleFallback)w.apecertoLoadGoogleFallback()};f.parentNode.insertBefore(j,f)}w.apecertoLoadGtm=load;function schedule(){var started=false,start=function(){if(started)return;started=true;['pointerdown','touchstart','keydown'].forEach(function(n){d.removeEventListener(n,start,true)});load()};['pointerdown','touchstart','keydown'].forEach(function(n){d.addEventListener(n,start,{capture:true,once:true,passive:n!=='keydown'})});w.setTimeout(start,12000)}if(d.readyState==='complete')schedule();else w.addEventListener('load',schedule,{once:true})})(window,document,'dataLayer','GTM-524TZP8X');</script>
-  <script src="/assets/analytics.js" defer></script>`;
+  <script>${consentBootstrap}</script>
+  <script id="apecerto-gtm-deferred">${gtmBootstrap}</script>
+  <script src="${analyticsAssetPath}" defer></script>`;
+const finalDocumentHead = `${productionMetadata}${productionStyle}`;
 
 design = trocaObrigatoria(design, '<html><head>', '<html lang="pt-BR"><head>', 'idioma do design');
 design = trocaObrigatoria(
   design,
   '<meta name="viewport" content="width=device-width, initial-scale=1">',
-  '<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>ApeCerto | Apartamentos em Moema</title>' + productionMetadata,
-  'metadados persistentes do design sem tracking duplicado',
+  '<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>ApeCerto | Apartamentos em Moema</title>' + finalDocumentHead,
+  'camada de producao persistente no DOM definitivo',
 );
 const faviconInline = /var ico = 'data:image\/png;base64,[A-Za-z0-9+/=]+';/;
 if (!faviconInline.test(design)) throw new Error('favicon inline do design ausente');
@@ -694,6 +700,28 @@ shell = trocaObrigatoria(
         }
         const binaryStr = atob(entry.data);`,
   'carregamento dos assets externos',
+);
+shell = trocaObrigatoria(
+  shell,
+  `    window.dispatchEvent(new CustomEvent('apecerto:bundle-mounted'));`,
+  `    ${consentBootstrap}
+    if (typeof window.apecertoLoadGtm !== 'function') {
+      const gtmRuntime = document.createElement('script');
+      gtmRuntime.id = 'apecerto-gtm-deferred';
+      gtmRuntime.textContent = ${JSON.stringify(gtmBootstrap)};
+      document.head.appendChild(gtmRuntime);
+    }
+    if (typeof window.apecertoTrack !== 'function') {
+      const trackingRuntime = document.createElement('script');
+      trackingRuntime.src = ${JSON.stringify(analyticsAssetPath)};
+      await new Promise(function (resolve, reject) {
+        trackingRuntime.onload = resolve;
+        trackingRuntime.onerror = function () { reject(new Error('tracking runtime indisponivel')); };
+        document.head.appendChild(trackingRuntime);
+      });
+    }
+    window.dispatchEvent(new CustomEvent('apecerto:bundle-mounted'));`,
+  'tracking persistente depois do shell visual',
 );
 const replacePayload = (html, type, payload) => {
   const pattern = new RegExp('(<script type="__bundler/' + type + '">)\\s*[\\s\\S]*?\\s*(<\\/script>)');

@@ -1,6 +1,9 @@
 (function () {
   'use strict';
 
+  if (window.__APECERTO_ANALYTICS_LOADED__ && typeof window.apecertoTrack === 'function') return;
+  window.__APECERTO_ANALYTICS_LOADED__ = true;
+
   var TRACKING_CONFIG = window.APECERTO_TRACKING_CONFIG && typeof window.APECERTO_TRACKING_CONFIG === 'object'
     ? window.APECERTO_TRACKING_CONFIG
     : {};
