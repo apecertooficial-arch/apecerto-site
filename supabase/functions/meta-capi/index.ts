@@ -152,7 +152,7 @@ Deno.serve(async (request: Request) => {
     const payload: Record<string, unknown> = {
       data: [{
         event_name: metaEvent,
-      event_time: Math.max(1, Number(body?.event_time) || Math.floor(Date.now() / 1000)),
+        event_time: Math.max(1, Number(body?.event_time) || Math.floor(Date.now() / 1000)),
         event_id: eventId,
         action_source: "website",
         event_source_url: safeEventSourceUrl(clean(body?.event_source_url, 500)),

@@ -22,6 +22,14 @@ test("conversões offline usam fatos canônicos e outbox idempotente", () => {
 test("crm-capi versionada resolve visita, proposta e venda e registra recibo", () => {
   assert.match(crmCapi, /graph\.facebook\.com\/v25\.0/);
   assert.doesNotMatch(crmCapi, /graph\.facebook\.com\/v21\.0/);
+  assert.match(crmCapi, /lead:\s*"Lead"/);
+  assert.match(crmCapi, /action_source:\s*"system_generated"/);
+  assert.match(crmCapi, /lead_event_source:\s*"ApeCerto ERP"/);
+  assert.match(crmCapi, /event_source:\s*"crm"/);
+  assert.match(crmCapi, /disparo_optout/);
+  assert.match(crmCapi, /invalid_event_time/);
+  assert.doesNotMatch(crmCapi, /action_source:\s*"website"/);
+  assert.doesNotMatch(crmCapi, /event_source_url:/);
   assert.match(crmCapi, /LeadRespondeu/);
   assert.doesNotMatch(crmCapi, /LeadRespondido/);
   assert.match(crmCapi, /response_actor = "lead"/);
@@ -39,7 +47,8 @@ test("crm-capi versionada resolve visita, proposta e venda e registra recibo", (
   assert.match(crmCapi, /userData\.lead_id\s*=\s*String\(attribution\.meta_lead_id\)/);
   assert.match(crmCapi, /userData\.page_id\s*=\s*String\(attribution\.page_id\)/);
   assert.match(crmCapi, /lead_attribution/);
-  assert.match(crmCapi, /event_time: Math\.max\(1, eventTime\)/);
+  assert.match(crmCapi, /event_time:\s*eventTime/);
+  assert.doesNotMatch(crmCapi, /event_time:\s*Math\.max/);
   assert.match(crmCapi, /funnel_stage/);
   assert.match(crmCapi, /stage_rank/);
   assert.match(crmCapi, /capi_token_missing" }, 503/);
@@ -73,6 +82,8 @@ test("meta-capi do navegador também deixa trilha de entrega", () => {
   assert.match(metaCapi, /sanitizeMetaCustomData/);
   assert.match(metaCapi, /customData\.content_ids\s*=\s*\[itemId\]/);
   assert.match(metaCapi, /customData\.content_type\s*=\s*"product"/);
+  assert.match(metaCapi, /safeEventSourceUrl/);
+  assert.match(metaCapi, /sanitizeMetaCustomData/);
 });
 
 test("contrato compartilhado impede PII crua em URL e custom_data", () => {

@@ -3,7 +3,6 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   hashedBrazilPhone,
   hashedEmail,
-  safeEventSourceUrl,
   sha256Hex,
 } from "../_shared/meta-identity.ts";
 
@@ -13,6 +12,7 @@ const TEST_CODE = Deno.env.get("META_TEST_EVENT_CODE") ?? "";
 const GRAPH = "https://graph.facebook.com/v25.0";
 
 const EVENT_MAP: Record<string, string> = {
+  lead: "Lead",
   responded: "LeadRespondeu",
   qualification_started: "QualificacaoIniciada",
   visit_scheduled: "Schedule",
@@ -25,6 +25,7 @@ const EVENT_MAP: Record<string, string> = {
 };
 
 const FUNNEL_STAGE: Record<string, { name: string; rank: number }> = {
+  lead: { name: "lead_recebido", rank: 10 },
   responded: { name: "lead_respondido", rank: 20 },
   qualification_started: { name: "qualificacao_iniciada", rank: 30 },
   qualified: { name: "lead_qualificado", rank: 35 },
@@ -42,8 +43,9 @@ function json(body: unknown, status = 200) {
 }
 
 function unixTime(value: unknown) {
+  if (value === null || value === undefined || String(value).trim() === "") return null;
   const milliseconds = new Date(String(value ?? "")).getTime();
-  return Number.isFinite(milliseconds) ? Math.floor(milliseconds / 1000) : Math.floor(Date.now() / 1000);
+  return Number.isFinite(milliseconds) ? Math.floor(milliseconds / 1000) : null;
 }
 
 Deno.serve(async (request: Request) => {
@@ -102,7 +104,7 @@ Deno.serve(async (request: Request) => {
   let negocioId = body.negocio_id ? Number(body.negocio_id) : null;
   let purchaseValue: number | null = null;
   let proposalValue: number | null = null;
-  let eventTime = unixTime(body.event_time ?? Date.now());
+  let eventTime = unixTime(body.event_time);
 
   if (sourceTable === "visitas") {
     const { data } = await supabase.from("visitas").select("negocio_id,resultado_em,atualizado_em,criado_em").eq("id", sourceId).maybeSingle();
@@ -134,12 +136,17 @@ Deno.serve(async (request: Request) => {
 
   const { data: negocio, error } = await supabase
     .from("negocios")
-    .select("id,status,valor,raw,lead_id,leads(telefone,email)")
+    .select("id,status,valor,raw,lead_id,leads(disparo_optout,telefone,email)")
     .eq("id", negocioId)
     .maybeSingle();
   if (error || !negocio) {
     await updateDelivery({ status: "failed", error_code: "db_error", last_error: error?.message ?? "Negócio ausente" });
     return json({ ok: false, error: "db_error" }, 500);
+  }
+
+  if (!eventTime || eventTime < 1) {
+    await updateDelivery({ status: "failed", error_code: "invalid_event_time", last_error: "Data real do evento ausente ou inválida" });
+    return json({ ok: false, error: "invalid_event_time" }, 422);
   }
 
   const raw = (negocio.raw ?? {}) as Record<string, any>;
@@ -148,6 +155,10 @@ Deno.serve(async (request: Request) => {
   const { data: attributionData } = await supabase.rpc("tracking_lead_attribution", { p_lead_id: negocio.lead_id });
   const attribution = (attributionData ?? {}) as Record<string, any>;
   const lead = (negocio as any).leads ?? {};
+  if (lead.disparo_optout === true) {
+    await updateDelivery({ status: "skipped", error_code: "lead_optout", last_error: "Lead com opt-out ativo" });
+    return json({ ok: false, error: "lead_optout" }, 409);
+  }
   const userData: Record<string, unknown> = { external_id: await sha256Hex(`negocio-${negocio.id}`) };
   const emailHash = await hashedEmail(lead.email);
   const phoneHash = await hashedBrazilPhone(lead.telefone);
@@ -163,7 +174,8 @@ Deno.serve(async (request: Request) => {
   if (attribution?.page_id) userData.page_id = String(attribution.page_id);
 
   const customData: Record<string, unknown> = {
-    lead_event_source: "crm_canonico",
+    lead_event_source: "ApeCerto ERP",
+    event_source: "crm",
     stage_event: eventType,
     funnel_stage: FUNNEL_STAGE[eventType]?.name,
     stage_rank: FUNNEL_STAGE[eventType]?.rank,
@@ -197,10 +209,9 @@ Deno.serve(async (request: Request) => {
   const payload: Record<string, unknown> = {
     data: [{
       event_name: metaEvent,
-      event_time: Math.max(1, eventTime),
+      event_time: eventTime,
       event_id: eventId,
-      action_source: "website",
-      event_source_url: safeEventSourceUrl(attribution?.landing_path ? `https://apecerto.com${String(attribution.landing_path)}` : "https://apecerto.com/"),
+      action_source: "system_generated",
       user_data: userData,
       custom_data: customData,
     }],
@@ -215,7 +226,6 @@ Deno.serve(async (request: Request) => {
       event_id: eventId,
       user_data_signals: Object.keys(userData).sort(),
       custom_data_keys: Object.keys(customData).sort(),
-      event_source_url: (payload.data as Array<Record<string, unknown>>)[0]?.event_source_url,
     });
   }
   if (!TOKEN) {
