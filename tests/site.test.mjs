@@ -835,6 +835,8 @@ test('telemetria sem cookie minimiza dados e tem retencao', async () => {
   const unifiedLeadMigration = await readFile('supabase/migrations/20260819112719_unify_site_leads_crm.sql', 'utf8');
   assert.ok(fn.includes('ALLOWED_EVENTS'), 'eventos devem usar lista permitida');
   assert.ok(fn.includes('ALLOWED_PROPERTY_KEYS'), 'propriedades devem usar lista permitida');
+  assert.ok(fn.includes('"consent_prompt"'), 'a exposição do CMP deve atravessar a allowlist da Edge');
+  assert.ok(fn.includes('"prompt_source"'), 'origem inicial ou preferências deve ser preservada sem PII');
   assert.ok(!fn.includes('p_ip:'), 'IP nao pode ser enviado para a base analitica');
   assert.ok(migration.includes("interval '90 days'"), 'eventos devem expirar em 90 dias');
   assert.ok(migration.includes("interval '48 hours'"), 'hash de rate limit deve expirar em 48 horas');

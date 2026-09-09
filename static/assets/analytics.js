@@ -41,6 +41,7 @@
   var marketingPageViewSent = false;
   var googleAdsLoaded = false;
   var consent = { analytics: false, marketing: false };
+  var initialConsentPromptTracked = false;
   var currentTouch = readCurrentTouch();
 
   // Mapa evento interno -> evento padrao da Meta. Espelha a Edge Function meta-capi.
@@ -951,6 +952,8 @@
   function addConsentBanner() {
     var existing = document.getElementById('apecerto-consent');
     if (existing) return;
+    var promptSource = arguments[0];
+    var source = promptSource === 'settings' ? 'settings' : 'initial';
     document.documentElement.classList.add('apecerto-consent-open');
     var banner = document.createElement('section');
     banner.id = 'apecerto-consent';
@@ -972,9 +975,13 @@
       window.apecertoTrack('consent_update', { consent_choice: choice });
     });
     document.body.appendChild(banner);
+    if (source !== 'initial' || !initialConsentPromptTracked) {
+      firstPartyTrack('consent_prompt', { prompt_source: source });
+      if (source === 'initial') initialConsentPromptTracked = true;
+    }
   }
 
-  window.apecertoOpenConsent = addConsentBanner;
+  window.apecertoOpenConsent = function () { addConsentBanner('settings'); };
 
   function addConsentSettingsButton() {
     if (document.getElementById('apecerto-consent-settings')) return;
@@ -984,7 +991,7 @@
     button.textContent = 'Preferências de privacidade';
     button.setAttribute('aria-label', 'Reabrir preferências de privacidade');
     button.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:2147482999;border:1px solid rgba(31,28,26,.18);border-radius:999px;background:#fff;color:#4a4541;padding:8px 12px;font:600 12px/1.2 Quicksand,Arial,sans-serif;box-shadow:0 2px 10px rgba(31,28,26,.12);cursor:pointer';
-    button.addEventListener('click', addConsentBanner);
+    button.addEventListener('click', function () { addConsentBanner('settings'); });
     document.body.appendChild(button);
   }
 
@@ -1174,7 +1181,7 @@
 
   function trackingReady() {
     addConsentSettingsButton();
-    if (!storedConsent) addConsentBanner();
+    if (!storedConsent) addConsentBanner('initial');
   }
 
   // O shell visual substitui document.documentElement depois que este arquivo

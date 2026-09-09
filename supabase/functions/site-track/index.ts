@@ -13,7 +13,7 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 const ALLOWED_EVENTS = new Set([
-  "page_view", "consent_update", "view_item", "view_inventory",
+  "page_view", "consent_prompt", "consent_update", "view_item", "view_inventory",
   "generate_lead", "whatsapp_click", "phone_click", "social_click",
   "sara_open", "sara_search", "sara_results", "sara_error",
   "favorite_toggle", "gallery_interaction", "property_search",
@@ -30,7 +30,7 @@ const ALLOWED_PROPERTY_KEYS = new Set([
   "lead_type", "objetivo", "percent_scrolled", "query_length",
   "result_count", "social_network", "source", "status", "value",
   "campaign_id", "adset_id", "ad_group_id", "ad_id", "creative_id",
-  "placement", "engagement_seconds", "field_name", "from_item_id",
+  "placement", "engagement_seconds", "field_name", "from_item_id", "prompt_source",
   "event_id", "navigation_type", "navigation_source",
 ]);
 

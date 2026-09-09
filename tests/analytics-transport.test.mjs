@@ -189,6 +189,27 @@ test('shell visual remonta CMP e preferências após substituir o documento', as
   assert.ok(runtime.window.document.getElementById('apecerto-consent-settings'));
 });
 
+test('CMP mede uma única exposição inicial e separa reabertura das preferências', async () => {
+  const runtime = await analyticsRuntime({ marketing: false, storedConsent: false });
+  const consentPrompts = () => runtime.requests
+    .filter((request) => request.url.includes('/functions/v1/site-track') && request.options.body)
+    .map((request) => JSON.parse(request.options.body))
+    .filter((body) => body.event_name === 'consent_prompt');
+
+  assert.equal(consentPrompts().length, 1);
+  assert.equal(consentPrompts()[0].properties.prompt_source, 'initial');
+
+  runtime.dispatchWindow('apecerto:bundle-mounted');
+  assert.equal(consentPrompts().length, 1);
+
+  chooseConsent(runtime, 'essential');
+  runtime.window.document.body.children = runtime.window.document.body.children
+    .filter((child) => child.id !== 'apecerto-consent');
+  runtime.window.apecertoOpenConsent();
+  assert.equal(consentPrompts().length, 2);
+  assert.equal(consentPrompts()[1].properties.prompt_source, 'settings');
+});
+
 test('page_view inicial preserva o mesmo event_id no banco, Pixel e CAPI', async () => {
   const runtime = await analyticsRuntime({ marketing: true });
   const firstPartyRequest = runtime.requests.find((request) => {
