@@ -24,7 +24,7 @@ const ALLOWED_ORIGINS = new Set([
 const PIXEL_ID = Deno.env.get("META_PIXEL_ID") ?? "1088080836200357";
 const TOKEN = Deno.env.get("META_CAPI_TOKEN") ?? "";
 const TEST_CODE = Deno.env.get("META_TEST_EVENT_CODE") ?? "";
-const GRAPH = "https://graph.facebook.com/v21.0";
+const GRAPH = "https://graph.facebook.com/v25.0";
 
 // Lead significa envio concluido. Intencao, abertura de portal e clique em CTA
 // permanecem no tracking first-party/GA4, sem ensinar a Meta com falso positivo.

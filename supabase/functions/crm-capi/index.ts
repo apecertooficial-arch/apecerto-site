@@ -10,7 +10,7 @@ import {
 const PIXEL_ID = Deno.env.get("META_PIXEL_ID") ?? "1088080836200357";
 const TOKEN = Deno.env.get("META_CAPI_TOKEN") ?? "";
 const TEST_CODE = Deno.env.get("META_TEST_EVENT_CODE") ?? "";
-const GRAPH = "https://graph.facebook.com/v21.0";
+const GRAPH = "https://graph.facebook.com/v25.0";
 
 const EVENT_MAP: Record<string, string> = {
   responded: "LeadRespondeu",

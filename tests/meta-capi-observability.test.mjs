@@ -20,6 +20,8 @@ test("conversões offline usam fatos canônicos e outbox idempotente", () => {
 });
 
 test("crm-capi versionada resolve visita, proposta e venda e registra recibo", () => {
+  assert.match(crmCapi, /graph\.facebook\.com\/v25\.0/);
+  assert.doesNotMatch(crmCapi, /graph\.facebook\.com\/v21\.0/);
   assert.match(crmCapi, /LeadRespondeu/);
   assert.doesNotMatch(crmCapi, /LeadRespondido/);
   assert.match(crmCapi, /response_actor = "lead"/);
@@ -57,6 +59,8 @@ test("funil de qualidade usa fatos reais, sem chamar Em atendimento de qualifica
 });
 
 test("meta-capi do navegador também deixa trilha de entrega", () => {
+  assert.match(metaCapi, /graph\.facebook\.com\/v25\.0/);
+  assert.doesNotMatch(metaCapi, /graph\.facebook\.com\/v21\.0/);
   assert.match(metaCapi, /tracking_delivery_upsert/);
   assert.match(metaCapi, /tracking_delivery_update/);
   assert.match(metaCapi, /channel: "meta_browser"/);
