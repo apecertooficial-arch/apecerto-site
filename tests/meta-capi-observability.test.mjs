@@ -67,6 +67,8 @@ test("meta-capi do navegador também deixa trilha de entrega", () => {
   assert.match(metaCapi, /hashedBrazilPhone/);
   assert.match(metaCapi, /safeEventSourceUrl/);
   assert.match(metaCapi, /sanitizeMetaCustomData/);
+  assert.match(metaCapi, /customData\.content_ids\s*=\s*\[itemId\]/);
+  assert.match(metaCapi, /customData\.content_type\s*=\s*"product"/);
 });
 
 test("contrato compartilhado impede PII crua em URL e custom_data", () => {

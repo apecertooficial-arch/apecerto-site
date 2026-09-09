@@ -141,6 +141,13 @@ Deno.serve(async (request: Request) => {
         else if (typeof value === "number" && Number.isFinite(value)) customData[key] = value;
         else if (typeof value === "boolean") customData[key] = value;
     }
+    // item_id permanece como dimensão first-party/GA4. Para a Meta, converte
+    // também ao parâmetro padrão usado em remarketing por produto/imóvel.
+    const itemId = clean(body?.custom_data?.item_id, 100);
+    if (metaEvent === "ViewContent" && itemId) {
+      customData.content_ids = [itemId];
+      customData.content_type = "product";
+    }
 
     const payload: Record<string, unknown> = {
       data: [{

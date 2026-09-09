@@ -213,6 +213,32 @@ test('page_view inicial preserva o mesmo event_id no banco, Pixel e CAPI', async
   assert.equal(pixelEvent?.[3]?.eventID, capiBody.event_id);
 });
 
+test('ViewContent envia content_ids compatível com remarketing por imóvel no Pixel e na CAPI', async () => {
+  const runtime = await analyticsRuntime({ marketing: true });
+  await runtime.window.apecertoTrack('view_item', {
+    event_id: '33333333-3333-4333-8333-333333333333',
+    item_id: '45dfa57e-35da-49cb-8766-4e6a61f7ec4a',
+    item_name: 'Apartamento com 1 quarto em Campo Belo',
+    value: 510000,
+    currency: 'BRL',
+  });
+
+  const capiRequest = runtime.requests.find((request) => {
+    if (!request.url.includes('/functions/v1/meta-capi') || !request.options.body) return false;
+    return JSON.parse(request.options.body).event_name === 'view_item';
+  });
+  const pixelEvent = runtime.window.fbq.queue.find((entry) => entry[0] === 'track' && entry[1] === 'ViewContent');
+
+  assert.ok(capiRequest);
+  assert.ok(pixelEvent);
+  const capiBody = JSON.parse(capiRequest.options.body);
+  assert.equal(capiBody.custom_data.item_id, '45dfa57e-35da-49cb-8766-4e6a61f7ec4a');
+  assert.deepEqual(capiBody.custom_data.content_ids, ['45dfa57e-35da-49cb-8766-4e6a61f7ec4a']);
+  assert.equal(capiBody.custom_data.content_type, 'product');
+  assert.deepEqual(Array.from(pixelEvent[2].content_ids), ['45dfa57e-35da-49cb-8766-4e6a61f7ec4a']);
+  assert.equal(pixelEvent[2].content_type, 'product');
+});
+
 test('Pixel desliga eventos automáticos antes de inicializar', async () => {
   const runtime = await analyticsRuntime({ marketing: true });
   const queue = runtime.window.fbq.queue.map((entry) => Array.from(entry));

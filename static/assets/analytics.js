@@ -461,10 +461,20 @@
     if (!consent.marketing) return;
     var metaEvent = META_EVENT_MAP[eventName];
     if (!metaEvent) return;
-    if (pixelLoaded && window.fbq) {
-      window.fbq(META_CUSTOM_EVENTS.has(eventName) ? 'trackCustom' : 'track', metaEvent, params || {}, { eventID: eventId });
+    var metaParams = Object.assign({}, params || {});
+    // O contrato interno usa item_id para GA4/ledger. A Meta exige
+    // content_ids para públicos e anúncios dinâmicos por imóvel.
+    if (eventName === 'view_item') {
+      var itemId = clean(metaParams.item_id, 100);
+      if (itemId) {
+        metaParams.content_ids = [itemId];
+        metaParams.content_type = 'product';
+      }
     }
-    capiSend(eventName, params || {}, eventId, Object.assign({
+    if (pixelLoaded && window.fbq) {
+      window.fbq(META_CUSTOM_EVENTS.has(eventName) ? 'trackCustom' : 'track', metaEvent, metaParams, { eventID: eventId });
+    }
+    capiSend(eventName, metaParams, eventId, Object.assign({
       external_id: ensureSessionId() || undefined,
     }, identity || {}));
   }
