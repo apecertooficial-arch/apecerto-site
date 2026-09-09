@@ -60,6 +60,7 @@ if (homeResponse) {
       requireMatch(analytics, /\/functions\/v1\/site-track/, 'coleta first-party ausente');
       requireMatch(analytics, /\/functions\/v1\/meta-capi/, 'Meta CAPI do navegador ausente');
       requireMatch(analytics, /apecerto_event_id/, 'event_id de deduplicacao ausente');
+      requireMatch(analytics, /content_ids/, 'ViewContent sem content_ids para remarketing por imóvel');
       requireMatch(analytics, /gtag\('consent', 'update'/, 'Consent Mode update ausente');
       requireMatch(analytics, /data-consent="all"/, 'CMP sem aceite explicito de marketing');
     }
