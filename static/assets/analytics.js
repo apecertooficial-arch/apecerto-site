@@ -76,6 +76,7 @@
   var lastViewedItemId = '';
   var lastViewedItemName = '';
   var financingRequestId = '';
+  var siteLeadRequestId = '';
 
   window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
@@ -935,7 +936,46 @@
       window.apecertoTrack('form_error', { form_context: leadType, error_type: 'contact_required' });
       throw new Error('contact_required');
     }
-    var response = await fetch(SUPABASE_URL + '/rest/v1/site_leads', {
+    // request_id fica estável enquanto o mesmo envio não for concluído (retry
+    // manual após falha de rede é idempotente) e é renovado após sucesso ou 400.
+    if (!uuidOrNull(siteLeadRequestId)) siteLeadRequestId = makeUuid();
+    var requestId = siteLeadRequestId;
+    body.request_id = requestId;
+    var honeypot = clean(source.website, 200);
+    var edgeBody = honeypot ? Object.assign({ website: honeypot }, body) : body;
+    var result = null;
+    var controller = typeof window.AbortController === 'function' ? new window.AbortController() : null;
+    var timeoutId = controller ? window.setTimeout(function () { controller.abort(); }, 15000) : null;
+    try {
+      var response = await fetch(SUPABASE_URL + '/functions/v1/site-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(edgeBody),
+        signal: controller ? controller.signal : undefined,
+      });
+      result = await response.json().catch(function () { return null; });
+    } catch (edgeError) {
+      response = null;
+    } finally {
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+    }
+    if (response && (response.status === 200 || response.status === 202) && result && result.ok === true && result.accepted === true) {
+      siteLeadRequestId = '';
+      return true;
+    }
+    if (response && (response.status === 400 || response.status === 403 || response.status === 429)) {
+      if (response.status !== 429) siteLeadRequestId = '';
+      var errorCode = result && typeof result.error === 'string' ? clean(result.error, 60) : '';
+      window.apecertoTrack('form_error', { form_context: leadType, error_type: 'lead_http_' + response.status + (errorCode ? '_' + errorCode : '') });
+      var rejected = new Error('lead_http_' + response.status);
+      rejected.status = response.status;
+      rejected.code = errorCode;
+      throw rejected;
+    }
+    // Edge indisponível (rede, timeout, 404, 5xx): o caminho anon continua ativo
+    // durante a transição. O mesmo request_id impede duplicata (409 = já gravado).
+    window.apecertoTrack('form_error', { form_context: leadType, error_type: 'lead_edge_fallback_' + (response ? response.status : 0) });
+    var fallback = await fetch(SUPABASE_URL + '/rest/v1/site_leads', {
       method: 'POST',
       headers: {
         apikey: SUPABASE_KEY,
@@ -945,10 +985,13 @@
       },
       body: JSON.stringify(body),
     });
-    if (!response.ok) {
-      window.apecertoTrack('form_error', { form_context: leadType, error_type: 'lead_http_' + response.status });
-      throw new Error('lead_http_' + response.status);
+    if (!fallback.ok && fallback.status !== 409) {
+      window.apecertoTrack('form_error', { form_context: leadType, error_type: 'lead_http_' + fallback.status });
+      var failed = new Error('lead_http_' + fallback.status);
+      failed.status = fallback.status;
+      throw failed;
     }
+    siteLeadRequestId = '';
     return true;
   };
 
