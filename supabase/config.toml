@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.site-financing-lead]
 verify_jwt = false
+
+[functions.site-lead]
+verify_jwt = false
