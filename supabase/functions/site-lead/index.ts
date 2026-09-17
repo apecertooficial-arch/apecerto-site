@@ -1,0 +1,344 @@
+// JavaScript válido de propósito: o mesmo handler roda nos testes locais
+// (node:test) e no runtime Deno da Supabase, sem expor a chave de serviço.
+//
+// Porta protegida dos leads comprador/proprietário do site. O navegador envia
+// um request_id (UUID por envio); a RPC public.site_lead_ingest faz, numa única
+// transação: idempotência -> limite por IP e por telefone -> deduplicação -> insert.
+
+export const ALLOWED_ORIGINS = new Set([
+  "https://apecerto.com",
+  "https://www.apecerto.com",
+  "https://apecerto-site.onrender.com",
+]);
+
+export const LEAD_TYPES = new Set(["comprador", "proprietario"]);
+
+export const CONTEXT_KEYS = new Set([
+  "empreendimento_id", "unidade_id", "empreendimento_nome", "preferencia_horario",
+  "captacao_id", "finalidade", "bairro", "cidade", "area_util",
+  "valor_imovel", "percentual_financiado", "valor_entrada",
+  "valor_financiar", "renda_mensal", "estado_civil", "objetivo",
+  "tipo_imovel", "source",
+]);
+
+const BODY_KEYS = new Set([
+  "request_id", "nome", "telefone", "email", "origem", "lead_type",
+  "empreendimento_id", "unidade_id", "empreendimento_nome",
+  "preferencia_horario", "page_view_id", "tracking", "context", "website",
+]);
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const HASH_PATTERN = /^[0-9a-f]{64}$/;
+const MAX_BODY_BYTES = 24_000;
+
+function corsHeaders(origin) {
+  const headers = {
+    "Access-Control-Allow-Headers": "content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Max-Age": "600",
+    "Vary": "Origin",
+  };
+  if (origin && ALLOWED_ORIGINS.has(origin)) headers["Access-Control-Allow-Origin"] = origin;
+  return headers;
+}
+
+function jsonResponse(origin, body, status = 200, extraHeaders = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...corsHeaders(origin),
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+      ...extraHeaders,
+    },
+  });
+}
+
+export function cleanText(value, maxLength) {
+  // Troca caracteres de controle por espaço (sem escapes unicode no fonte).
+  return Array.from(String(value ?? ""), (ch) => {
+    const code = ch.charCodeAt(0);
+    return code < 32 || code === 127 ? " " : ch;
+  }).join("")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength);
+}
+
+export function uuid(value) {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toLowerCase();
+  return UUID_PATTERN.test(normalized) ? normalized : null;
+}
+
+// Celular ou fixo brasileiro, com ou sem +55. Devolve 55 + DDD + número.
+export function normalizePhone(value) {
+  let digits = String(value ?? "").replace(/\D/g, "");
+  if (digits.length === 10 || digits.length === 11) digits = `55${digits}`;
+  if (!/^55[1-9][0-9][0-9]{8,9}$/.test(digits)) return null;
+  const ddd = Number(digits.slice(2, 4));
+  if (ddd < 11) return null;
+  const local = digits.slice(4);
+  if (local.length === 9 && local[0] !== "9") return null;
+  if (local.length === 8 && !/^[2-5]/.test(local)) return null;
+  return digits;
+}
+
+export function normalizeEmail(value) {
+  const email = cleanText(value, 254).toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function jsonBytes(value) {
+  return new TextEncoder().encode(JSON.stringify(value)).byteLength;
+}
+
+// Validação pura (testável sem rede). Devolve { ok, error } ou { ok, lead }.
+export function validateLeadPayload(body) {
+  const fail = (error) => ({ ok: false, error });
+  if (!isPlainObject(body)) return fail("invalid_request");
+  if (Object.keys(body).some((key) => !BODY_KEYS.has(key))) return fail("unexpected_field");
+
+  const requestId = uuid(body.request_id);
+  if (!requestId) return fail("invalid_request_id");
+
+  // Honeypot: campo invisível que pessoas não preenchem.
+  const honeypot = body.website != null && cleanText(body.website, 200) !== "";
+
+  if (body.origem != null && body.origem !== "site") return fail("invalid_origin");
+  const leadType = body.lead_type == null ? "comprador" : body.lead_type;
+  if (!LEAD_TYPES.has(leadType)) return fail("invalid_lead_type");
+
+  const nome = cleanText(body.nome, 121);
+  if (nome.length < 2 || nome.length > 120) return fail("invalid_name");
+
+  const telefone = normalizePhone(body.telefone);
+  if (!telefone) return fail("invalid_phone");
+
+  let email = null;
+  if (body.email != null && String(body.email).trim() !== "") {
+    email = normalizeEmail(body.email);
+    if (!email) return fail("invalid_email");
+  }
+
+  const empreendimentoId = body.empreendimento_id == null || body.empreendimento_id === ""
+    ? null : uuid(body.empreendimento_id);
+  if ((body.empreendimento_id != null && body.empreendimento_id !== "") && !empreendimentoId) {
+    return fail("invalid_empreendimento_id");
+  }
+  const unidadeId = body.unidade_id == null || body.unidade_id === "" ? null : uuid(body.unidade_id);
+  if ((body.unidade_id != null && body.unidade_id !== "") && !unidadeId) return fail("invalid_unidade_id");
+  if (unidadeId && !empreendimentoId) return fail("invalid_unidade_id");
+
+  const pageViewId = body.page_view_id == null || body.page_view_id === "" ? null : uuid(body.page_view_id);
+  if (body.page_view_id != null && body.page_view_id !== "" && !pageViewId) return fail("invalid_page_view_id");
+
+  const tracking = body.tracking == null ? {} : body.tracking;
+  if (!isPlainObject(tracking) || jsonBytes(tracking) > 12_000) return fail("invalid_tracking");
+
+  const rawContext = body.context == null ? {} : body.context;
+  if (!isPlainObject(rawContext)) return fail("invalid_context");
+  const context = {};
+  for (const [key, value] of Object.entries(rawContext)) {
+    if (!CONTEXT_KEYS.has(key)) return fail("invalid_context");
+    if (value === null || value === undefined || value === "") continue;
+    if (typeof value === "string") context[key] = cleanText(value, 300);
+    else if (typeof value === "number" && Number.isFinite(value)) context[key] = value;
+    else if (typeof value === "boolean") context[key] = value;
+    else return fail("invalid_context");
+  }
+  // O banco exige context.unidade_id == unidade_id; o topo é a fonte da verdade.
+  delete context.unidade_id;
+  delete context.empreendimento_id;
+  if (unidadeId) context.unidade_id = unidadeId;
+  if (empreendimentoId) context.empreendimento_id = empreendimentoId;
+  if (jsonBytes(context) > 8_000) return fail("invalid_context");
+
+  const empreendimentoNome = cleanText(body.empreendimento_nome, 200) || null;
+  const preferenciaHorario = cleanText(body.preferencia_horario, 200) || null;
+
+  return {
+    ok: true,
+    honeypot,
+    lead: {
+      request_id: requestId,
+      lead_type: leadType,
+      nome,
+      telefone,
+      email,
+      empreendimento_id: empreendimentoId,
+      unidade_id: unidadeId,
+      empreendimento_nome: empreendimentoNome,
+      preferencia_horario: preferenciaHorario,
+      page_view_id: pageViewId,
+      tracking,
+      context,
+    },
+  };
+}
+
+function normalizedIp(value) {
+  const candidate = cleanText(value, 64).replace(/^\[|\]$/g, "");
+  if (/^[0-9]{1,3}(?:\.[0-9]{1,3}){3}$/.test(candidate)) {
+    const parts = candidate.split(".").map(Number);
+    return parts.every((part) => part >= 0 && part <= 255) ? parts.join(".") : null;
+  }
+  return candidate.includes(":") && /^[0-9a-f:.]+$/i.test(candidate) ? candidate.toLowerCase() : null;
+}
+
+// Headers preenchidos pelo gateway da Supabase. Nunca aceitamos IP do JSON e
+// nunca persistimos o valor bruto (só HMAC).
+export function trustedClientIp(request) {
+  const cloudflare = normalizedIp(request.headers.get("cf-connecting-ip"));
+  if (cloudflare) return cloudflare;
+  const real = normalizedIp(request.headers.get("x-real-ip"));
+  if (real) return real;
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return normalizedIp(forwarded);
+}
+
+async function hmacHex(secret, value) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(value));
+  return Array.from(new Uint8Array(signature)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function serviceRoleKey(env) {
+  const key = cleanText(env?.get?.("SUPABASE_SERVICE_ROLE_KEY"), 4096);
+  if (!key) throw new Error("service_key_missing");
+  if (key.startsWith("sb_secret_")) return key;
+  const parts = key.split(".");
+  if (parts.length !== 3) throw new Error("service_key_invalid");
+  try {
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(atob(payload + "=".repeat((4 - payload.length % 4) % 4)));
+    if (decoded.role !== "service_role") throw new Error("wrong_role");
+  } catch {
+    throw new Error("service_key_invalid");
+  }
+  return key;
+}
+
+export function createSiteLeadHandler({ fetchImpl = fetch, env = globalThis.Deno?.env } = {}) {
+  return async function siteLead(request) {
+    const origin = request.headers.get("origin");
+    if (request.method === "OPTIONS") {
+      if (!origin || !ALLOWED_ORIGINS.has(origin)) {
+        return jsonResponse(origin, { ok: false, error: "origin_not_allowed" }, 403);
+      }
+      return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    }
+    if (request.method !== "POST") {
+      return jsonResponse(origin, { ok: false, error: "method_not_allowed" }, 405, { Allow: "POST, OPTIONS" });
+    }
+    if (!origin || !ALLOWED_ORIGINS.has(origin)) {
+      return jsonResponse(origin, { ok: false, error: "origin_not_allowed" }, 403);
+    }
+    if (!String(request.headers.get("content-type") ?? "").toLowerCase().startsWith("application/json")) {
+      return jsonResponse(origin, { ok: false, error: "invalid_request" }, 400);
+    }
+    if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) {
+      return jsonResponse(origin, { ok: false, error: "invalid_request" }, 400);
+    }
+
+    try {
+      const rawBody = await request.text();
+      if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) {
+        return jsonResponse(origin, { ok: false, error: "invalid_request" }, 400);
+      }
+      let body;
+      try {
+        body = JSON.parse(rawBody);
+      } catch {
+        return jsonResponse(origin, { ok: false, error: "invalid_request" }, 400);
+      }
+      const validation = validateLeadPayload(body);
+      if (!validation.ok) return jsonResponse(origin, { ok: false, error: validation.error }, 400);
+      const lead = validation.lead;
+
+      // Robô: responde como sucesso para não ensinar o filtro, sem gravar nada.
+      if (validation.honeypot) {
+        return jsonResponse(origin, {
+          ok: true, accepted: true, duplicate: false, id: crypto.randomUUID(), request_id: lead.request_id,
+        }, 202);
+      }
+
+      const ip = trustedClientIp(request);
+      if (!ip) return jsonResponse(origin, { ok: false, error: "invalid_request" }, 400);
+
+      const supabaseUrl = String(env?.get?.("SUPABASE_URL") ?? "").replace(/\/+$/, "");
+      if (!/^https:\/\/[a-z0-9-]+[.]supabase[.]co$/i.test(supabaseUrl)) throw new Error("supabase_url_invalid");
+      const serviceKey = serviceRoleKey(env);
+      const [ipHash, phoneHash] = await Promise.all([
+        hmacHex(serviceKey, `site-lead:ip:${ip}`),
+        hmacHex(serviceKey, `site-lead:phone:${lead.telefone}`),
+      ]);
+      if (!HASH_PATTERN.test(ipHash) || !HASH_PATTERN.test(phoneHash)) throw new Error("hash_failed");
+
+      const serviceHeaders = {
+        apikey: serviceKey,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+      if (!serviceKey.startsWith("sb_secret_")) serviceHeaders.Authorization = `Bearer ${serviceKey}`;
+
+      const rpcResponse = await fetchImpl(`${supabaseUrl}/rest/v1/rpc/site_lead_ingest`, {
+        method: "POST",
+        headers: serviceHeaders,
+        body: JSON.stringify({
+          p_request_id: lead.request_id,
+          p_ip_hash: ipHash,
+          p_phone_hash: phoneHash,
+          p_lead_type: lead.lead_type,
+          p_nome: lead.nome,
+          p_telefone: lead.telefone,
+          p_email: lead.email,
+          p_empreendimento_id: lead.empreendimento_id,
+          p_unidade_id: lead.unidade_id,
+          p_empreendimento_nome: lead.empreendimento_nome,
+          p_preferencia_horario: lead.preferencia_horario,
+          p_page_view_id: lead.page_view_id,
+          p_tracking: lead.tracking,
+          p_context: lead.context,
+        }),
+        redirect: "error",
+        signal: AbortSignal.timeout(8_000),
+      });
+      if (!rpcResponse.ok) throw new Error("rpc_unavailable");
+      const result = await rpcResponse.json().catch(() => null);
+      if (!isPlainObject(result)) throw new Error("rpc_invalid");
+      if (result.accepted !== true) {
+        if (result.code === "rate_limited") {
+          return jsonResponse(origin, { ok: false, error: "rate_limited" }, 429, { "Retry-After": "3600" });
+        }
+        if (result.code === "invalid_request") {
+          return jsonResponse(origin, { ok: false, error: "invalid_request" }, 400);
+        }
+        throw new Error("ingest_rejected");
+      }
+      const id = uuid(result.id);
+      if (!id) throw new Error("rpc_invalid");
+      return jsonResponse(origin, {
+        ok: true,
+        accepted: true,
+        duplicate: result.duplicate === true,
+        id,
+        request_id: lead.request_id,
+      }, result.duplicate === true ? 200 : 202);
+    } catch {
+      return jsonResponse(origin, { ok: false, error: "temporarily_unavailable" }, 503);
+    }
+  };
+}
+
+if (typeof Deno !== "undefined" && Deno?.serve) {
+  Deno.serve(createSiteLeadHandler({ fetchImpl: fetch, env: Deno.env }));
+}
